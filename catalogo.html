@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catálogo de Equipamentos — cscalculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="catalogo-dados.js"></script>
+<style>
+  :root{
+    --bg: #0a0a0b;
+    --panel: #131315;
+    --panel-2: #1a1a1d;
+    --line: #29292d;
+    --text: #f3f1ec;
+    --muted: #8c8c91;
+    --power: #4a9fc9;
+    --signal: #e08a7d;
+    --weight: #a83f34;
+    --ok: #7cae83;
+    --accent: #7cae83;
+    --accent-ink: #0d1a10;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    line-height:1.5;
+  }
+  h1,h2,h3,.disp{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+
+  header{
+    border-bottom:1px solid var(--line);
+    background:
+      radial-gradient(ellipse 900px 300px at 15% 0%, rgba(124,174,131,0.12), transparent 70%);
+  }
+  header .header-inner{
+    max-width:1100px;
+    margin:0 auto;
+    padding:44px 20px 32px;
+  }
+  .back-link{
+    display:inline-block;
+    color:var(--muted);
+    text-decoration:none;
+    font-size:13px;
+    font-weight:500;
+    margin-bottom:18px;
+  }
+  .back-link:hover{ color:var(--accent); }
+  header .tag{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    color:var(--accent);
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    margin:0 0 14px;
+  }
+  header .tag::before{
+    content:'';
+    width:6px; height:6px;
+    background:var(--accent);
+    border-radius:1px;
+    display:inline-block;
+  }
+  header h1{
+    font-size:32px;
+    margin:0 0 10px;
+    line-height:1.12;
+    max-width:30ch;
+  }
+  header p{
+    color:var(--muted);
+    margin:0;
+    font-size:14.5px;
+    max-width:70ch;
+  }
+
+  main{
+    max-width:1100px;
+    margin:0 auto;
+    padding:32px 20px 80px;
+  }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-top:2px solid var(--accent);
+    border-radius:3px;
+    padding:22px;
+  }
+  .card + .card{margin-top:20px;}
+  .card.flat{ border-top:1px solid var(--line); }
+
+  .section-title{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--text);
+    margin:0 0 16px;
+    padding-bottom:12px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .section-title .sub{
+    font-family:'Inter', sans-serif;
+    font-size:12px;
+    font-weight:400;
+    text-transform:none;
+    letter-spacing:0;
+    color:var(--muted);
+  }
+
+  .field{margin-bottom:14px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{
+    display:block;
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:5px;
+  }
+  .field .hint{
+    display:block;
+    font-size:11.5px;
+    color:var(--muted);
+    margin-top:4px;
+  }
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;}
+  .row4{display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:12px;}
+  @media (max-width: 720px){
+    .row2, .row3, .row4{ grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width: 480px){
+    .row2, .row3, .row4{ grid-template-columns:1fr; }
+  }
+
+  input[type=number], input[type=text], select, textarea{
+    width:100%;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:9px 10px;
+    border-radius:3px;
+    font-size:15px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  input[type=number]:focus, input[type=text]:focus, select:focus, textarea:focus{
+    outline:none;
+    border-color:var(--accent);
+  }
+  select{font-family:'Inter', sans-serif;}
+  textarea{font-family:'Inter', sans-serif; resize:vertical; min-height:44px;}
+
+  .checkbox-row{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:10px 12px;
+    margin-bottom:14px;
+  }
+  .checkbox-row input{margin-top:3px;}
+  .checkbox-row .cb-text{font-size:13px; color:var(--text);}
+  .checkbox-row .cb-text small{display:block; color:var(--muted); margin-top:2px;}
+
+  .btn-add{
+    background:var(--accent);
+    border:1px solid var(--accent);
+    color:var(--accent-ink);
+    padding:10px 18px;
+    border-radius:3px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .btn-add:hover{ opacity:0.88; }
+  .btn-ghost{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--muted);
+    padding:10px 16px;
+    border-radius:3px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .btn-ghost:hover{ border-color:var(--text); color:var(--text); }
+  .form-actions{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    margin-top:18px;
+    flex-wrap:wrap;
+  }
+  .form-msg{
+    font-size:12.5px;
+    color:var(--ok);
+    display:none;
+  }
+  .form-msg.show{display:inline-block;}
+  .form-msg.err{ color:var(--weight); }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13.5px;
+  }
+  table th{
+    text-align:left;
+    font-size:11.5px;
+    color:var(--muted);
+    font-weight:600;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    padding:8px 8px;
+    border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  table td{
+    padding:9px 8px;
+    border-bottom:1px solid var(--line);
+    vertical-align:middle;
+  }
+  table tr:last-child td{border-bottom:none;}
+  td.num, th.num{text-align:right; font-family:'IBM Plex Mono', monospace;}
+  .table-wrap{ overflow-x:auto; }
+  .empty-row td{
+    color:var(--muted);
+    font-size:13px;
+    padding:14px 8px;
+    text-align:center;
+    border-bottom:none;
+  }
+  .btn-remove{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--muted);
+    width:26px; height:26px;
+    border-radius:3px;
+    cursor:pointer;
+    font-size:14px;
+    line-height:1;
+  }
+  .btn-remove:hover{ border-color:var(--weight); color:var(--weight); }
+  .btn-edit{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--muted);
+    width:26px; height:26px;
+    border-radius:3px;
+    cursor:pointer;
+    font-size:13px;
+    line-height:1;
+  }
+  .btn-edit:hover{ border-color:var(--accent); color:var(--accent); }
+  .row-actions{ display:flex; gap:6px; justify-content:flex-end; }
+
+  /* ===== abas de categoria ===== */
+  .cat-tabs{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:20px;
+  }
+  .cat-tabs button{
+    padding:10px 16px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--muted);
+    border-radius:20px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:7px;
+  }
+  .cat-tabs button.active{
+    border-color:var(--accent);
+    background:rgba(124,174,131,0.12);
+    color:var(--accent);
+  }
+  .cat-panel{ display:none; }
+  .cat-panel.active{ display:block; }
+
+  details.ref-box{
+    margin-top:20px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    background:var(--panel);
+  }
+  details.ref-box summary{
+    cursor:pointer;
+    padding:14px 16px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    color:var(--text);
+    list-style:none;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  details.ref-box summary::-webkit-details-marker{ display:none; }
+  details.ref-box summary::after{
+    content:'+';
+    color:var(--muted);
+    font-size:18px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  details.ref-box[open] summary::after{ content:'−'; }
+  details.ref-box .ref-body{
+    padding:0 16px 16px;
+    max-height:360px;
+    overflow-y:auto;
+  }
+  details.ref-box .ref-body p.note{
+    color:var(--muted);
+    font-size:12.5px;
+    margin:0 0 12px;
+  }
+
+  .top-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+  }
+  .top-actions .backup-btns{ display:flex; gap:8px; flex-wrap:wrap; }
+  .intro-note{
+    font-size:13px;
+    color:var(--muted);
+    margin:0;
+  }
+  .intro-note strong{ color:var(--text); }
+
+  .storage-note{
+    display:flex;
+    gap:10px;
+    background:rgba(74,159,201,0.08);
+    border:1px solid rgba(74,159,201,0.35);
+    border-radius:3px;
+    padding:12px 14px;
+    font-size:12.5px;
+    color:var(--muted);
+    margin-bottom:20px;
+  }
+  .storage-note strong{ color:var(--text); }
+
+  footer{
+    max-width:1100px;
+    margin:0 auto;
+    padding:24px 20px 40px;
+    color:var(--muted);
+    font-size:12px;
+    border-top:1px solid var(--line);
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="db-config.js"></script>
+<script src="auth.js"></script>
+</head>
+<body>
+<script>(async()=>{ await MMAuth.init({admin:true}); })();</script>
+
+<header>
+  <div class="header-inner">
+    <a class="back-link" href="index.html">&larr; Voltar para áreas</a>
+    <p class="tag">05 · Cadastro</p>
+    <h1>Catálogo de Equipamentos</h1>
+    <p>Cadastre novos modelos de caixas, mesas, stages, aparelhos de luz, pitch de painel de LED e processadoras. Uma vez salvos aqui, eles passam a aparecer automaticamente nas calculadoras de Som, Luz e Vídeo, junto com os modelos que já vêm prontos.</p>
+  </div>
+</header>
+
+<main>
+
+  <div class="storage-note">
+    <span style="display:inline-flex;flex-shrink:0;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h13l3 3v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M8 4v5h8V4"/><rect x="7.5" y="13" width="9" height="6"/></svg></span>
+    <span><strong>Onde isso fica salvo:</strong> os cadastros ficam guardados neste navegador/computador (mesma técnica que as calculadoras já usam para lembrar seu último projeto). Eles não aparecem automaticamente em outro computador ou navegador — use <strong>Exportar backup</strong> para gerar um arquivo .json e <strong>Importar backup</strong> para carregá-lo em outro lugar.</span>
+  </div>
+
+  <div class="top-actions">
+    <p class="intro-note">Escolha a categoria abaixo para cadastrar um novo modelo.</p>
+    <div class="backup-btns">
+      <button type="button" class="btn-ghost" id="btnExportar">⭳ Exportar backup (.json)</button>
+      <button type="button" class="btn-ghost" id="btnImportarTrigger">⭱ Importar backup</button>
+      <input type="file" id="inputImportar" accept="application/json" style="display:none;">
+    </div>
+  </div>
+
+  <div class="cat-tabs" id="catTabs"></div>
+
+  <div id="catPanels"></div>
+
+</main>
+
+<footer>
+  Catálogo global de equipamentos — somente administradores podem cadastrar ou alterar itens. As mudanças são salvas no Supabase e ficam disponíveis para todos os usuários nas calculadoras de Som, Luz e Vídeo.
+</footer>
+
+<script>
+(function(){
+  const REF_CAIXAS = [{"label":"EV ETX-10P (10\", ativa)","watts":140,"peso":20,"casePor":2},{"label":"EV ETX-12P (12\", ativa)","watts":180,"peso":24,"casePor":1},{"label":"EV ETX-15P (15\", ativa)","watts":220,"peso":29,"casePor":1},{"label":"EV EKX-12P (12\", ativa, compacta)","watts":160,"peso":18,"casePor":2},{"label":"EV ZLX-12BT (12\", ativa, compacta)","watts":150,"peso":15,"casePor":2},{"label":"EV ETX-15SP (sub 15\", ativo)","watts":280,"peso":32,"casePor":1},{"label":"EV ETX-18SP (sub 18\", ativo)","watts":350,"peso":42,"casePor":1},{"label":"EV ELX200-10P (10\", ativa)","watts":150,"peso":13.5,"casePor":2},{"label":"EV ELX200-18SP (sub 18\", ativo)","watts":300,"peso":29,"casePor":1},{"label":"RCF ART 732-A (12\", ativa, compacta)","watts":170,"peso":14,"casePor":2},{"label":"RCF ART 910-A (10\", ativa)","watts":150,"peso":14,"casePor":2},{"label":"RCF ART 912-A (12\", ativa)","watts":190,"peso":17,"casePor":1},{"label":"RCF ART 915-A (15\", ativa)","watts":240,"peso":22,"casePor":1},{"label":"RCF HDL 6-A (elemento de line array, ativo)","watts":250,"peso":11.5,"casePor":1},{"label":"RCF HDL 26-A (elemento de line array, ativo)","watts":300,"peso":13.5,"casePor":1},{"label":"RCF HDL 20-A (elemento de line array, ativo)","watts":400,"peso":30,"casePor":1},{"label":"RCF HDL 35-AS (sub voável 15\", ativo)","watts":350,"peso":30,"casePor":1},{"label":"RCF SUB 705-AS (sub 15\", ativo)","watts":280,"peso":25,"casePor":1},{"label":"RCF SUB 8003-AS (sub 18\", ativo)","watts":350,"peso":36,"casePor":1},{"label":"RCF SUB 8006-AS (sub duplo 18\", ativo)","watts":550,"peso":65,"casePor":1},{"label":"D.A.S Action 508A (8\", ativa)","watts":140,"peso":11,"casePor":2},{"label":"D.A.S Action 512A (12\", ativa)","watts":190,"peso":17,"casePor":1},{"label":"D.A.S Action 515A (15\", ativa)","watts":250,"peso":24,"casePor":1},{"label":"D.A.S Vantec 15A (15\", ativa)","watts":260,"peso":26,"casePor":1},{"label":"D.A.S Vantec 20A (elemento de line array, ativo)","watts":380,"peso":24,"casePor":1},{"label":"D.A.S Action 118A (sub 18\", ativo)","watts":350,"peso":38,"casePor":1},{"label":"D.A.S Vantec-118A (sub 18\", ativo)","watts":400,"peso":45,"casePor":1},{"label":"D.A.S EVENT-26A (elemento de line array, ativo)","watts":200,"peso":16.5,"casePor":2},{"label":"D.A.S EVENT-28A (elemento de line array, ativo)","watts":230,"peso":20.5,"casePor":2},{"label":"D.A.S EVENT-30A (elemento de line array, ativo)","watts":280,"peso":26.5,"casePor":1},{"label":"D.A.S EVENT-210A (elemento de line array, ativo)","watts":300,"peso":32.5,"casePor":1},{"label":"D.A.S EVENT-212A (elemento de line array, ativo)","watts":400,"peso":41,"casePor":1},{"label":"D.A.S EVENT-115A (sub 15\", ativo)","watts":250,"peso":37,"casePor":1},{"label":"D.A.S EVENT-118A (sub 18\", ativo)","watts":350,"peso":43,"casePor":1},{"label":"D.A.S EVENT-218A (sub duplo 18\", ativo)","watts":550,"peso":68.5,"casePor":1},{"label":"D.A.S EVENT-S218A (sub duplo 18\" neo, ativo)","watts":650,"peso":78,"casePor":1},{"label":"D.A.S EVENT-121A (sub 21\" horn-loaded, ativo)","watts":600,"peso":78.5,"casePor":1},{"label":"Yamaha DXR8 mkII (8\", ativa)","watts":100,"peso":13,"casePor":2},{"label":"Yamaha DXR12 mkII (12\", ativa)","watts":110,"peso":18.6,"casePor":1},{"label":"Yamaha DXR15 mkII (15\", ativa)","watts":130,"peso":21.8,"casePor":1},{"label":"Yamaha DZR12 (12\", ativa, alta potência)","watts":160,"peso":19.6,"casePor":1},{"label":"Yamaha DZR15 (15\", ativa, alta potência)","watts":190,"peso":23.4,"casePor":1},{"label":"Yamaha DZR315 (3 vias, ativa)","watts":280,"peso":37,"casePor":1},{"label":"Yamaha DXS15 mkII (sub 15\", ativo)","watts":100,"peso":25,"casePor":1},{"label":"Yamaha DXS18 mkII (sub 18\", ativo)","watts":100,"peso":31,"casePor":1},{"label":"Meyer Sound UPJunior (ativa, compacta)","watts":200,"peso":20,"casePor":1},{"label":"Meyer Sound UPA-1P (ativa)","watts":280,"peso":32,"casePor":1},{"label":"Meyer Sound UPQ-1P (ativa)","watts":320,"peso":34,"casePor":1},{"label":"Meyer Sound ULTRA-X40 (line array, ativo)","watts":350,"peso":24,"casePor":1},{"label":"Meyer Sound USW-1P (sub, ativo)","watts":400,"peso":47,"casePor":1},{"label":"Meyer Sound 900-LFC (sub, ativo)","watts":600,"peso":73,"casePor":1},{"label":"d&b T10 (passiva + amplificador D-Series)","watts":200,"peso":19,"casePor":1},{"label":"d&b Y8 (line array, passiva + amplificador D-Series)","watts":220,"peso":21,"casePor":1},{"label":"d&b V8 (line array, passiva + amplificador D-Series)","watts":260,"peso":29,"casePor":1},{"label":"d&b Y-SUB (sub, passiva + amplificador D-Series)","watts":400,"peso":39,"casePor":1},{"label":"d&b B22 (sub, passiva + amplificador D-Series)","watts":450,"peso":65,"casePor":1},{"label":"QSC K8.2 (8\", ativa)","watts":130,"peso":13.6,"casePor":2},{"label":"QSC K10.2 (10\", ativa)","watts":150,"peso":14.5,"casePor":2},{"label":"QSC K12.2 (12\", ativa)","watts":170,"peso":17.7,"casePor":1},{"label":"QSC KW153 (15\", ativa)","watts":200,"peso":20.4,"casePor":1},{"label":"QSC KS112 (sub 12\", ativo)","watts":250,"peso":29.5,"casePor":1},{"label":"QSC KS118 (sub 18\", ativo)","watts":350,"peso":47.7,"casePor":1},{"label":"QSC KS212C (sub cardioide, ativo)","watts":450,"peso":63,"casePor":1}];
+  const REF_EXPANSOES = {"s16":{"label":"Behringer S16 / Midas DL16 (AES50)","in":16,"out":8},"s32":{"label":"Behringer S32 / Midas DL32 (AES50)","in":32,"out":16},"dl251":{"label":"Midas DL251","in":48,"out":16},"dl153":{"label":"Midas DL153","in":16,"out":8},"dl155":{"label":"Midas DL155","in":8,"out":8},"drack":{"label":"DiGiCo D-Rack","in":32,"out":16},"d2rack":{"label":"DiGiCo D2-Rack","in":48,"out":24},"rio3224":{"label":"Yamaha Rio3224-D2","in":32,"out":16},"rio1608":{"label":"Yamaha Rio1608-D2","in":16,"out":8},"tio1608":{"label":"Yamaha Tio1608-D2","in":16,"out":8},"vistage":{"label":"Soundcraft Vi Stagebox","in":64,"out":32},"vicompact":{"label":"Soundcraft Compact Stagebox","in":32,"out":8},"ygdai":{"label":"Cartão Mini-YGDAI (slot de expansão)","in":16,"out":16}};
+  const REF_CONSOLES_SOM = [{"marca":"Behringer / Midas","label":"Behringer XR18 (X Air)","maxCh":18,"inputsLocal":18,"outputsLocal":8,"busesTotal":6,"consumo":50,"noExpansion":false,"expansaoLabel":"Behringer S16 / Midas DL16 (AES50)","expansaoMax":2},{"marca":"Behringer / Midas","label":"Behringer X32 / Midas M32","maxCh":32,"inputsLocal":32,"outputsLocal":16,"busesTotal":22,"consumo":120,"noExpansion":false,"expansaoLabel":"Behringer S16 / Midas DL16 (AES50)","expansaoMax":6},{"marca":"Behringer / Midas","label":"Behringer X32 Compact / Midas M32C","maxCh":32,"inputsLocal":16,"outputsLocal":8,"busesTotal":22,"consumo":110,"noExpansion":false,"expansaoLabel":"Behringer S16 / Midas DL16 (AES50)","expansaoMax":6},{"marca":"Behringer / Midas","label":"Behringer X32 Producer","maxCh":32,"inputsLocal":16,"outputsLocal":8,"busesTotal":22,"consumo":110,"noExpansion":false,"expansaoLabel":"Behringer S16 / Midas DL16 (AES50)","expansaoMax":6},{"marca":"Behringer / Midas","label":"Behringer X32 Rack / Midas M32R","maxCh":32,"inputsLocal":16,"outputsLocal":8,"busesTotal":22,"consumo":100,"noExpansion":false,"expansaoLabel":"Behringer S16 / Midas DL16 (AES50)","expansaoMax":6},{"marca":"Behringer / Midas","label":"Behringer WING","maxCh":48,"inputsLocal":8,"outputsLocal":8,"busesTotal":24,"consumo":180,"noExpansion":false,"expansaoLabel":"Behringer S16 / Midas DL16 (AES50)","expansaoMax":9},{"marca":"Behringer / Midas","label":"Behringer WING Compact","maxCh":48,"inputsLocal":24,"outputsLocal":8,"busesTotal":24,"consumo":160,"noExpansion":false,"expansaoLabel":"Behringer S16 / Midas DL16 (AES50)","expansaoMax":9},{"marca":"Behringer / Midas","label":"Behringer WING Rack","maxCh":48,"inputsLocal":24,"outputsLocal":8,"busesTotal":24,"consumo":160,"noExpansion":false,"expansaoLabel":"Behringer S16 / Midas DL16 (AES50)","expansaoMax":9},{"marca":"Behringer / Midas","label":"Midas PRO2","maxCh":64,"inputsLocal":8,"outputsLocal":16,"busesTotal":24,"consumo":250,"noExpansion":false,"expansaoLabel":"Midas DL251","expansaoMax":3},{"marca":"Behringer / Midas","label":"Midas PRO X","maxCh":168,"inputsLocal":16,"outputsLocal":8,"busesTotal":96,"consumo":350,"noExpansion":false,"expansaoLabel":"Midas DL153","expansaoMax":6},{"marca":"DiGiCo","label":"DiGiCo SD9 (Mixrack)","maxCh":96,"inputsLocal":32,"outputsLocal":16,"busesTotal":36,"consumo":300,"noExpansion":false,"expansaoLabel":"DiGiCo D-Rack","expansaoMax":4},{"marca":"DiGiCo","label":"DiGiCo SD8 (Mixrack)","maxCh":120,"inputsLocal":48,"outputsLocal":8,"busesTotal":48,"consumo":350,"noExpansion":false,"expansaoLabel":"DiGiCo D2-Rack","expansaoMax":4},{"marca":"DiGiCo","label":"DiGiCo Quantum225","maxCh":72,"inputsLocal":8,"outputsLocal":8,"busesTotal":36,"consumo":300,"noExpansion":false,"expansaoLabel":"DiGiCo D-Rack","expansaoMax":4},{"marca":"DiGiCo","label":"DiGiCo Quantum338","maxCh":128,"inputsLocal":8,"outputsLocal":8,"busesTotal":64,"consumo":400,"noExpansion":false,"expansaoLabel":"DiGiCo D2-Rack","expansaoMax":4},{"marca":"DiGiCo","label":"DiGiCo S21 / S31","maxCh":48,"inputsLocal":0,"outputsLocal":0,"busesTotal":46,"consumo":200,"noExpansion":false,"expansaoLabel":"DiGiCo D-Rack","expansaoMax":3},{"marca":"Soundcraft","label":"Soundcraft Si Expression 1","maxCh":66,"inputsLocal":20,"outputsLocal":16,"busesTotal":20,"consumo":150,"noExpansion":false,"expansaoLabel":"Soundcraft Compact Stagebox","expansaoMax":2},{"marca":"Soundcraft","label":"Soundcraft Si Expression 2","maxCh":66,"inputsLocal":28,"outputsLocal":16,"busesTotal":20,"consumo":190,"noExpansion":false,"expansaoLabel":"Soundcraft Compact Stagebox","expansaoMax":2},{"marca":"Soundcraft","label":"Soundcraft Si Expression 3","maxCh":66,"inputsLocal":36,"outputsLocal":16,"busesTotal":20,"consumo":220,"noExpansion":false,"expansaoLabel":"Soundcraft Compact Stagebox","expansaoMax":2},{"marca":"Soundcraft","label":"Soundcraft Vi1000","maxCh":96,"inputsLocal":16,"outputsLocal":16,"busesTotal":24,"consumo":250,"noExpansion":false,"expansaoLabel":"Soundcraft Vi Stagebox","expansaoMax":2},{"marca":"Soundcraft","label":"Soundcraft Vi2000","maxCh":96,"inputsLocal":32,"outputsLocal":24,"busesTotal":24,"consumo":280,"noExpansion":false,"expansaoLabel":"Soundcraft Vi Stagebox","expansaoMax":2},{"marca":"Soundcraft","label":"Soundcraft Vi3000","maxCh":96,"inputsLocal":48,"outputsLocal":16,"busesTotal":24,"consumo":300,"noExpansion":false,"expansaoLabel":"Soundcraft Vi Stagebox","expansaoMax":2},{"marca":"Soundcraft","label":"Soundcraft Vi5000","maxCh":128,"inputsLocal":19,"outputsLocal":16,"busesTotal":32,"consumo":350,"noExpansion":false,"expansaoLabel":"Soundcraft Vi Stagebox","expansaoMax":5},{"marca":"Soundcraft","label":"Soundcraft Vi7000","maxCh":128,"inputsLocal":19,"outputsLocal":16,"busesTotal":32,"consumo":380,"noExpansion":false,"expansaoLabel":"Soundcraft Vi Stagebox","expansaoMax":5},{"marca":"Soundcraft","label":"Soundcraft Ui24R","maxCh":24,"inputsLocal":22,"outputsLocal":10,"busesTotal":8,"consumo":60,"noExpansion":true,"expansaoLabel":null,"expansaoMax":null},{"marca":"Yamaha","label":"Yamaha CL5","maxCh":80,"inputsLocal":0,"outputsLocal":0,"busesTotal":32,"consumo":200,"noExpansion":false,"expansaoLabel":"Yamaha Rio3224-D2","expansaoMax":8},{"marca":"Yamaha","label":"Yamaha CL3","maxCh":72,"inputsLocal":0,"outputsLocal":0,"busesTotal":32,"consumo":180,"noExpansion":false,"expansaoLabel":"Yamaha Rio3224-D2","expansaoMax":8},{"marca":"Yamaha","label":"Yamaha CL1","maxCh":56,"inputsLocal":0,"outputsLocal":0,"busesTotal":32,"consumo":150,"noExpansion":false,"expansaoLabel":"Yamaha Rio1608-D2","expansaoMax":8},{"marca":"Yamaha","label":"Yamaha QL5","maxCh":72,"inputsLocal":32,"outputsLocal":16,"busesTotal":24,"consumo":180,"noExpansion":false,"expansaoLabel":"Yamaha Rio1608-D2","expansaoMax":8},{"marca":"Yamaha","label":"Yamaha QL1","maxCh":40,"inputsLocal":16,"outputsLocal":8,"busesTotal":24,"consumo":150,"noExpansion":false,"expansaoLabel":"Yamaha Rio1608-D2","expansaoMax":8},{"marca":"Yamaha","label":"Yamaha DM7","maxCh":120,"inputsLocal":32,"outputsLocal":16,"busesTotal":60,"consumo":240,"noExpansion":false,"expansaoLabel":"Yamaha Rio3224-D2","expansaoMax":8},{"marca":"Yamaha","label":"Yamaha DM7 Compact","maxCh":72,"inputsLocal":16,"outputsLocal":16,"busesTotal":60,"consumo":240,"noExpansion":false,"expansaoLabel":"Yamaha Rio1608-D2","expansaoMax":8},{"marca":"Yamaha","label":"Yamaha DM3","maxCh":19,"inputsLocal":16,"outputsLocal":8,"busesTotal":11,"consumo":40,"noExpansion":false,"expansaoLabel":"Yamaha Tio1608-D2","expansaoMax":1},{"marca":"Yamaha","label":"Yamaha 01V96i","maxCh":40,"inputsLocal":16,"outputsLocal":8,"busesTotal":16,"consumo":50,"noExpansion":false,"expansaoLabel":"Cartão Mini-YGDAI (slot de expansão)","expansaoMax":1},{"marca":"Mesas analógicas","label":"Mesa analógica 12–16 canais","maxCh":16,"inputsLocal":16,"outputsLocal":10,"busesTotal":8,"consumo":20,"noExpansion":true,"expansaoLabel":null,"expansaoMax":null},{"marca":"Mesas analógicas","label":"Mesa analógica 24 canais","maxCh":24,"inputsLocal":24,"outputsLocal":10,"busesTotal":8,"consumo":20,"noExpansion":true,"expansaoLabel":null,"expansaoMax":null},{"marca":"Mesas analógicas","label":"Mesa analógica 32 canais","maxCh":32,"inputsLocal":32,"outputsLocal":12,"busesTotal":10,"consumo":20,"noExpansion":true,"expansaoLabel":null,"expansaoMax":null},{"marca":"Mesas analógicas","label":"Mesa analógica 40 canais","maxCh":40,"inputsLocal":40,"outputsLocal":14,"busesTotal":12,"consumo":20,"noExpansion":true,"expansaoLabel":null,"expansaoMax":null}];
+  const REF_MARCAS_MESA_SOM = ["Behringer / Midas","DiGiCo","Soundcraft","Yamaha","Mesas analógicas"];
+  const REF_EQUIP_LUZ = [{"label":"Moving Beam 9R (250W)","watts":300,"peso":16,"dmx":16,"casePor":2},{"label":"Moving Beam 10R (280W)","watts":500,"peso":19,"dmx":20,"casePor":2},{"label":"Moving Beam 14R (295W)","watts":440,"peso":14.5,"dmx":16,"casePor":2},{"label":"BSW 481 CMY","watts":500,"peso":21,"dmx":24,"casePor":2},{"label":"Moving Wash (LED 19×15W)","watts":350,"peso":9,"dmx":16,"casePor":4},{"label":"Par LED (18×15W RGBWA+UV)","watts":290,"peso":5,"dmx":8,"casePor":10},{"label":"COB (100W RGBW)","watts":120,"peso":3,"dmx":6,"casePor":8},{"label":"Brute (4 lâmpadas PAR36/aircraft)","watts":2400,"peso":10,"dmx":1,"casePor":2},{"label":"Strobo LED + Fita","watts":700,"peso":9,"dmx":4,"casePor":10},{"label":"Fita de LED (rolo de 5m)","watts":60,"peso":0.5,"dmx":3,"casePor":null}];
+  const REF_CONSOLES_LUZ = [{"label":"Pilot 512 / Pilot 2000","parametros":512,"saidasDmx":1,"aparelhosMax":40,"desc":"512 parâmetros · 1 saída DMX"},{"label":"grandMA2 onPC + Command Wing","parametros":2048,"saidasDmx":2,"aparelhosMax":null,"desc":"2.048 parâmetros · 2 saídas DMX"},{"label":"grandMA2 light","parametros":4096,"saidasDmx":6,"aparelhosMax":null,"desc":"4.096 parâmetros · 6 saídas DMX"},{"label":"grandMA2 full-size","parametros":8192,"saidasDmx":6,"aparelhosMax":null,"desc":"8.192 parâmetros · 6 saídas DMX"},{"label":"grandMA3 onPC + Command Wing","parametros":4096,"saidasDmx":2,"aparelhosMax":null,"desc":"4.096 parâmetros · 2 saídas DMX"},{"label":"grandMA3 full-size","parametros":20480,"saidasDmx":6,"aparelhosMax":null,"desc":"20.480 parâmetros · 6 saídas DMX"},{"label":"Mesa DMX 1024","parametros":1024,"saidasDmx":2,"aparelhosMax":null,"desc":"1.024 parâmetros · 2 saídas DMX (2 universos)"}];
+  const REF_PITCHES = [{"pitch":"1.53","label":"P1.53","peso100":14,"peso50":8,"maxWm2Indoor":700,"maxWm2Outdoor":900},{"pitch":"1.953","label":"P1.95","peso100":13.5,"peso50":8,"maxWm2Indoor":650,"maxWm2Outdoor":850},{"pitch":"2","label":"P2","peso100":13.5,"peso50":8,"maxWm2Indoor":650,"maxWm2Outdoor":850},{"pitch":"2.5","label":"P2.5","peso100":13.5,"peso50":7.5,"maxWm2Indoor":600,"maxWm2Outdoor":800},{"pitch":"2.6","label":"P2.6","peso100":13.5,"peso50":7.5,"maxWm2Indoor":600,"maxWm2Outdoor":800},{"pitch":"2.91","label":"P2.91","peso100":13.5,"peso50":8,"maxWm2Indoor":600,"maxWm2Outdoor":750},{"pitch":"2.976","label":"P2.98","peso100":13.5,"peso50":8,"maxWm2Indoor":600,"maxWm2Outdoor":750},{"pitch":"3","label":"P3","peso100":13.5,"peso50":8,"maxWm2Indoor":550,"maxWm2Outdoor":700},{"pitch":"3.906","label":"P3.91","peso100":13.5,"peso50":8,"maxWm2Indoor":550,"maxWm2Outdoor":650},{"pitch":"4","label":"P4","peso100":14,"peso50":8.5,"maxWm2Indoor":500,"maxWm2Outdoor":600},{"pitch":"4.808","label":"P4.81","peso100":14,"peso50":8.5,"maxWm2Indoor":500,"maxWm2Outdoor":600},{"pitch":"5.952","label":"P5.95","peso100":13,"peso50":7,"maxWm2Indoor":450,"maxWm2Outdoor":550},{"pitch":"6.25","label":"P6.25","peso100":11,"peso50":6,"maxWm2Indoor":400,"maxWm2Outdoor":500},{"pitch":"8.928","label":"P8.92","peso100":12,"peso50":7,"maxWm2Indoor":350,"maxWm2Outdoor":450},{"pitch":"10","label":"P10","peso100":15,"peso50":8,"maxWm2Indoor":350,"maxWm2Outdoor":400}];
+  const REF_PROCESSADORAS = [{"nome":"MCTRL660","maxPixels":2300000,"maxInputW":1920,"maxInputH":1200,"serieH":false,"outputPorts":4,"outputCards":null,"portsPerCard":null},{"nome":"VX600","maxPixels":3900000,"maxInputW":3840,"maxInputH":2160,"serieH":false,"outputPorts":6,"outputCards":null,"portsPerCard":null},{"nome":"VC6","maxPixels":3900000,"maxInputW":3840,"maxInputH":2784,"serieH":false,"outputPorts":6,"outputCards":null,"portsPerCard":null},{"nome":"VX1000","maxPixels":6500000,"maxInputW":4096,"maxInputH":1080,"serieH":false,"outputPorts":10,"outputCards":null,"portsPerCard":null},{"nome":"VX16S","maxPixels":10400000,"maxInputW":3840,"maxInputH":2160,"serieH":false,"outputPorts":16,"outputCards":null,"portsPerCard":null},{"nome":"H2","maxPixels":26000000,"maxInputW":8192,"maxInputH":4320,"serieH":true,"outputPorts":40,"outputCards":2,"portsPerCard":20},{"nome":"H5","maxPixels":39000000,"maxInputW":8192,"maxInputH":4320,"serieH":true,"outputPorts":60,"outputCards":3,"portsPerCard":20},{"nome":"H9","maxPixels":65000000,"maxInputW":8192,"maxInputH":4320,"serieH":true,"outputPorts":100,"outputCards":5,"portsPerCard":20},{"nome":"H9 Enhanced","maxPixels":130000000,"maxInputW":8192,"maxInputH":4320,"serieH":true,"outputPorts":200,"outputCards":10,"portsPerCard":20},{"nome":"H15","maxPixels":130000000,"maxInputW":8192,"maxInputH":4320,"serieH":true,"outputPorts":200,"outputCards":10,"portsPerCard":20},{"nome":"H15 Enhanced","maxPixels":208000000,"maxInputW":8192,"maxInputH":4320,"serieH":true,"outputPorts":320,"outputCards":16,"portsPerCard":20},{"nome":"H20","maxPixels":260000000,"maxInputW":8192,"maxInputH":4320,"serieH":true,"outputPorts":400,"outputCards":20,"portsPerCard":20}];
+
+  function panelsHTML(){
+    return `
+    <div class="cat-panel active" id="panel-caixas">
+      <div class="card">
+        <p class="section-title">Nova caixa de som <span class="sub">preencha e clique em adicionar</span></p>
+        <form id="formCaixas">
+          <div class="row2">
+            <div class="field"><label>Marca</label><input type="text" id="cx_marca" placeholder="Ex: JBL" required></div>
+            <div class="field"><label>Modelo</label><input type="text" id="cx_modelo" placeholder="Ex: PRX815W" required></div>
+          </div>
+          <div class="field"><label>Detalhe (opcional)</label><input type="text" id="cx_detalhe" placeholder='Ex: 15&quot;, ativa, 2 vias'></div>
+          <div class="row3">
+            <div class="field"><label>Potência elétrica de rede (W)</label><input type="number" id="cx_watts" min="0" step="1" placeholder="Ex: 220" required></div>
+            <div class="field"><label>Peso (kg)</label><input type="number" id="cx_peso" min="0" step="0.1" placeholder="Ex: 24" required></div>
+            <div class="field"><label>Caixas por flight case</label><input type="number" id="cx_case" min="1" step="1" placeholder="Opcional">
+              <span class="hint">Deixe em branco se não há case padrão para essa caixa.</span>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-add" id="cx_submitBtn">+ Adicionar caixa</button>
+            <button type="button" class="btn-ghost" id="cx_cancelBtn" style="display:none;">Cancelar edição</button>
+            <span class="form-msg" id="cx_msg"></span>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <p class="section-title">Minhas caixas cadastradas <span class="sub" id="cx_count"></span></p>
+        <div class="table-wrap"><table><thead><tr><th>Modelo</th><th class="num">Potência</th><th class="num">Peso</th><th class="num">Por case</th><th></th></tr></thead><tbody id="cx_tbody"></tbody></table></div>
+      </div>
+      <details class="ref-box">
+        <summary>Ver os modelos que já vêm prontos na calculadora de Som <span id="cx_refCount" class="sub"></span></summary>
+        <div class="ref-body">
+          <p class="note">Referência — não editável aqui. Evite cadastrar um modelo que já está nesta lista.</p>
+          <div class="table-wrap"><table><thead><tr><th>Modelo</th><th class="num">Potência</th><th class="num">Peso</th><th class="num">Por case</th></tr></thead><tbody id="cx_refTbody"></tbody></table></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="cat-panel" id="panel-mesasSom">
+      <div class="card">
+        <p class="section-title">Nova mesa de som</p>
+        <form id="formMesasSom">
+          <div class="row2">
+            <div class="field"><label>Marca</label><input type="text" id="ms_marca" list="ms_marcas" placeholder="Ex: Yamaha" required></div>
+            <div class="field"><label>Modelo</label><input type="text" id="ms_modelo" placeholder="Ex: TF5" required></div>
+          </div>
+          <datalist id="ms_marcas"></datalist>
+          <div class="row3">
+            <div class="field"><label>Canais mixáveis (máx.)</label><input type="number" id="ms_maxch" min="1" step="1" placeholder="Ex: 40" required></div>
+            <div class="field"><label>Entradas locais</label><input type="number" id="ms_in" min="0" step="1" placeholder="Ex: 32" required></div>
+            <div class="field"><label>Saídas locais</label><input type="number" id="ms_out" min="0" step="1" placeholder="Ex: 16" required></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label>Buses/subgrupos totais</label><input type="number" id="ms_buses" min="0" step="1" placeholder="Ex: 20" required></div>
+            <div class="field"><label>Consumo elétrico (W)</label><input type="number" id="ms_consumo" min="0" step="1" placeholder="Ex: 150" required></div>
+          </div>
+          <label class="checkbox-row">
+            <input type="checkbox" id="ms_semExpansao">
+            <span class="cb-text">Esta mesa <strong>não</strong> tem expansão via rack/stagebox<small>Marque para mesas compactas ou analógicas sem entrada de stagebox digital.</small></span>
+          </label>
+          <div class="row2" id="ms_expansaoCampos">
+            <div class="field"><label>Rack/stagebox de expansão padrão</label><select id="ms_expTipo"></select></div>
+            <div class="field"><label>Quantidade máxima de racks</label><input type="number" id="ms_expMax" min="1" step="1" placeholder="Ex: 2"></div>
+          </div>
+          <div class="field"><label>Descrição curta (opcional)</label><input type="text" id="ms_desc" placeholder="Se deixar em branco, geramos uma automaticamente">
+            <span class="hint">Aparece na calculadora junto ao nome da mesa.</span>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-add" id="ms_submitBtn">+ Adicionar mesa</button>
+            <button type="button" class="btn-ghost" id="ms_cancelBtn" style="display:none;">Cancelar edição</button>
+            <span class="form-msg" id="ms_msg"></span>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <p class="section-title">Minhas mesas cadastradas <span class="sub" id="ms_count"></span></p>
+        <div class="table-wrap"><table><thead><tr><th>Marca</th><th>Modelo</th><th class="num">Canais</th><th class="num">Entr./Saíd.</th><th class="num">Consumo</th><th></th></tr></thead><tbody id="ms_tbody"></tbody></table></div>
+      </div>
+      <details class="ref-box">
+        <summary>Ver as mesas que já vêm prontas na calculadora de Som <span id="ms_refCount" class="sub"></span></summary>
+        <div class="ref-body">
+          <p class="note">Referência — não editável aqui.</p>
+          <div class="table-wrap"><table><thead><tr><th>Marca</th><th>Modelo</th><th class="num">Canais</th><th class="num">Entr./Saíd.</th><th class="num">Consumo</th><th>Expansão</th></tr></thead><tbody id="ms_refTbody"></tbody></table></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="cat-panel" id="panel-stagesSom">
+      <div class="card">
+        <p class="section-title">Novo rack / stagebox de expansão</p>
+        <form id="formStages">
+          <div class="row2">
+            <div class="field"><label>Marca</label><input type="text" id="st_marca" placeholder="Ex: Midas" required></div>
+            <div class="field"><label>Modelo</label><input type="text" id="st_modelo" placeholder="Ex: DL251" required></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label>Entradas</label><input type="number" id="st_in" min="0" step="1" placeholder="Ex: 48" required></div>
+            <div class="field"><label>Saídas</label><input type="number" id="st_out" min="0" step="1" placeholder="Ex: 16" required></div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-add" id="st_submitBtn">+ Adicionar stage</button>
+            <button type="button" class="btn-ghost" id="st_cancelBtn" style="display:none;">Cancelar edição</button>
+            <span class="form-msg" id="st_msg"></span>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <p class="section-title">Meus racks/stageboxes cadastrados <span class="sub" id="st_count"></span></p>
+        <div class="table-wrap"><table><thead><tr><th>Modelo</th><th class="num">Entradas</th><th class="num">Saídas</th><th></th></tr></thead><tbody id="st_tbody"></tbody></table></div>
+      </div>
+      <details class="ref-box">
+        <summary>Ver os racks/stageboxes que já vêm prontos <span id="st_refCount" class="sub"></span></summary>
+        <div class="ref-body">
+          <p class="note">Referência — não editável aqui. Estes ficam disponíveis também no campo "Rack/stagebox de expansão padrão" ao cadastrar uma mesa de som.</p>
+          <div class="table-wrap"><table><thead><tr><th>Modelo</th><th class="num">Entradas</th><th class="num">Saídas</th></tr></thead><tbody id="st_refTbody"></tbody></table></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="cat-panel" id="panel-aparelhosLuz">
+      <div class="card">
+        <p class="section-title">Novo aparelho de iluminação</p>
+        <form id="formAparelhosLuz">
+          <div class="row2">
+            <div class="field"><label>Marca</label><input type="text" id="al_marca" placeholder="Ex: Chauvet" required></div>
+            <div class="field"><label>Modelo</label><input type="text" id="al_modelo" placeholder="Ex: Rogue R2 Wash" required></div>
+          </div>
+          <div class="row4">
+            <div class="field"><label>Potência (W)</label><input type="number" id="al_watts" min="0" step="1" placeholder="Ex: 350" required></div>
+            <div class="field"><label>Peso (kg)</label><input type="number" id="al_peso" min="0" step="0.1" placeholder="Ex: 9" required></div>
+            <div class="field"><label>Canais DMX</label><input type="number" id="al_dmx" min="1" step="1" placeholder="Ex: 16" required></div>
+            <div class="field"><label>Por flight case</label><input type="number" id="al_case" min="1" step="1" placeholder="Opcional"></div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-add" id="al_submitBtn">+ Adicionar aparelho</button>
+            <button type="button" class="btn-ghost" id="al_cancelBtn" style="display:none;">Cancelar edição</button>
+            <span class="form-msg" id="al_msg"></span>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <p class="section-title">Meus aparelhos cadastrados <span class="sub" id="al_count"></span></p>
+        <div class="table-wrap"><table><thead><tr><th>Modelo</th><th class="num">Potência</th><th class="num">Peso</th><th class="num">DMX</th><th class="num">Por case</th><th></th></tr></thead><tbody id="al_tbody"></tbody></table></div>
+      </div>
+      <details class="ref-box">
+        <summary>Ver os aparelhos que já vêm prontos na calculadora de Luz <span id="al_refCount" class="sub"></span></summary>
+        <div class="ref-body">
+          <p class="note">Referência — não editável aqui.</p>
+          <div class="table-wrap"><table><thead><tr><th>Modelo</th><th class="num">Potência</th><th class="num">Peso</th><th class="num">DMX</th><th class="num">Por case</th></tr></thead><tbody id="al_refTbody"></tbody></table></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="cat-panel" id="panel-mesasLuz">
+      <div class="card">
+        <p class="section-title">Nova mesa de luz</p>
+        <form id="formMesasLuz">
+          <div class="row2">
+            <div class="field"><label>Marca</label><input type="text" id="ml_marca" placeholder="Ex: Avolites" required></div>
+            <div class="field"><label>Modelo</label><input type="text" id="ml_modelo" placeholder="Ex: Tiger Touch II" required></div>
+          </div>
+          <div class="row3">
+            <div class="field"><label>Parâmetros</label><input type="number" id="ml_parametros" min="1" step="1" placeholder="Ex: 4096" required></div>
+            <div class="field"><label>Saídas DMX</label><input type="number" id="ml_saidas" min="1" step="1" placeholder="Ex: 4" required></div>
+            <div class="field"><label>Aparelhos máx. (opcional)</label><input type="number" id="ml_aparelhosMax" min="1" step="1" placeholder="Sem limite definido"></div>
+          </div>
+          <div class="field"><label>Descrição curta (opcional)</label><input type="text" id="ml_desc" placeholder="Se deixar em branco, geramos uma automaticamente"></div>
+          <div class="form-actions">
+            <button type="submit" class="btn-add" id="ml_submitBtn">+ Adicionar mesa</button>
+            <button type="button" class="btn-ghost" id="ml_cancelBtn" style="display:none;">Cancelar edição</button>
+            <span class="form-msg" id="ml_msg"></span>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <p class="section-title">Minhas mesas de luz cadastradas <span class="sub" id="ml_count"></span></p>
+        <div class="table-wrap"><table><thead><tr><th>Modelo</th><th class="num">Parâmetros</th><th class="num">Saídas DMX</th><th></th></tr></thead><tbody id="ml_tbody"></tbody></table></div>
+      </div>
+      <details class="ref-box">
+        <summary>Ver as mesas que já vêm prontas na calculadora de Luz <span id="ml_refCount" class="sub"></span></summary>
+        <div class="ref-body">
+          <p class="note">Referência — não editável aqui.</p>
+          <div class="table-wrap"><table><thead><tr><th>Modelo</th><th class="num">Parâmetros</th><th class="num">Saídas DMX</th></tr></thead><tbody id="ml_refTbody"></tbody></table></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="cat-panel" id="panel-pitchesLed">
+      <div class="card">
+        <p class="section-title">Novo pixel pitch de painel de LED</p>
+        <form id="formPitches">
+          <div class="field"><label>Pixel pitch (mm)</label><input type="text" id="pl_pitch" placeholder="Ex: 3.9" required>
+            <span class="hint">Use ponto para decimais (ex: 3.9), igual aparece nas fichas técnicas.</span>
+          </div>
+          <div class="row2">
+            <div class="field"><label>Peso da placa 50x100cm (kg)</label><input type="number" id="pl_peso100" min="0" step="0.1" placeholder="Ex: 13.5" required></div>
+            <div class="field"><label>Peso da placa 50x50cm (kg)</label><input type="number" id="pl_peso50" min="0" step="0.1" placeholder="Ex: 8" required></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label>Potência máxima indoor (W/m²)</label><input type="number" id="pl_indoor" min="0" step="1" placeholder="Ex: 550" required></div>
+            <div class="field"><label>Potência máxima outdoor (W/m²)</label><input type="number" id="pl_outdoor" min="0" step="1" placeholder="Ex: 700" required></div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-add" id="pl_submitBtn">+ Adicionar pitch</button>
+            <button type="button" class="btn-ghost" id="pl_cancelBtn" style="display:none;">Cancelar edição</button>
+            <span class="form-msg" id="pl_msg"></span>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <p class="section-title">Meus pitches cadastrados <span class="sub" id="pl_count"></span></p>
+        <div class="table-wrap"><table><thead><tr><th>Pitch</th><th class="num">Peso 50x100</th><th class="num">Peso 50x50</th><th class="num">Indoor</th><th class="num">Outdoor</th><th></th></tr></thead><tbody id="pl_tbody"></tbody></table></div>
+      </div>
+      <details class="ref-box">
+        <summary>Ver os pitches que já vêm prontos na calculadora de Vídeo <span id="pl_refCount" class="sub"></span></summary>
+        <div class="ref-body">
+          <p class="note">Referência — não editável aqui.</p>
+          <div class="table-wrap"><table><thead><tr><th>Pitch</th><th class="num">Peso 50x100</th><th class="num">Peso 50x50</th><th class="num">Indoor</th><th class="num">Outdoor</th></tr></thead><tbody id="pl_refTbody"></tbody></table></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="cat-panel" id="panel-processadoras">
+      <div class="card">
+        <p class="section-title">Nova processadora de vídeo</p>
+        <form id="formProcessadoras">
+          <div class="field"><label>Nome</label><input type="text" id="pr_nome" placeholder="Ex: VX4S" required></div>
+          <div class="row3">
+            <div class="field"><label>Capacidade máxima (pixels)</label><input type="number" id="pr_maxpixels" min="1" step="1" placeholder="Ex: 2600000" required></div>
+            <div class="field"><label>Entrada máx. — largura (px)</label><input type="number" id="pr_inw" min="1" step="1" placeholder="Ex: 1920" required></div>
+            <div class="field"><label>Entrada máx. — altura (px)</label><input type="number" id="pr_inh" min="1" step="1" placeholder="Ex: 1200" required></div>
+          </div>
+          <label class="checkbox-row">
+            <input type="checkbox" id="pr_serieH">
+            <span class="cb-text">É uma processadora modular (tipo série H, com cartões de saída plugáveis)<small>Marque se ela usa cartões de saída, cada um com várias portas RJ45.</small></span>
+          </label>
+          <div class="row2" id="pr_simplesCampos">
+            <div class="field"><label>Portas de saída (total)</label><input type="number" id="pr_outports" min="1" step="1" placeholder="Ex: 4"></div>
+          </div>
+          <div class="row2" id="pr_serieHCampos" style="display:none;">
+            <div class="field"><label>Cartões de saída (máx.)</label><input type="number" id="pr_outcards" min="1" step="1" placeholder="Ex: 2"></div>
+            <div class="field"><label>Portas por cartão</label><input type="number" id="pr_portspercard" min="1" step="1" placeholder="Ex: 20"></div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-add" id="pr_submitBtn">+ Adicionar processadora</button>
+            <button type="button" class="btn-ghost" id="pr_cancelBtn" style="display:none;">Cancelar edição</button>
+            <span class="form-msg" id="pr_msg"></span>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <p class="section-title">Minhas processadoras cadastradas <span class="sub" id="pr_count"></span></p>
+        <div class="table-wrap"><table><thead><tr><th>Nome</th><th class="num">Pixels máx.</th><th class="num">Entrada máx.</th><th class="num">Portas</th><th></th></tr></thead><tbody id="pr_tbody"></tbody></table></div>
+      </div>
+      <details class="ref-box">
+        <summary>Ver as processadoras que já vêm prontas na calculadora de Vídeo <span id="pr_refCount" class="sub"></span></summary>
+        <div class="ref-body">
+          <p class="note">Referência — não editável aqui.</p>
+          <div class="table-wrap"><table><thead><tr><th>Nome</th><th class="num">Pixels máx.</th><th class="num">Entrada máx.</th><th class="num">Portas</th></tr></thead><tbody id="pr_refTbody"></tbody></table></div>
+        </div>
+      </details>
+    </div>
+    `;
+  }
+
+
+  const $ = id => document.getElementById(id);
+  const M = window.MMCatalogo;
+
+  function num(v){ const n = parseFloat(String(v==null?'':v).replace(',', '.')); return isNaN(n) ? 0 : n; }
+  function fmtNum(n){ return Number(n||0).toLocaleString('pt-BR', { maximumFractionDigits: 2 }); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  let dados = M ? M.carregar() : { caixas:{}, mesasSom:{}, stagesSom:{}, aparelhosLuz:{}, mesasLuz:{}, pitchesLed:{}, processadoras:{} };
+  function persistir(){ if (M) M.salvar(dados); if(window.MMAuth) MMAuth.saveCatalog(dados).catch(function(e){ console.error(e); alert('Não foi possível salvar no banco online: '+(e.message||e)); }); }
+
+  function showMsg(id, texto, isErr){
+    const el = $(id);
+    el.textContent = texto;
+    el.classList.remove('err');
+    if (isErr) el.classList.add('err');
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2600);
+  }
+
+  function confirmarRemocao(nome){
+    return window.confirm('Remover "' + nome + '" do catálogo? Isso não afeta cálculos já feitos, só some da lista de opções.');
+  }
+
+  function renderTable(tbodyId, itemsArr, cols, onEdit, onRemove){
+    const tbody = $(tbodyId);
+    if (!itemsArr.length){
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="' + (cols.length + 1) + '">Nenhum item cadastrado ainda.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = itemsArr.map(function (row) {
+      const tds = cols.map(function (c) { return '<td class="' + (c.num ? 'num' : '') + '">' + c.get(row.item) + '</td>'; }).join('');
+      return '<tr>' + tds + '<td><div class="row-actions">' +
+        '<button type="button" class="btn-edit" data-edit="' + esc(row.key) + '" title="Editar">&#9998;</button>' +
+        '<button type="button" class="btn-remove" data-remove="' + esc(row.key) + '" title="Remover">&times;</button>' +
+        '</div></td></tr>';
+    }).join('');
+    tbody.querySelectorAll('[data-edit]').forEach(function (b) { b.addEventListener('click', function () { onEdit(b.dataset.edit); }); });
+    tbody.querySelectorAll('[data-remove]').forEach(function (b) { b.addEventListener('click', function () { onRemove(b.dataset.remove); }); });
+  }
+
+  function renderRefTable(tbodyId, refArr, cols){
+    const tbody = $(tbodyId);
+    tbody.innerHTML = refArr.map(function (item) {
+      return '<tr>' + cols.map(function (c) { return '<td class="' + (c.num ? 'num' : '') + '">' + c.get(item) + '</td>'; }).join('') + '</tr>';
+    }).join('');
+  }
+
+  function toRows(obj){
+    return Object.keys(obj).map(function (k) { return { key: k, item: obj[k] }; });
+  }
+
+  // ===================== abas =====================
+  const CATS = [
+    { id: 'caixas', icon: '&#128266;', nome: 'Caixas de Som' },
+    { id: 'mesasSom', icon: '&#127925;', nome: 'Mesas de Som' },
+    { id: 'stagesSom', icon: '&#128225;', nome: 'Stage / Expansão' },
+    { id: 'aparelhosLuz', icon: '&#128161;', nome: 'Aparelhos de Luz' },
+    { id: 'mesasLuz', icon: '&#127925;', nome: 'Mesas de Luz' },
+    { id: 'pitchesLed', icon: '&#128998;', nome: 'Pitch de LED' },
+    { id: 'processadoras', icon: '&#128421;', nome: 'Processadoras' }
+  ];
+
+  function buildTabs(){
+    $('catTabs').innerHTML = CATS.map(function (c, i) {
+      return '<button type="button" data-cat="' + c.id + '" class="' + (i === 0 ? 'active' : '') + '">' + c.icon + ' ' + c.nome + '</button>';
+    }).join('');
+    $('catTabs').querySelectorAll('button').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        $('catTabs').querySelectorAll('button').forEach(function (b) { b.classList.toggle('active', b === btn); });
+        document.querySelectorAll('.cat-panel').forEach(function (p) { p.classList.toggle('active', p.id === 'panel-' + btn.dataset.cat); });
+      });
+    });
+  }
+
+  // ===================== Caixas de Som =====================
+  let cxEditando = null;
+  function cxColunas(){
+    return [
+      { label: 'Modelo', get: function (i) { return esc(i.label); } },
+      { label: 'Potência', get: function (i) { return fmtNum(i.watts) + ' W'; }, num: true },
+      { label: 'Peso', get: function (i) { return fmtNum(i.peso) + ' kg'; }, num: true },
+      { label: 'Por case', get: function (i) { return i.casePor ? i.casePor : '—'; }, num: true }
+    ];
+  }
+  function cxRender(){
+    const rows = toRows(dados.caixas);
+    $('cx_count').textContent = rows.length ? '(' + rows.length + ')' : '';
+    renderTable('cx_tbody', rows, cxColunas(), cxEditar, cxRemover);
+    $('cx_refCount').textContent = '(' + REF_CAIXAS.length + ')';
+    renderRefTable('cx_refTbody', REF_CAIXAS, cxColunas());
+  }
+  function cxLimparForm(){
+    $('formCaixas').reset();
+    cxEditando = null;
+    $('cx_submitBtn').textContent = '+ Adicionar caixa';
+    $('cx_cancelBtn').style.display = 'none';
+  }
+  function cxEditar(key){
+    const item = dados.caixas[key];
+    if (!item) return;
+    $('cx_marca').value = item.marca || '';
+    $('cx_modelo').value = item.modelo || '';
+    $('cx_detalhe').value = item.detalhe || '';
+    $('cx_watts').value = item.watts;
+    $('cx_peso').value = item.peso;
+    $('cx_case').value = item.casePor || '';
+    cxEditando = key;
+    $('cx_submitBtn').textContent = 'Salvar alterações';
+    $('cx_cancelBtn').style.display = 'inline-block';
+    window.scrollTo({ top: $('formCaixas').getBoundingClientRect().top + window.scrollY - 20, behavior: 'smooth' });
+  }
+  function cxRemover(key){
+    const item = dados.caixas[key];
+    if (!item || !confirmarRemocao(item.label)) return;
+    delete dados.caixas[key];
+    persistir();
+    cxRender();
+  }
+  function cxSubmit(e){
+    e.preventDefault();
+    const marca = $('cx_marca').value.trim();
+    const modelo = $('cx_modelo').value.trim();
+    const detalhe = $('cx_detalhe').value.trim();
+    const watts = $('cx_watts').value;
+    const peso = $('cx_peso').value;
+    const casePorRaw = $('cx_case').value;
+    if (!marca || !modelo || watts === '' || peso === '') { showMsg('cx_msg', 'Preencha marca, modelo, potência e peso.', true); return; }
+    const label = marca + ' ' + modelo + (detalhe ? ' (' + detalhe + ')' : '');
+    const item = { label: label, marca: marca, modelo: modelo, detalhe: detalhe, watts: num(watts), peso: num(peso), casePor: casePorRaw ? num(casePorRaw) : null };
+    const key = cxEditando || M.chaveUnica(marca + '_' + modelo, 'c_', dados.caixas);
+    dados.caixas[key] = item;
+    persistir();
+    cxRender();
+    showMsg('cx_msg', cxEditando ? 'Alterações salvas.' : 'Caixa adicionada.');
+    cxLimparForm();
+  }
+
+  // ===================== Mesas de Som =====================
+  let msEditando = null;
+  function msExpansaoOptions(){
+    const opts = Object.assign({}, REF_EXPANSOES, dados.stagesSom);
+    return opts;
+  }
+  function msBuildExpSelect(selecionado){
+    const opts = msExpansaoOptions();
+    $('ms_expTipo').innerHTML = Object.keys(opts).map(function (k) {
+      const e = opts[k];
+      return '<option value="' + k + '"' + (k === selecionado ? ' selected' : '') + '>' + esc(e.label) + ' (' + e.in + ' in / ' + e.out + ' out)</option>';
+    }).join('');
+  }
+  function msUpdateExpansaoUI(){
+    const semExp = $('ms_semExpansao').checked;
+    $('ms_expansaoCampos').style.display = semExp ? 'none' : 'grid';
+  }
+  function msBuildMarcasDatalist(){
+    const marcas = REF_MARCAS_MESA_SOM.slice();
+    Object.keys(dados.mesasSom).forEach(function (k) {
+      const marca = dados.mesasSom[k].marca;
+      if (marca && marcas.indexOf(marca) === -1) marcas.push(marca);
+    });
+    $('ms_marcas').innerHTML = marcas.map(function (m) { return '<option value="' + esc(m) + '">'; }).join('');
+  }
+  function msColunas(){
+    return [
+      { label: 'Marca', get: function (i) { return esc(i.marca || '—'); } },
+      { label: 'Modelo', get: function (i) { return esc(i.label); } },
+      { label: 'Canais', get: function (i) { return i.maxCh; }, num: true },
+      { label: 'E/S', get: function (i) { return i.inputsLocal + '/' + i.outputsLocal; }, num: true },
+      { label: 'Consumo', get: function (i) { return fmtNum(i.consumo) + ' W'; }, num: true }
+    ];
+  }
+  function msRender(){
+    const rows = toRows(dados.mesasSom);
+    $('ms_count').textContent = rows.length ? '(' + rows.length + ')' : '';
+    renderTable('ms_tbody', rows, msColunas(), msEditar, msRemover);
+    $('ms_refCount').textContent = '(' + REF_CONSOLES_SOM.length + ')';
+    renderRefTable('ms_refTbody', REF_CONSOLES_SOM, [
+      { label: 'Marca', get: function (i) { return esc(i.marca); } },
+      { label: 'Modelo', get: function (i) { return esc(i.label); } },
+      { label: 'Canais', get: function (i) { return i.maxCh; }, num: true },
+      { label: 'E/S', get: function (i) { return i.inputsLocal + '/' + i.outputsLocal; }, num: true },
+      { label: 'Consumo', get: function (i) { return fmtNum(i.consumo) + ' W'; }, num: true },
+      { label: 'Expansão', get: function (i) { return i.noExpansion ? 'sem expansão' : esc(i.expansaoLabel || '—') + (i.expansaoMax ? ' (até ' + i.expansaoMax + ')' : ''); } }
+    ]);
+    msBuildMarcasDatalist();
+  }
+  function msLimparForm(){
+    $('formMesasSom').reset();
+    msEditando = null;
+    $('ms_submitBtn').textContent = '+ Adicionar mesa';
+    $('ms_cancelBtn').style.display = 'none';
+    msBuildExpSelect();
+    msUpdateExpansaoUI();
+  }
+  function msEditar(key){
+    const item = dados.mesasSom[key];
+    if (!item) return;
+    $('ms_marca').value = item.marca || '';
+    $('ms_modelo').value = item.label || '';
+    $('ms_maxch').value = item.maxCh;
+    $('ms_in').value = item.inputsLocal;
+    $('ms_out').value = item.outputsLocal;
+    $('ms_buses').value = item.busesTotal;
+    $('ms_consumo').value = item.consumo;
+    $('ms_desc').value = item.desc || '';
+    $('ms_semExpansao').checked = !!item.noExpansion;
+    msBuildExpSelect(item.expansaoPadrao);
+    $('ms_expMax').value = item.expansaoMax || '';
+    msUpdateExpansaoUI();
+    msEditando = key;
+    $('ms_submitBtn').textContent = 'Salvar alterações';
+    $('ms_cancelBtn').style.display = 'inline-block';
+    window.scrollTo({ top: $('formMesasSom').getBoundingClientRect().top + window.scrollY - 20, behavior: 'smooth' });
+  }
+  function msRemover(key){
+    const item = dados.mesasSom[key];
+    if (!item || !confirmarRemocao(item.label)) return;
+    delete dados.mesasSom[key];
+    persistir();
+    msRender();
+  }
+  function msSubmit(e){
+    e.preventDefault();
+    const marca = $('ms_marca').value.trim();
+    const modelo = $('ms_modelo').value.trim();
+    const maxCh = $('ms_maxch').value, inputsLocal = $('ms_in').value, outputsLocal = $('ms_out').value;
+    const buses = $('ms_buses').value, consumo = $('ms_consumo').value;
+    const semExp = $('ms_semExpansao').checked;
+    if (!marca || !modelo || maxCh === '' || inputsLocal === '' || outputsLocal === '' || buses === '' || consumo === '') {
+      showMsg('ms_msg', 'Preencha marca, modelo e todos os campos numéricos.', true); return;
+    }
+    const item = {
+      marca: marca,
+      label: modelo,
+      maxCh: num(maxCh), inputsLocal: num(inputsLocal), outputsLocal: num(outputsLocal),
+      busesTotal: num(buses), consumo: num(consumo)
+    };
+    if (semExp) {
+      item.noExpansion = true;
+      item.desc = $('ms_desc').value.trim() || (item.maxCh + ' canais mixáveis · ' + item.inputsLocal + ' entradas / ' + item.outputsLocal + ' saídas locais · sem expansão');
+    } else {
+      const expTipo = $('ms_expTipo').value;
+      const expMax = $('ms_expMax').value;
+      if (!expTipo || !expMax) { showMsg('ms_msg', 'Escolha o rack de expansão e a quantidade máxima (ou marque "sem expansão").', true); return; }
+      item.expansaoPadrao = expTipo;
+      item.expansaoMax = num(expMax);
+      const opts = msExpansaoOptions();
+      const expLabel = opts[expTipo] ? opts[expTipo].label : expTipo;
+      item.desc = $('ms_desc').value.trim() || (item.maxCh + ' canais mixáveis · ' + item.inputsLocal + ' entradas / ' + item.outputsLocal + ' saídas locais · expansível com ' + expLabel);
+    }
+    const key = msEditando || M.chaveUnica(marca + '_' + modelo, 'c_', dados.mesasSom);
+    dados.mesasSom[key] = item;
+    persistir();
+    msRender();
+    showMsg('ms_msg', msEditando ? 'Alterações salvas.' : 'Mesa adicionada.');
+    msLimparForm();
+  }
+
+  // ===================== Stage / Expansão de Som =====================
+  let stEditando = null;
+  function stColunas(){
+    return [
+      { label: 'Modelo', get: function (i) { return esc(i.label); } },
+      { label: 'Entradas', get: function (i) { return i.in; }, num: true },
+      { label: 'Saídas', get: function (i) { return i.out; }, num: true }
+    ];
+  }
+  function stRender(){
+    const rows = toRows(dados.stagesSom);
+    $('st_count').textContent = rows.length ? '(' + rows.length + ')' : '';
+    renderTable('st_tbody', rows, stColunas(), stEditar, stRemover);
+    const refRows = Object.keys(REF_EXPANSOES).map(function (k) { return REF_EXPANSOES[k]; });
+    $('st_refCount').textContent = '(' + refRows.length + ')';
+    renderRefTable('st_refTbody', refRows, stColunas());
+    msBuildExpSelect(msEditando ? dados.mesasSom[msEditando].expansaoPadrao : undefined);
+  }
+  function stLimparForm(){
+    $('formStages').reset();
+    stEditando = null;
+    $('st_submitBtn').textContent = '+ Adicionar stage';
+    $('st_cancelBtn').style.display = 'none';
+  }
+  function stEditar(key){
+    const item = dados.stagesSom[key];
+    if (!item) return;
+    $('st_marca').value = item.marca || '';
+    $('st_modelo').value = item.modelo || '';
+    $('st_in').value = item.in;
+    $('st_out').value = item.out;
+    stEditando = key;
+    $('st_submitBtn').textContent = 'Salvar alterações';
+    $('st_cancelBtn').style.display = 'inline-block';
+    window.scrollTo({ top: $('formStages').getBoundingClientRect().top + window.scrollY - 20, behavior: 'smooth' });
+  }
+  function stRemover(key){
+    const item = dados.stagesSom[key];
+    if (!item) return;
+    const dependentes = Object.keys(dados.mesasSom).filter(function (k) { return dados.mesasSom[k].expansaoPadrao === key; }).map(function (k) { return dados.mesasSom[k].label; });
+    if (dependentes.length) {
+      alert('Não é possível remover "' + item.label + '": a(s) mesa(s) ' + dependentes.join(', ') + ' usa(m) este rack como expansão padrão. Edite essa(s) mesa(s) primeiro.');
+      return;
+    }
+    if (!confirmarRemocao(item.label)) return;
+    delete dados.stagesSom[key];
+    persistir();
+    stRender();
+  }
+  function stSubmit(e){
+    e.preventDefault();
+    const marca = $('st_marca').value.trim();
+    const modelo = $('st_modelo').value.trim();
+    const inV = $('st_in').value, outV = $('st_out').value;
+    if (!marca || !modelo || inV === '' || outV === '') { showMsg('st_msg', 'Preencha marca, modelo, entradas e saídas.', true); return; }
+    const item = { label: marca + ' ' + modelo, marca: marca, modelo: modelo, in: num(inV), out: num(outV) };
+    const key = stEditando || M.chaveUnica(marca + '_' + modelo, 'c_', dados.stagesSom);
+    dados.stagesSom[key] = item;
+    persistir();
+    stRender();
+    showMsg('st_msg', stEditando ? 'Alterações salvas.' : 'Stage adicionado.');
+    stLimparForm();
+  }
+
+  // ===================== Aparelhos de Luz =====================
+  let alEditando = null;
+  function alColunas(){
+    return [
+      { label: 'Modelo', get: function (i) { return esc(i.label); } },
+      { label: 'Potência', get: function (i) { return fmtNum(i.watts) + ' W'; }, num: true },
+      { label: 'Peso', get: function (i) { return fmtNum(i.peso) + ' kg'; }, num: true },
+      { label: 'DMX', get: function (i) { return i.dmx; }, num: true },
+      { label: 'Por case', get: function (i) { return i.casePor ? i.casePor : '—'; }, num: true }
+    ];
+  }
+  function alRender(){
+    const rows = toRows(dados.aparelhosLuz);
+    $('al_count').textContent = rows.length ? '(' + rows.length + ')' : '';
+    renderTable('al_tbody', rows, alColunas(), alEditar, alRemover);
+    $('al_refCount').textContent = '(' + REF_EQUIP_LUZ.length + ')';
+    renderRefTable('al_refTbody', REF_EQUIP_LUZ, alColunas());
+  }
+  function alLimparForm(){
+    $('formAparelhosLuz').reset();
+    alEditando = null;
+    $('al_submitBtn').textContent = '+ Adicionar aparelho';
+    $('al_cancelBtn').style.display = 'none';
+  }
+  function alEditar(key){
+    const item = dados.aparelhosLuz[key];
+    if (!item) return;
+    $('al_marca').value = item.marca || '';
+    $('al_modelo').value = item.modelo || '';
+    $('al_watts').value = item.watts;
+    $('al_peso').value = item.peso;
+    $('al_dmx').value = item.dmx;
+    $('al_case').value = item.casePor || '';
+    alEditando = key;
+    $('al_submitBtn').textContent = 'Salvar alterações';
+    $('al_cancelBtn').style.display = 'inline-block';
+    window.scrollTo({ top: $('formAparelhosLuz').getBoundingClientRect().top + window.scrollY - 20, behavior: 'smooth' });
+  }
+  function alRemover(key){
+    const item = dados.aparelhosLuz[key];
+    if (!item || !confirmarRemocao(item.label)) return;
+    delete dados.aparelhosLuz[key];
+    persistir();
+    alRender();
+  }
+  function alSubmit(e){
+    e.preventDefault();
+    const marca = $('al_marca').value.trim();
+    const modelo = $('al_modelo').value.trim();
+    const watts = $('al_watts').value, peso = $('al_peso').value, dmx = $('al_dmx').value;
+    const casePorRaw = $('al_case').value;
+    if (!marca || !modelo || watts === '' || peso === '' || dmx === '') { showMsg('al_msg', 'Preencha marca, modelo, potência, peso e canais DMX.', true); return; }
+    const item = { label: marca + ' ' + modelo, marca: marca, modelo: modelo, watts: num(watts), peso: num(peso), dmx: num(dmx), casePor: casePorRaw ? num(casePorRaw) : null };
+    const key = alEditando || M.chaveUnica(marca + '_' + modelo, 'c_', dados.aparelhosLuz);
+    dados.aparelhosLuz[key] = item;
+    persistir();
+    alRender();
+    showMsg('al_msg', alEditando ? 'Alterações salvas.' : 'Aparelho adicionado.');
+    alLimparForm();
+  }
+
+  // ===================== Mesas de Luz =====================
+  let mlEditando = null;
+  function mlColunas(){
+    return [
+      { label: 'Modelo', get: function (i) { return esc(i.label); } },
+      { label: 'Parâmetros', get: function (i) { return fmtNum(i.parametros); }, num: true },
+      { label: 'Saídas DMX', get: function (i) { return i.saidasDmx; }, num: true }
+    ];
+  }
+  function mlRender(){
+    const rows = toRows(dados.mesasLuz);
+    $('ml_count').textContent = rows.length ? '(' + rows.length + ')' : '';
+    renderTable('ml_tbody', rows, mlColunas(), mlEditar, mlRemover);
+    $('ml_refCount').textContent = '(' + REF_CONSOLES_LUZ.length + ')';
+    renderRefTable('ml_refTbody', REF_CONSOLES_LUZ, mlColunas());
+  }
+  function mlLimparForm(){
+    $('formMesasLuz').reset();
+    mlEditando = null;
+    $('ml_submitBtn').textContent = '+ Adicionar mesa';
+    $('ml_cancelBtn').style.display = 'none';
+  }
+  function mlEditar(key){
+    const item = dados.mesasLuz[key];
+    if (!item) return;
+    $('ml_marca').value = item.marca || '';
+    $('ml_modelo').value = item.modelo || '';
+    $('ml_parametros').value = item.parametros;
+    $('ml_saidas').value = item.saidasDmx;
+    $('ml_aparelhosMax').value = item.aparelhosMax || '';
+    $('ml_desc').value = item.desc || '';
+    mlEditando = key;
+    $('ml_submitBtn').textContent = 'Salvar alterações';
+    $('ml_cancelBtn').style.display = 'inline-block';
+    window.scrollTo({ top: $('formMesasLuz').getBoundingClientRect().top + window.scrollY - 20, behavior: 'smooth' });
+  }
+  function mlRemover(key){
+    const item = dados.mesasLuz[key];
+    if (!item || !confirmarRemocao(item.label)) return;
+    delete dados.mesasLuz[key];
+    persistir();
+    mlRender();
+  }
+  function mlSubmit(e){
+    e.preventDefault();
+    const marca = $('ml_marca').value.trim();
+    const modelo = $('ml_modelo').value.trim();
+    const parametros = $('ml_parametros').value, saidas = $('ml_saidas').value;
+    const aparelhosMaxRaw = $('ml_aparelhosMax').value;
+    if (!marca || !modelo || parametros === '' || saidas === '') { showMsg('ml_msg', 'Preencha marca, modelo, parâmetros e saídas DMX.', true); return; }
+    const item = {
+      label: marca + ' ' + modelo,
+      marca: marca, modelo: modelo,
+      parametros: num(parametros),
+      saidasDmx: num(saidas),
+      aparelhosMax: aparelhosMaxRaw ? num(aparelhosMaxRaw) : undefined
+    };
+    item.desc = $('ml_desc').value.trim() || (fmtNum(item.parametros) + ' parâmetros · ' + item.saidasDmx + ' saída' + (item.saidasDmx === 1 ? '' : 's') + ' DMX');
+    const key = mlEditando || M.chaveUnica(marca + '_' + modelo, 'c_', dados.mesasLuz);
+    dados.mesasLuz[key] = item;
+    persistir();
+    mlRender();
+    showMsg('ml_msg', mlEditando ? 'Alterações salvas.' : 'Mesa adicionada.');
+    mlLimparForm();
+  }
+
+  // ===================== Pitch de LED =====================
+  let plEditando = null;
+  function plColunas(){
+    return [
+      { label: 'Pitch', get: function (i) { return esc(i.label); } },
+      { label: 'Peso 50x100', get: function (i) { return fmtNum(i.peso100) + ' kg'; }, num: true },
+      { label: 'Peso 50x50', get: function (i) { return fmtNum(i.peso50) + ' kg'; }, num: true },
+      { label: 'Indoor', get: function (i) { return fmtNum(i.maxWm2Indoor) + ' W/m²'; }, num: true },
+      { label: 'Outdoor', get: function (i) { return fmtNum(i.maxWm2Outdoor) + ' W/m²'; }, num: true }
+    ];
+  }
+  function plRender(){
+    const rows = toRows(dados.pitchesLed);
+    $('pl_count').textContent = rows.length ? '(' + rows.length + ')' : '';
+    renderTable('pl_tbody', rows, plColunas(), plEditar, plRemover);
+    $('pl_refCount').textContent = '(' + REF_PITCHES.length + ')';
+    renderRefTable('pl_refTbody', REF_PITCHES, plColunas());
+  }
+  function plLimparForm(){
+    $('formPitches').reset();
+    plEditando = null;
+    $('pl_submitBtn').textContent = '+ Adicionar pitch';
+    $('pl_cancelBtn').style.display = 'none';
+  }
+  function plEditar(key){
+    const item = dados.pitchesLed[key];
+    if (!item) return;
+    $('pl_pitch').value = key;
+    $('pl_peso100').value = item.peso100;
+    $('pl_peso50').value = item.peso50;
+    $('pl_indoor').value = item.maxWm2Indoor;
+    $('pl_outdoor').value = item.maxWm2Outdoor;
+    plEditando = key;
+    $('pl_submitBtn').textContent = 'Salvar alterações';
+    $('pl_cancelBtn').style.display = 'inline-block';
+    window.scrollTo({ top: $('formPitches').getBoundingClientRect().top + window.scrollY - 20, behavior: 'smooth' });
+  }
+  function plRemover(key){
+    const item = dados.pitchesLed[key];
+    if (!item || !confirmarRemocao(item.label)) return;
+    delete dados.pitchesLed[key];
+    persistir();
+    plRender();
+  }
+  function plSubmit(e){
+    e.preventDefault();
+    const pitchRaw = $('pl_pitch').value.trim().replace(',', '.');
+    const peso100 = $('pl_peso100').value, peso50 = $('pl_peso50').value;
+    const indoor = $('pl_indoor').value, outdoor = $('pl_outdoor').value;
+    if (!pitchRaw || peso100 === '' || peso50 === '' || indoor === '' || outdoor === '') { showMsg('pl_msg', 'Preencha todos os campos.', true); return; }
+    if (isNaN(parseFloat(pitchRaw))) { showMsg('pl_msg', 'Informe o pitch como número, ex: 3.9', true); return; }
+    const key = plEditando || pitchRaw;
+    if (!plEditando && (dados.pitchesLed[key] || REF_PITCHES.some(function (p) { return p.pitch === key; }))) {
+      showMsg('pl_msg', 'Já existe um pitch P' + key + ' cadastrado. Edite o existente em vez de duplicar.', true); return;
+    }
+    dados.pitchesLed[key] = {
+      label: 'P' + pitchRaw,
+      peso100: num(peso100), peso50: num(peso50),
+      maxWm2Indoor: num(indoor), maxWm2Outdoor: num(outdoor)
+    };
+    persistir();
+    plRender();
+    showMsg('pl_msg', plEditando ? 'Alterações salvas.' : 'Pitch adicionado.');
+    plLimparForm();
+  }
+
+  // ===================== Processadoras =====================
+  let prEditando = null;
+  function prColunas(){
+    return [
+      { label: 'Nome', get: function (i) { return esc(i.nome); } },
+      { label: 'Pixels máx.', get: function (i) { return fmtNum(i.maxPixels); }, num: true },
+      { label: 'Entrada máx.', get: function (i) { return i.maxInputW + '×' + i.maxInputH; }, num: true },
+      { label: 'Portas', get: function (i) { return i.serieH ? (i.outputCards + '×' + i.portsPerCard + ' = ' + i.outputPorts) : i.outputPorts; }, num: true }
+    ];
+  }
+  function prRender(){
+    const rows = toRows(dados.processadoras);
+    $('pr_count').textContent = rows.length ? '(' + rows.length + ')' : '';
+    renderTable('pr_tbody', rows, prColunas(), prEditar, prRemover);
+    $('pr_refCount').textContent = '(' + REF_PROCESSADORAS.length + ')';
+    renderRefTable('pr_refTbody', REF_PROCESSADORAS, prColunas());
+  }
+  function prUpdateUI(){
+    const serieH = $('pr_serieH').checked;
+    $('pr_simplesCampos').style.display = serieH ? 'none' : 'grid';
+    $('pr_serieHCampos').style.display = serieH ? 'grid' : 'none';
+  }
+  function prLimparForm(){
+    $('formProcessadoras').reset();
+    prEditando = null;
+    $('pr_submitBtn').textContent = '+ Adicionar processadora';
+    $('pr_cancelBtn').style.display = 'none';
+    prUpdateUI();
+  }
+  function prEditar(key){
+    const item = dados.processadoras[key];
+    if (!item) return;
+    $('pr_nome').value = item.nome;
+    $('pr_maxpixels').value = item.maxPixels;
+    $('pr_inw').value = item.maxInputW;
+    $('pr_inh').value = item.maxInputH;
+    $('pr_serieH').checked = !!item.serieH;
+    $('pr_outports').value = item.serieH ? '' : item.outputPorts;
+    $('pr_outcards').value = item.serieH ? item.outputCards : '';
+    $('pr_portspercard').value = item.serieH ? item.portsPerCard : '';
+    prUpdateUI();
+    prEditando = key;
+    $('pr_submitBtn').textContent = 'Salvar alterações';
+    $('pr_cancelBtn').style.display = 'inline-block';
+    window.scrollTo({ top: $('formProcessadoras').getBoundingClientRect().top + window.scrollY - 20, behavior: 'smooth' });
+  }
+  function prRemover(key){
+    const item = dados.processadoras[key];
+    if (!item || !confirmarRemocao(item.nome)) return;
+    delete dados.processadoras[key];
+    persistir();
+    prRender();
+  }
+  function prSubmit(e){
+    e.preventDefault();
+    const nome = $('pr_nome').value.trim();
+    const maxPixels = $('pr_maxpixels').value, inw = $('pr_inw').value, inh = $('pr_inh').value;
+    const serieH = $('pr_serieH').checked;
+    if (!nome || maxPixels === '' || inw === '' || inh === '') { showMsg('pr_msg', 'Preencha nome, pixels máximos e a resolução máxima de entrada.', true); return; }
+    const item = { nome: nome, maxPixels: num(maxPixels), maxInputW: num(inw), maxInputH: num(inh), serieH: serieH };
+    if (serieH) {
+      const outcards = $('pr_outcards').value, portspercard = $('pr_portspercard').value;
+      if (!outcards || !portspercard) { showMsg('pr_msg', 'Preencha cartões de saída e portas por cartão.', true); return; }
+      item.outputCards = num(outcards);
+      item.portsPerCard = num(portspercard);
+      item.outputPorts = item.outputCards * item.portsPerCard;
+    } else {
+      const outports = $('pr_outports').value;
+      if (!outports) { showMsg('pr_msg', 'Preencha a quantidade de portas de saída.', true); return; }
+      item.outputPorts = num(outports);
+    }
+    const key = prEditando || M.chaveUnica(nome, 'c_', dados.processadoras);
+    dados.processadoras[key] = item;
+    persistir();
+    prRender();
+    showMsg('pr_msg', prEditando ? 'Alterações salvas.' : 'Processadora adicionada.');
+    prLimparForm();
+  }
+
+  // ===================== backup: exportar / importar =====================
+  function exportarBackup(){
+    const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dt = new Date();
+    const stamp = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+    a.href = url;
+    a.download = 'catalogo-equipamentos-' + stamp + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  function importarBackup(file){
+    const reader = new FileReader();
+    reader.onload = function () {
+      try {
+        const novo = JSON.parse(reader.result);
+        const base = M ? M.vazio() : dados;
+        Object.keys(base).forEach(function (k) {
+          if (novo[k] && typeof novo[k] === 'object') {
+            dados[k] = Object.assign({}, dados[k], novo[k]);
+          }
+        });
+        persistir();
+        renderTudo();
+        alert('Backup importado com sucesso.');
+      } catch (e) {
+        alert('Não foi possível ler esse arquivo. Verifique se é um backup exportado por esta mesma página.');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function renderTudo(){
+    cxRender();
+    msRender();
+    stRender();
+    alRender();
+    mlRender();
+    plRender();
+    prRender();
+  }
+
+  function init(){
+    buildTabs();
+    $('catPanels').innerHTML = panelsHTML();
+
+    $('formCaixas').addEventListener('submit', cxSubmit);
+    $('cx_cancelBtn').addEventListener('click', cxLimparForm);
+
+    $('formMesasSom').addEventListener('submit', msSubmit);
+    $('ms_cancelBtn').addEventListener('click', msLimparForm);
+    $('ms_semExpansao').addEventListener('change', msUpdateExpansaoUI);
+    msBuildExpSelect();
+    msUpdateExpansaoUI();
+
+    $('formStages').addEventListener('submit', stSubmit);
+    $('st_cancelBtn').addEventListener('click', stLimparForm);
+
+    $('formAparelhosLuz').addEventListener('submit', alSubmit);
+    $('al_cancelBtn').addEventListener('click', alLimparForm);
+
+    $('formMesasLuz').addEventListener('submit', mlSubmit);
+    $('ml_cancelBtn').addEventListener('click', mlLimparForm);
+
+    $('formPitches').addEventListener('submit', plSubmit);
+    $('pl_cancelBtn').addEventListener('click', plLimparForm);
+
+    $('formProcessadoras').addEventListener('submit', prSubmit);
+    $('pr_cancelBtn').addEventListener('click', prLimparForm);
+    $('pr_serieH').addEventListener('change', prUpdateUI);
+    prUpdateUI();
+
+    $('btnExportar').addEventListener('click', exportarBackup);
+    $('btnImportarTrigger').addEventListener('click', function () { $('inputImportar').click(); });
+    $('inputImportar').addEventListener('change', function (e) {
+      if (e.target.files && e.target.files[0]) importarBackup(e.target.files[0]);
+      e.target.value = '';
+    });
+
+    renderTudo();
+  }
+
+  init();
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pré Produção de Som — cscalculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="catalogo-dados.js"></script>
+<style>
+  :root{
+    --bg: #0a0a0b;
+    --panel: #131315;
+    --panel-2: #1a1a1d;
+    --line: #29292d;
+    --text: #f3f1ec;
+    --muted: #8c8c91;
+    --power: #4a9fc9;
+    --signal: #e08a7d;
+    --weight: #a83f34;
+    --ok: #7cae83;
+    --som: #d6473c;
+    --accent: var(--som);
+    --accent-ink: #fdf1ef;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    line-height:1.5;
+  }
+  h1,h2,h3,.disp{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+
+  header{
+    border-bottom:1px solid var(--line);
+    background:
+      radial-gradient(ellipse 900px 300px at 15% 0%, rgba(214,71,60,0.12), transparent 70%);
+  }
+  header .header-inner{
+    max-width:1100px;
+    margin:0 auto;
+    padding:44px 20px 32px;
+  }
+  .back-link{
+    display:inline-block;
+    color:var(--muted);
+    text-decoration:none;
+    font-size:13px;
+    font-weight:500;
+    margin-bottom:18px;
+  }
+  .back-link:hover{ color:var(--accent); }
+  header .tag{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    color:var(--accent);
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    margin:0 0 14px;
+  }
+  header .tag::before{
+    content:'';
+    width:6px; height:6px;
+    background:var(--accent);
+    border-radius:1px;
+    display:inline-block;
+  }
+  header h1{
+    font-size:32px;
+    margin:0 0 10px;
+    line-height:1.12;
+    max-width:26ch;
+  }
+  header p{
+    color:var(--muted);
+    margin:0;
+    font-size:14.5px;
+    max-width:64ch;
+  }
+
+  html{ scroll-behavior:smooth; }
+
+  .layout{
+    display:flex;
+    max-width:1400px;
+    margin:0 auto;
+    align-items:flex-start;
+  }
+  .sidebar{
+    width:230px;
+    flex-shrink:0;
+    position:sticky;
+    top:0;
+    height:100vh;
+    overflow-y:auto;
+    box-sizing:border-box;
+    padding:24px 16px 20px 20px;
+    border-right:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+  }
+  .sidebar .save-status{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:8px 10px;
+    font-size:11.5px;
+    color:var(--muted);
+    margin-bottom:18px;
+  }
+  .sidebar-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    color:var(--muted);
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    margin:0 0 8px;
+  }
+  .sidebar nav{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    flex-grow:1;
+  }
+  .sidebar nav a{
+    display:block;
+    padding:8px 10px;
+    border-radius:3px;
+    font-size:13px;
+    color:var(--muted);
+    text-decoration:none;
+    scroll-margin-top:20px;
+  }
+  .sidebar nav a:hover{ color:var(--text); }
+  .sidebar nav a.active{
+    background:rgba(214,71,60,0.10);
+    color:var(--accent);
+    font-weight:600;
+  }
+  .sidebar .sidebar-btn{
+    margin-top:16px;
+    width:100%;
+  }
+  @media (max-width: 980px){
+    .layout{ flex-direction:column; }
+    .sidebar{
+      width:100%;
+      height:auto;
+      position:relative;
+      border-right:none;
+      border-bottom:1px solid var(--line);
+      flex-direction:row;
+      align-items:center;
+      overflow-x:auto;
+      padding:14px 20px;
+      gap:12px;
+    }
+    .sidebar .save-status{ margin-bottom:0; white-space:nowrap; }
+    .sidebar-label{ display:none; }
+    .sidebar nav{ flex-direction:row; flex-grow:0; }
+    .sidebar nav a{ white-space:nowrap; }
+    .sidebar .sidebar-btn{ margin-top:0; width:auto; white-space:nowrap; }
+  }
+
+  main{
+    flex-grow:1;
+    min-width:0;
+    max-width:1100px;
+    margin:0;
+    padding:32px 20px 80px;
+  }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-top:2px solid var(--accent);
+    border-radius:3px;
+    padding:22px;
+    scroll-margin-top:20px;
+  }
+  .card + .card{margin-top:20px;}
+
+  .section-title{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--text);
+    margin:0 0 16px;
+    padding-bottom:12px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .section-title .sub{
+    font-family:'Inter', sans-serif;
+    font-size:12px;
+    font-weight:400;
+    text-transform:none;
+    letter-spacing:0;
+    color:var(--muted);
+  }
+
+  .group-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    margin:16px 0 8px;
+  }
+  .group-label:first-child{margin-top:0;}
+
+  .brand-tabs{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .brand-tabs button{
+    padding:9px 16px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--muted);
+    border-radius:20px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .brand-tabs button.active{
+    border-color:var(--accent);
+    background:rgba(214,71,60,0.10);
+    color:var(--accent);
+  }
+  #modelSelectWrap{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:12px;
+  }
+  #modelSelectWrap select{
+    font-family:'Inter', sans-serif;
+  }
+  #modelDesc{
+    margin-top:10px;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  #modelDesc strong{color:var(--text);}
+
+  .field{margin-bottom:14px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{
+    display:block;
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:5px;
+  }
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:end;}
+  .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; align-items:end;}
+  .row2 .field, .row3 .field{ margin-bottom:0; }
+
+  input[type=number], input[type=text], select{
+    width:100%;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:9px 10px;
+    border-radius:3px;
+    font-size:15px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  input[type=number]:focus, input[type=text]:focus, select:focus{
+    outline:none;
+    border-color:var(--accent);
+  }
+  select{font-family:'Inter', sans-serif;}
+
+  .pitch-toggle{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .pitch-toggle button{
+    flex:1;
+    min-width:220px;
+    padding:9px 10px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--muted);
+    border-radius:3px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    cursor:pointer;
+    text-align:left;
+  }
+  .pitch-toggle button .cnome{ display:block; color:var(--text); font-family:'Space Grotesk', sans-serif; font-size:13.5px; font-weight:600; margin-bottom:2px;}
+  .pitch-toggle button.active{
+    border-color:var(--accent);
+    background:rgba(214,71,60,0.10);
+  }
+  .pitch-toggle button.active .cnome{ color:var(--accent); }
+
+  .add-row{
+    display:grid;
+    grid-template-columns: 1fr 90px auto;
+    gap:10px;
+    align-items:end;
+    margin-bottom:14px;
+  }
+  .add-row .field{margin-bottom:0;}
+  .btn-add{
+    background:var(--accent);
+    border:1px solid var(--accent);
+    color:var(--accent-ink);
+    padding:9px 16px;
+    border-radius:3px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .btn-add:hover{ opacity:0.88; }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13.5px;
+  }
+  table th{
+    text-align:left;
+    font-size:11.5px;
+    color:var(--muted);
+    font-weight:600;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    padding:8px 8px;
+    border-bottom:1px solid var(--line);
+  }
+  table td{
+    padding:9px 8px;
+    border-bottom:1px solid var(--line);
+    vertical-align:middle;
+  }
+  table tr:last-child td{border-bottom:none;}
+  td.num, th.num{text-align:right; font-family:'IBM Plex Mono', monospace;}
+  .qty-input{
+    width:60px;
+    padding:5px 6px;
+    font-size:13px;
+    text-align:center;
+  }
+  .btn-remove{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--muted);
+    width:26px; height:26px;
+    border-radius:3px;
+    cursor:pointer;
+    font-size:14px;
+    line-height:1;
+  }
+  .btn-remove:hover{ border-color:var(--weight); color:var(--weight); }
+  .btn-copy{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--muted);
+    width:26px; height:26px;
+    border-radius:3px;
+    cursor:pointer;
+    font-size:13px;
+    line-height:1;
+  }
+  .btn-copy:hover{ border-color:var(--accent); color:var(--accent); }
+  .checkbox-row{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:10px 12px;
+    margin-bottom:14px;
+  }
+  .checkbox-row input{margin-top:3px;}
+  .checkbox-row .cb-text{font-size:13px; color:var(--text);}
+  .checkbox-row .cb-text small{display:block; color:var(--muted); margin-top:2px;}
+
+  .toggle-strip{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px 20px;
+    align-items:center;
+    margin:2px 0 10px;
+  }
+  .toggle-chip{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-size:13px;
+    color:var(--text);
+    cursor:pointer;
+    user-select:none;
+  }
+  .toggle-chip input{ margin:0; cursor:pointer; accent-color:var(--accent); }
+  .toggle-chip:hover{ color:var(--accent); }
+  .subfields{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    padding:8px 10px;
+    margin:0 0 10px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:3px;
+  }
+  .subfields.cols3{grid-template-columns:1fr 1fr 1fr;}
+  .subfields .field{ margin-bottom:0; }
+  .subfields .field label{
+    font-size:11.5px;
+    margin-bottom:3px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .subfields input[type=number], .subfields select{
+    padding:6px 8px;
+    font-size:13px;
+  }
+  .empty-row td{
+    color:var(--muted);
+    font-size:13px;
+    padding:14px 8px;
+    text-align:center;
+    border-bottom:none;
+  }
+
+  .cat-subtotal{
+    display:flex;
+    gap:18px;
+    flex-wrap:wrap;
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  .cat-subtotal b{ color:var(--text); font-family:'IBM Plex Mono', monospace; font-weight:600; }
+
+  .swatch{
+    display:inline-block;
+    width:8px; height:8px;
+    border-radius:1px;
+    margin-right:8px;
+  }
+  .sw-power{background:var(--accent);}
+  .sw-signal{background:var(--signal);}
+  .sw-weight{background:var(--weight);}
+  .sw-neutral{background:var(--muted);}
+  .sw-ok{background:var(--ok);}
+
+  .hero-stat{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-top:2px solid var(--accent);
+    border-radius:3px;
+    overflow:hidden;
+    margin-bottom:20px;
+  }
+  .hero-stat .cell{
+    background:var(--panel);
+    padding:20px 16px;
+  }
+  .hero-stat .cell .num{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:26px;
+    font-weight:600;
+    line-height:1;
+    color:var(--accent);
+  }
+  .hero-stat .cell .label{
+    font-size:11.5px;
+    color:var(--muted);
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    margin-top:8px;
+  }
+  .hero-stat .cell.weight .num{color:var(--weight);}
+
+
+  .delay-result{
+    margin:0 0 14px;
+    padding:10px 12px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:3px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px 18px;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  .delay-result strong{
+    color:var(--power);
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .delay-result .final{color:var(--accent);}
+
+  .note{
+    font-size:12.5px;
+    color:var(--muted);
+    margin-top:16px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+  }
+  .note strong{color:var(--text);}
+  .note.tight{margin-top:0; padding-top:0; border-top:none;}
+
+  .status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:12px;
+    font-weight:600;
+    padding:4px 10px;
+    border-radius:20px;
+    border:1px solid var(--line);
+  }
+  .status-pill.ok{ color:var(--ok); border-color:var(--ok); }
+  .status-pill.bad{ color:var(--weight); border-color:var(--weight); }
+
+  .cat-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:20px;
+    align-items:start;
+  }
+  .cat-grid > .card{ margin-top:0; }
+  @media (max-width: 860px){
+    .cat-grid{grid-template-columns: 1fr;}
+    .add-row{grid-template-columns: 1fr;}
+    .row3{grid-template-columns: 1fr;}
+  }
+
+  footer{
+    max-width:1100px;
+    margin:0 auto;
+    padding:24px 20px 40px;
+    color:var(--muted);
+    font-size:12px;
+    border-top:1px solid var(--line);
+  }
+
+  .export-bar{
+    max-width:1100px;
+    margin:0 auto;
+    padding:16px 20px 0;
+    display:flex;
+    justify-content:flex-end;
+  }
+  .btn-export{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-top:2px solid var(--accent);
+    color:var(--text);
+    padding:10px 18px;
+    border-radius:3px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .btn-export:hover{ border-color:var(--accent); }
+
+  .descritivo-wrap{
+    max-width:1100px;
+    margin:0 auto;
+    padding:0 20px;
+    display:none;
+  }
+  .descritivo-wrap.show{ display:block; }
+  #descritivoText{
+    width:100%;
+    min-height:420px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    line-height:1.6;
+    padding:14px;
+    border-radius:3px;
+    white-space:pre-wrap;
+  }
+  .btn-copiar{
+    margin-top:10px;
+    background:var(--accent);
+    border:1px solid var(--accent);
+    color:var(--accent-ink);
+    padding:9px 16px;
+    border-radius:3px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="db-config.js"></script>
+<script src="auth.js"></script>
+</head>
+<body>
+<script>(async()=>{ await MMAuth.init({admin:false}); await MMAuth.refreshCatalog(); })();</script>
+
+<header>
+  <div class="header-inner">
+    <a class="back-link" href="index.html">&larr; Voltar para áreas</a>
+    <p class="tag">Pré Produção de Som</p>
+    <h1>Calculadora de Som</h1>
+    <p>Mesa de som, canais de entrada, monitoração/saídas, expansão por stagebox e sistema de PA — com cálculo de amperagem, peso e rigging suspenso.</p>
+  </div>
+</header>
+
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="save-status" id="saveStatus"><span style="display:inline-flex;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h13l3 3v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M8 4v5h8V4"/><rect x="7.5" y="13" width="9" height="6"/></svg></span><span id="saveStatusText">salvando…</span></div>
+  <p class="sidebar-label">Seções</p>
+  <nav id="sideNav">
+    <a href="#sec-mesa">Mesa de som</a>
+    <a href="#sec-energia">Energia (AC)</a>
+    <a href="#sec-canais">Canais de entrada</a>
+    <a href="#sec-saidas">Saídas / monitoração</a>
+    <a href="#sec-expansao">Capacidade e expansão</a>
+    <a href="#sec-pa">Sistema de PA</a>
+    <a href="#sec-resumo">Resumo geral</a>
+    <a href="#sec-circuitos">Circuitos AC</a>
+    <a href="#sec-cases">Cases necessários</a>
+    <a href="#cardRigging">Rigging suspenso</a>
+  </nav>
+</aside>
+
+<main>
+
+  <div class="card" id="sec-mesa">
+    <p class="section-title">Mesa de som do evento <span class="sub">usada para todo o evento</span></p>
+    <div class="brand-tabs" id="brandTabs"></div>
+    <div id="modelSelectWrap">
+      <label style="display:block; font-size:13px; color:var(--muted); margin-bottom:5px;">Modelo</label>
+      <select id="modelSelect"></select>
+      <p id="modelDesc"></p>
+    </div>
+  </div>
+
+  <div class="card" id="sec-energia">
+    <p class="section-title">Circuito de energia (AC) <span class="sub">e peso de cabeamento</span></p>
+    <div class="row2">
+      <div class="field">
+        <label for="tensaoRede">Tensão (V)</label>
+        <select id="tensaoRede"><option value="110">110 V</option><option value="220" selected>220 V</option></select>
+      </div>
+      <div class="field">
+        <label for="ampsCircuito">Corrente do circuito / disjuntor (A)</label>
+        <input type="number" id="ampsCircuito" min="1" step="1" value="20">
+      </div>
+    </div>
+    <div class="field">
+      <label for="cabeamentoKgM">Peso de cabeamento (sinal + energia) por metro de posição (kg/m)</label>
+      <input type="number" id="cabeamentoKgM" min="0" step="0.1" value="0.4">
+    </div>
+    <p class="note tight" id="notaCircuito"></p>
+  </div>
+
+  <div class="card" id="sec-canais">
+    <p class="section-title">Canais de entrada <span class="sub">fontes que serão ligadas na mesa</span></p>
+    <div class="add-row">
+      <div class="field">
+        <label>Fonte de entrada</label>
+        <select id="selFonte"></select>
+      </div>
+      <div class="field">
+        <label>Qtd.</label>
+        <input type="number" id="qtyFonte" min="1" step="1" value="1">
+      </div>
+      <button type="button" class="btn-add" id="btnAddFonte">Adicionar</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Fonte</th>
+          <th class="num">Qtd.</th>
+          <th class="num">Canais/un.</th>
+          <th class="num">Canais</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tblFontes"></tbody>
+      <tfoot>
+        <tr style="border-top:1px solid var(--line);">
+          <td colspan="3" style="font-weight:600;">Total de canais de entrada</td>
+          <td class="num" style="font-weight:600;" id="totalCanaisEntrada">0</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+    <p class="note tight">Canais estimados por tipo: mic, canal de banda e canal auxiliar contam 1 canal de entrada por unidade.</p>
+  </div>
+
+  <div class="card" id="sec-saidas">
+    <p class="section-title">Saídas / monitoração <span class="sub">retornos (aux) e matrizes/zonas adicionais</span></p>
+    <div class="row3">
+      <div class="field">
+        <label>Retornos/monitor mixes (aux) necessários</label>
+        <input type="number" id="auxNecessarios" min="0" step="1" value="4">
+      </div>
+      <div class="field">
+        <label>Matrizes/zonas adicionais (delay, gravação, transmissão)</label>
+        <input type="number" id="matrizNecessarios" min="0" step="1" value="1">
+      </div>
+      <div class="field">
+        <label>Saídas de PA principal (L/R, sempre incluído)</label>
+        <input type="number" id="mainOut" min="1" step="1" value="2" disabled>
+      </div>
+    </div>
+    <p class="note tight" id="notaSaidas"></p>
+  </div>
+
+
+  <div class="card" id="sec-expansao">
+    <p class="section-title">Capacidade da mesa e expansão <span class="sub" id="statusMesaWrap"></span></p>
+
+    <div class="toggle-strip" style="margin-bottom:10px;">
+      <label class="toggle-chip" title="Use quando a mesa vai receber um stagebox/rack digital adicional para ganhar I/O físico.">
+        <input type="checkbox" id="usaExpansao"> Usar rack de expansão (stagebox)
+      </label>
+      <label class="toggle-chip" title="Use quando um processador de sistema (gerenciador de loudspeaker/matriz) for somar saídas adicionais depois da mesa.">
+        <input type="checkbox" id="usaProcessador"> Usar processador
+      </label>
+    </div>
+
+    <div class="subfields cols3" id="expansaoCampos" style="display:none;">
+      <div class="field">
+        <label for="tipoExpansao">Modelo do rack/stagebox</label>
+        <select id="tipoExpansao"></select>
+      </div>
+      <div class="field">
+        <label for="qtdExpansao">Quantidade de unidades</label>
+        <input type="number" id="qtdExpansao" min="1" step="1" value="1">
+      </div>
+      <div class="field">
+        <label for="entradasPorUnidade">Entradas / saídas por unidade</label>
+        <input type="text" id="entradasPorUnidade" readonly>
+      </div>
+    </div>
+
+    <div class="subfields" id="processadorCampos" style="display:none;">
+      <div class="field">
+        <label for="nomeProcessador">Processador (nome/modelo, opcional)</label>
+        <input type="text" id="nomeProcessador" placeholder="Ex.: dbx DriveRack, XTA, Lake, BSS, Symetrix...">
+      </div>
+      <div class="field">
+        <label for="saidasProcessador">Saídas do processador</label>
+        <input type="number" id="saidasProcessador" min="1" step="1" value="8">
+      </div>
+    </div>
+
+    <table>
+      <tbody id="tblMesa"></tbody>
+    </table>
+    <p class="note" id="notaMesa"></p>
+  </div>
+
+  <div id="sec-pa" style="display:flex; justify-content:space-between; align-items:flex-end; gap:12px; margin-bottom:14px; flex-wrap:wrap; scroll-margin-top:20px;">
+    <div>
+      <p class="section-title" style="border-bottom:none; padding-bottom:0; margin-bottom:4px;">Sistema de PA</p>
+      <p class="note tight" style="margin-top:0;">Cada grupo é uma posição do sistema — dê o nome que quiser (PA Principal L, PA Principal R, Sub, Monitor 1, Delay...), adicione as caixas e marque as opções que se aplicam.</p>
+    </div>
+    <button type="button" class="btn-add" id="btnAddGrupo">+ Adicionar grupo</button>
+  </div>
+  <div class="cat-grid" id="gruposWrap" style="margin-bottom:20px;"></div>
+
+  <div class="hero-stat" id="heroStat" style="margin-top:20px;"></div>
+
+  <div class="card" id="sec-resumo">
+    <p class="section-title">Potência e peso — total geral</p>
+    <table>
+      <tbody id="tblResumoGeral"></tbody>
+    </table>
+    <p class="note tight">O consumo elétrico usado aqui é o consumo de rede das caixas (referência de mercado), não a potência de amplificação (RMS/peak) informada pelo fabricante — que é a potência de áudio, e não o que puxa do disjuntor.</p>
+  </div>
+
+  <div class="card" id="sec-circuitos">
+    <p class="section-title">Circuitos de energia (AC) necessários <span class="sub">mesa + caixas, por grupo</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Grupo</th>
+          <th class="num">Potência</th>
+          <th class="num">Corrente</th>
+          <th class="num">Circuitos</th>
+        </tr>
+      </thead>
+      <tbody id="tblCircuitos"></tbody>
+      <tfoot>
+        <tr style="border-top:1px solid var(--line);">
+          <td style="font-weight:600;">Total de circuitos AC</td>
+          <td class="num" colspan="3" style="font-weight:600;" id="circuitosFinal">0</td>
+        </tr>
+      </tfoot>
+    </table>
+    <p class="note tight">Cálculo: soma a potência (W) de todos os itens do grupo (mesa entra separada, no total geral), converte pra corrente (A = W ÷ V) e divide pela corrente do circuito/disjuntor.</p>
+  </div>
+
+  <div class="card" id="sec-cases">
+    <p class="section-title">Cases necessários <span class="sub">total do projeto, por caixa</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Caixa</th>
+          <th class="num">Qtd. total</th>
+          <th class="num">Caixas/case</th>
+          <th class="num">Cases</th>
+        </tr>
+      </thead>
+      <tbody id="tblCases"></tbody>
+      <tfoot>
+        <tr style="border-top:1px solid var(--line);">
+          <td style="font-weight:600;">Total de cases</td>
+          <td class="num" colspan="3" style="font-weight:600;" id="casesFinal">0</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="card" id="cardRigging">
+    <p class="section-title">Rigging suspenso <span class="sub">grupos marcados como voado/suspenso</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Posição</th>
+          <th class="num">Caixas</th>
+          <th class="num">Peso suspenso</th>
+          <th class="num">Fixação</th>
+        </tr>
+      </thead>
+      <tbody id="tblRigging"></tbody>
+      <tfoot>
+        <tr style="border-top:1px solid var(--line);">
+          <td style="font-weight:600;">Total geral</td>
+          <td class="num" style="font-weight:600;" id="riggingTotalCaixas">0</td>
+          <td class="num" style="font-weight:600;" id="riggingTotalPeso">0 kg</td>
+          <td class="num" style="font-weight:600;" id="riggingTotalTalhas">0</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+</main>
+
+</div><!-- /.layout -->
+</div>
+
+<footer>
+  Calculadora de referência para pré-produção de som. Canais, buses, I/O de mesas e consumo elétrico de caixas são referências de mercado (specs de fabricante quando disponíveis) e podem variar conforme modelo, firmware e configuração real do sistema.
+</footer>
+
+<script>
+  const $ = id => document.getElementById(id);
+  function fmt(n){
+    return Number(n||0).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+  }
+
+  // ===== catálogo de fontes de entrada =====
+  const FONTES = {
+    mic:      { label:'Mic (microfone)',                              ch:1 },
+    banda:    { label:'Canal de banda (instrumentos, DI, bateria...)',ch:1 },
+    auxiliar: { label:'Canal auxiliar (playback, talkback, retorno...)', ch:1 }
+  };
+
+  // ===== catálogo de caixas de PA =====
+  // watts = consumo elétrico de rede (referência de mercado / specs de fabricante quando
+  // disponíveis: EV ETX-12P e ELX200 usam valor de "Power Consumption" real do datasheet;
+  // Yamaha DXR/DXS também usam o "Power Consumption" oficial da Yamaha; RCF HDL 6-A/26-A/35-AS
+  // e SUB 8006-AS, e D.A.S EVENT (pesos e potência de amplificação direto do site oficial
+  // dasaudio.com/en/series/event), usam consumo estimado a partir da potência do amplificador
+  // de cada linha; demais modelos usam média de consumo entre modelos equivalentes da faixa).
+  // peso: peso aproximado da caixa (kg). casePor: caixas por flight case (referência de mercado
+  // de locação — caixas maiores costumam ser 1 por case fechado; compactas, 2 por case).
+  const CAIXAS = {
+    // Electro-Voice
+    ev_etx10p:  { label:'EV ETX-10P (10", ativa)',                    watts:140, peso:20,  casePor:2 },
+    ev_etx12p:  { label:'EV ETX-12P (12", ativa)',                    watts:180, peso:24,  casePor:1 },
+    ev_etx15p:  { label:'EV ETX-15P (15", ativa)',                    watts:220, peso:29,  casePor:1 },
+    ev_ekx12:   { label:'EV EKX-12P (12", ativa, compacta)',          watts:160, peso:18,  casePor:2 },
+    ev_zlx12bt: { label:'EV ZLX-12BT (12", ativa, compacta)',         watts:150, peso:15,  casePor:2 },
+    ev_etx15sp: { label:'EV ETX-15SP (sub 15", ativo)',               watts:280, peso:32,  casePor:1 },
+    ev_etx18sp: { label:'EV ETX-18SP (sub 18", ativo)',               watts:350, peso:42,  casePor:1 },
+    ev_elx20010p:{ label:'EV ELX200-10P (10", ativa)',                watts:150, peso:13.5,casePor:2 },
+    ev_elx20018sp:{ label:'EV ELX200-18SP (sub 18", ativo)',          watts:300, peso:29,  casePor:1 },
+    // RCF
+    rcf_art732a:{ label:'RCF ART 732-A (12", ativa, compacta)',       watts:170, peso:14,  casePor:2 },
+    rcf_art910a:{ label:'RCF ART 910-A (10", ativa)',                 watts:150, peso:14,  casePor:2 },
+    rcf_art912a:{ label:'RCF ART 912-A (12", ativa)',                 watts:190, peso:17,  casePor:1 },
+    rcf_art915a:{ label:'RCF ART 915-A (15", ativa)',                 watts:240, peso:22,  casePor:1 },
+    rcf_hdl6a:  { label:'RCF HDL 6-A (elemento de line array, ativo)',  watts:250, peso:11.5, casePor:1 },
+    rcf_hdl26a: { label:'RCF HDL 26-A (elemento de line array, ativo)', watts:300, peso:13.5, casePor:1 },
+    rcf_hdl20a: { label:'RCF HDL 20-A (elemento de line array, ativo)', watts:400, peso:30, casePor:1 },
+    rcf_hdl35as:{ label:'RCF HDL 35-AS (sub voável 15", ativo)',      watts:350, peso:30,  casePor:1 },
+    rcf_sub705as:{ label:'RCF SUB 705-AS (sub 15", ativo)',           watts:280, peso:25,  casePor:1 },
+    rcf_sub8003as:{ label:'RCF SUB 8003-AS (sub 18", ativo)',         watts:350, peso:36,  casePor:1 },
+    rcf_sub8006as:{ label:'RCF SUB 8006-AS (sub duplo 18", ativo)',   watts:550, peso:65,  casePor:1 },
+    // D.A.S Audio
+    das_action508a:{ label:'D.A.S Action 508A (8", ativa)',           watts:140, peso:11,  casePor:2 },
+    das_action512a:{ label:'D.A.S Action 512A (12", ativa)',          watts:190, peso:17,  casePor:1 },
+    das_action515a:{ label:'D.A.S Action 515A (15", ativa)',          watts:250, peso:24,  casePor:1 },
+    das_vantec15a: { label:'D.A.S Vantec 15A (15", ativa)',           watts:260, peso:26,  casePor:1 },
+    das_vantec20a: { label:'D.A.S Vantec 20A (elemento de line array, ativo)', watts:380, peso:24, casePor:1 },
+    das_action118a:{ label:'D.A.S Action 118A (sub 18", ativo)',      watts:350, peso:38,  casePor:1 },
+    das_vantec118a:{ label:'D.A.S Vantec-118A (sub 18", ativo)',      watts:400, peso:45,  casePor:1 },
+    das_event26a: { label:'D.A.S EVENT-26A (elemento de line array, ativo)',  watts:200, peso:16.5, casePor:2 },
+    das_event28a: { label:'D.A.S EVENT-28A (elemento de line array, ativo)',  watts:230, peso:20.5, casePor:2 },
+    das_event30a: { label:'D.A.S EVENT-30A (elemento de line array, ativo)',  watts:280, peso:26.5, casePor:1 },
+    das_event210a:{ label:'D.A.S EVENT-210A (elemento de line array, ativo)', watts:300, peso:32.5, casePor:1 },
+    das_event212a:{ label:'D.A.S EVENT-212A (elemento de line array, ativo)', watts:400, peso:41,   casePor:1 },
+    das_event115a:{ label:'D.A.S EVENT-115A (sub 15", ativo)',       watts:250, peso:37,   casePor:1 },
+    das_event118a:{ label:'D.A.S EVENT-118A (sub 18", ativo)',       watts:350, peso:43,   casePor:1 },
+    das_event218a:{ label:'D.A.S EVENT-218A (sub duplo 18", ativo)', watts:550, peso:68.5, casePor:1 },
+    das_events218a:{ label:'D.A.S EVENT-S218A (sub duplo 18" neo, ativo)', watts:650, peso:78,  casePor:1 },
+    das_event121a:{ label:'D.A.S EVENT-121A (sub 21" horn-loaded, ativo)', watts:600, peso:78.5, casePor:1 },
+    // Yamaha
+    yam_dxr8:   { label:'Yamaha DXR8 mkII (8", ativa)',               watts:100, peso:13,  casePor:2 },
+    yam_dxr12:  { label:'Yamaha DXR12 mkII (12", ativa)',             watts:110, peso:18.6, casePor:1 },
+    yam_dxr15:  { label:'Yamaha DXR15 mkII (15", ativa)',             watts:130, peso:21.8, casePor:1 },
+    yam_dzr12:  { label:'Yamaha DZR12 (12", ativa, alta potência)',   watts:160, peso:19.6, casePor:1 },
+    yam_dzr15:  { label:'Yamaha DZR15 (15", ativa, alta potência)',   watts:190, peso:23.4, casePor:1 },
+    yam_dzr315: { label:'Yamaha DZR315 (3 vias, ativa)',              watts:280, peso:37,  casePor:1 },
+    yam_dxs15:  { label:'Yamaha DXS15 mkII (sub 15", ativo)',         watts:100, peso:25,  casePor:1 },
+    yam_dxs18:  { label:'Yamaha DXS18 mkII (sub 18", ativo)',         watts:100, peso:31,  casePor:1 },
+    // Meyer Sound (autoamplificadas)
+    meyer_upjr: { label:'Meyer Sound UPJunior (ativa, compacta)',     watts:200, peso:20,  casePor:1 },
+    meyer_upa1p:{ label:'Meyer Sound UPA-1P (ativa)',                 watts:280, peso:32,  casePor:1 },
+    meyer_upq1p:{ label:'Meyer Sound UPQ-1P (ativa)',                 watts:320, peso:34,  casePor:1 },
+    meyer_ultx40:{ label:'Meyer Sound ULTRA-X40 (line array, ativo)', watts:350, peso:24,  casePor:1 },
+    meyer_usw1p:{ label:'Meyer Sound USW-1P (sub, ativo)',            watts:400, peso:47,  casePor:1 },
+    meyer_900lfc:{ label:'Meyer Sound 900-LFC (sub, ativo)',          watts:600, peso:73,  casePor:1 },
+    // d&b audiotechnik — caixas passivas + amplificador D-Series dedicado
+    db_t10:     { label:'d&b T10 (passiva + amplificador D-Series)',    watts:200, peso:19, casePor:1 },
+    db_y8:      { label:'d&b Y8 (line array, passiva + amplificador D-Series)', watts:220, peso:21, casePor:1 },
+    db_v8:      { label:'d&b V8 (line array, passiva + amplificador D-Series)', watts:260, peso:29, casePor:1 },
+    db_ysub:    { label:'d&b Y-SUB (sub, passiva + amplificador D-Series)',    watts:400, peso:39, casePor:1 },
+    db_b22:     { label:'d&b B22 (sub, passiva + amplificador D-Series)',     watts:450, peso:65, casePor:1 },
+    // QSC
+    qsc_k8:     { label:'QSC K8.2 (8", ativa)',                       watts:130, peso:13.6, casePor:2 },
+    qsc_k10:    { label:'QSC K10.2 (10", ativa)',                     watts:150, peso:14.5, casePor:2 },
+    qsc_k12:    { label:'QSC K12.2 (12", ativa)',                     watts:170, peso:17.7, casePor:1 },
+    qsc_kw153:  { label:'QSC KW153 (15", ativa)',                     watts:200, peso:20.4, casePor:1 },
+    qsc_ks112:  { label:'QSC KS112 (sub 12", ativo)',                 watts:250, peso:29.5, casePor:1 },
+    qsc_ks118:  { label:'QSC KS118 (sub 18", ativo)',                 watts:350, peso:47.7, casePor:1 },
+    qsc_ks212c: { label:'QSC KS212C (sub cardioide, ativo)',          watts:450, peso:63,  casePor:1 }
+  };
+
+  // ===== catálogo de racks/stageboxes de expansão =====
+  const EXPANSOES = {
+    s16:    { label:'Behringer S16 / Midas DL16 (AES50)',  in:16, out:8  },
+    s32:    { label:'Behringer S32 / Midas DL32 (AES50)',  in:32, out:16 },
+    dl251:  { label:'Midas DL251',                          in:48, out:16 },
+    dl153:  { label:'Midas DL153',                          in:16, out:8  },
+    dl155:  { label:'Midas DL155',                          in:8,  out:8  },
+    drack:  { label:'DiGiCo D-Rack',                        in:32, out:16 },
+    d2rack: { label:'DiGiCo D2-Rack',                       in:48, out:24 },
+    rio3224:{ label:'Yamaha Rio3224-D2',                    in:32, out:16 },
+    rio1608:{ label:'Yamaha Rio1608-D2',                    in:16, out:8  },
+    tio1608:{ label:'Yamaha Tio1608-D2',                    in:16, out:8  },
+    vistage:{ label:'Soundcraft Vi Stagebox',               in:64, out:32 },
+    vicompact:{ label:'Soundcraft Compact Stagebox',        in:32, out:8  },
+    ygdai:  { label:'Cartão Mini-YGDAI (slot de expansão)', in:16, out:16 }
+  };
+
+  // ===== catálogo de mesas de som =====
+  const CONSOLES = {
+    xr18:       { label:'Behringer XR18 (X Air)',               inputsLocal:18, outputsLocal:8,  maxCh:18,  busesTotal:6,  consumo:50,  expansaoPadrao:'s16',    expansaoMax:2, desc:'18 canais mixáveis · 16 entradas mic/line + 2 linha / 8 saídas locais · AES50' },
+    x32:        { label:'Behringer X32 / Midas M32',            inputsLocal:32, outputsLocal:16, maxCh:32,  busesTotal:22, consumo:120, expansaoPadrao:'s16',    expansaoMax:6, desc:'32 canais mixáveis · 32 entradas / 16 saídas locais · AES50' },
+    x32compact: { label:'Behringer X32 Compact / Midas M32C',   inputsLocal:16, outputsLocal:8,  maxCh:32,  busesTotal:22, consumo:110, expansaoPadrao:'s16',    expansaoMax:6, desc:'32 canais mixáveis · 16 entradas / 8 saídas locais · AES50' },
+    x32producer:{ label:'Behringer X32 Producer',               inputsLocal:16, outputsLocal:8,  maxCh:32,  busesTotal:22, consumo:110, expansaoPadrao:'s16',    expansaoMax:6, desc:'32 canais mixáveis · 16 entradas / 8 saídas locais · AES50' },
+    x32rack:    { label:'Behringer X32 Rack / Midas M32R',      inputsLocal:16, outputsLocal:8,  maxCh:32,  busesTotal:22, consumo:100, expansaoPadrao:'s16',    expansaoMax:6, desc:'32 canais mixáveis · 16 entradas / 8 saídas locais · AES50' },
+
+    wing:       { label:'Behringer WING',                       inputsLocal:8,  outputsLocal:8,  maxCh:48,  busesTotal:24, consumo:180, expansaoPadrao:'s16',    expansaoMax:9, desc:'48 canais mixáveis · 8 entradas / 8 saídas locais · 3x AES50' },
+    wingcompact:{ label:'Behringer WING Compact',               inputsLocal:24, outputsLocal:8,  maxCh:48,  busesTotal:24, consumo:160, expansaoPadrao:'s16',    expansaoMax:9, desc:'48 canais mixáveis · 24 entradas / 8 saídas locais · 3x AES50' },
+    wingrack:   { label:'Behringer WING Rack',                  inputsLocal:24, outputsLocal:8,  maxCh:48,  busesTotal:24, consumo:160, expansaoPadrao:'s16',    expansaoMax:9, desc:'48 canais mixáveis · 24 entradas / 8 saídas locais · 3x AES50' },
+
+    pro2:       { label:'Midas PRO2',                           inputsLocal:8,  outputsLocal:16, maxCh:64,  busesTotal:24, consumo:250, expansaoPadrao:'dl251',  expansaoMax:3, desc:'64 canais mixáveis · 8 entradas / 16 saídas locais · padrão DL251' },
+    prox:       { label:'Midas PRO X',                          inputsLocal:16, outputsLocal:8,  maxCh:168, busesTotal:96, consumo:350, expansaoPadrao:'dl153',  expansaoMax:6, desc:'168 canais mixáveis · 16 entradas / 8 saídas locais · HD96' },
+
+    sd9:        { label:'DiGiCo SD9 (Mixrack)',                 inputsLocal:32, outputsLocal:16, maxCh:96,  busesTotal:36, consumo:300, expansaoPadrao:'drack',  expansaoMax:4, desc:'96 canais mixáveis · D-Rack padrão (32/16 a 48kHz)' },
+    sd8:        { label:'DiGiCo SD8 (Mixrack)',                 inputsLocal:48, outputsLocal:8,  maxCh:120, busesTotal:48, consumo:350, expansaoPadrao:'d2rack', expansaoMax:4, desc:'120 canais mixáveis · D2-Rack padrão (48/8, até 24 saídas)' },
+    quantum225: { label:'DiGiCo Quantum225',                    inputsLocal:8,  outputsLocal:8,  maxCh:72,  busesTotal:36, consumo:300, expansaoPadrao:'drack',  expansaoMax:4, desc:'72 canais mixáveis (96 com Pulse) · 8 entradas / 8 saídas locais' },
+    quantum338: { label:'DiGiCo Quantum338',                    inputsLocal:8,  outputsLocal:8,  maxCh:128, busesTotal:64, consumo:400, expansaoPadrao:'d2rack', expansaoMax:4, desc:'128 canais mixáveis (156 com Pulse) · 8 entradas / 8 saídas locais' },
+    s21s31:     { label:'DiGiCo S21 / S31',                     inputsLocal:0,  outputsLocal:0,  maxCh:48,  busesTotal:46, consumo:200, expansaoPadrao:'drack',  expansaoMax:3, desc:'48 canais mixáveis · sem I/O local — requer rack' },
+
+    siexpr1:    { label:'Soundcraft Si Expression 1',           inputsLocal:20, outputsLocal:16, maxCh:66,  busesTotal:20, consumo:150, expansaoPadrao:'vicompact', expansaoMax:2, desc:'66 canais mixáveis · 16 mic + 4 linha / 16 saídas locais · slot 64×64 para stagebox' },
+    siexpr2:    { label:'Soundcraft Si Expression 2',           inputsLocal:28, outputsLocal:16, maxCh:66,  busesTotal:20, consumo:190, expansaoPadrao:'vicompact', expansaoMax:2, desc:'66 canais mixáveis · 24 mic + 4 linha / 16 saídas locais · slot 64×64 para stagebox' },
+    siexpr3:    { label:'Soundcraft Si Expression 3',           inputsLocal:36, outputsLocal:16, maxCh:66,  busesTotal:20, consumo:220, expansaoPadrao:'vicompact', expansaoMax:2, desc:'66 canais mixáveis · 32 mic + 4 linha / 16 saídas locais · slot 64×64 para stagebox' },
+    vi1000:     { label:'Soundcraft Vi1000',                    inputsLocal:16, outputsLocal:16, maxCh:96,  busesTotal:24, consumo:250, expansaoPadrao:'vistage', expansaoMax:2, desc:'96 canais mixáveis · 16 entradas / 16 saídas locais · 2 slots de expansão (Vi Stagebox)' },
+    vi2000:     { label:'Soundcraft Vi2000',                    inputsLocal:32, outputsLocal:24, maxCh:96,  busesTotal:24, consumo:280, expansaoPadrao:'vistage', expansaoMax:2, desc:'96 canais mixáveis · 32 entradas / 24 saídas locais · 2 slots de expansão (Vi Stagebox)' },
+    vi3000:     { label:'Soundcraft Vi3000',                    inputsLocal:48, outputsLocal:16, maxCh:96,  busesTotal:24, consumo:300, expansaoPadrao:'vistage',expansaoMax:2, desc:'96 canais mixáveis · 48 entradas / 16 saídas locais (configurável)' },
+    vi5000:     { label:'Soundcraft Vi5000',                    inputsLocal:19, outputsLocal:16, maxCh:128, busesTotal:32, consumo:350, expansaoPadrao:'vistage', expansaoMax:5, desc:'128 canais mixáveis · Local Rack (3 mic + 16 linha / 16 saídas) · expansível com Vi Stagebox (até 5 unidades)' },
+    vi7000:     { label:'Soundcraft Vi7000',                    inputsLocal:19, outputsLocal:16, maxCh:128, busesTotal:32, consumo:380, expansaoPadrao:'vistage', expansaoMax:5, desc:'128 canais mixáveis · Local Rack (3 mic + 16 linha / 16 saídas) · maior superfície (40+4 faders) · expansível com Vi Stagebox (até 5 unidades)' },
+    ui24r:      { label:'Soundcraft Ui24R',                     inputsLocal:22, outputsLocal:10, maxCh:24,  busesTotal:8,  consumo:60,  noExpansion:true,        desc:'24 canais · 22 entradas / 10 saídas — sem expansão' },
+
+    cl5:        { label:'Yamaha CL5',                           inputsLocal:0,  outputsLocal:0,  maxCh:80,  busesTotal:32, consumo:200, expansaoPadrao:'rio3224',expansaoMax:8, desc:'80 canais mixáveis · 100% via Rio (sem I/O local na mesa)' },
+    cl3:        { label:'Yamaha CL3',                           inputsLocal:0,  outputsLocal:0,  maxCh:72,  busesTotal:32, consumo:180, expansaoPadrao:'rio3224',expansaoMax:8, desc:'72 canais mixáveis · 100% via Rio (sem I/O local na mesa)' },
+    cl1:        { label:'Yamaha CL1',                           inputsLocal:0,  outputsLocal:0,  maxCh:56,  busesTotal:32, consumo:150, expansaoPadrao:'rio1608',expansaoMax:8, desc:'56 canais mixáveis · 100% via Rio (sem I/O local na mesa)' },
+
+    ql5:        { label:'Yamaha QL5',                           inputsLocal:32, outputsLocal:16, maxCh:72,  busesTotal:24, consumo:180, expansaoPadrao:'rio1608',expansaoMax:8, desc:'72 canais mixáveis · 32 entradas / 16 saídas locais' },
+    ql1:        { label:'Yamaha QL1',                           inputsLocal:16, outputsLocal:8,  maxCh:40,  busesTotal:24, consumo:150, expansaoPadrao:'rio1608',expansaoMax:8, desc:'40 canais mixáveis · 16 entradas / 8 saídas locais' },
+
+    dm7:        { label:'Yamaha DM7',                           inputsLocal:32, outputsLocal:16, maxCh:120, busesTotal:60, consumo:240, expansaoPadrao:'rio3224',expansaoMax:8, desc:'120 canais mixáveis · 32 entradas / 16 saídas locais' },
+    dm7compact: { label:'Yamaha DM7 Compact',                   inputsLocal:16, outputsLocal:16, maxCh:72,  busesTotal:60, consumo:240, expansaoPadrao:'rio1608',expansaoMax:8, desc:'72 canais mixáveis · 16 entradas / 16 saídas locais' },
+    dm3:        { label:'Yamaha DM3',                           inputsLocal:16, outputsLocal:8,  maxCh:19,  busesTotal:11, consumo:40,  expansaoPadrao:'tio1608',expansaoMax:1, desc:'19 canais mixáveis · 16 entradas / 8 saídas locais' },
+
+    v01v96i:    { label:'Yamaha 01V96i',                        inputsLocal:16, outputsLocal:8,  maxCh:40,  busesTotal:16, consumo:50,  expansaoPadrao:'ygdai',  expansaoMax:1, desc:'40 canais mixáveis · 16 entradas / 8 saídas locais + slot Mini-YGDAI' },
+
+    analog16:   { label:'Mesa analógica 12–16 canais',          inputsLocal:16, outputsLocal:10, maxCh:16,  busesTotal:8,  consumo:20,  noExpansion:true, desc:'16 canais · sem expansão digital' },
+    analog24:   { label:'Mesa analógica 24 canais',             inputsLocal:24, outputsLocal:10, maxCh:24,  busesTotal:8,  consumo:20,  noExpansion:true, desc:'24 canais · sem expansão digital' },
+    analog32:   { label:'Mesa analógica 32 canais',             inputsLocal:32, outputsLocal:12, maxCh:32,  busesTotal:10, consumo:20,  noExpansion:true, desc:'32 canais · sem expansão digital' },
+    analog40:   { label:'Mesa analógica 40 canais',             inputsLocal:40, outputsLocal:14, maxCh:40,  busesTotal:12, consumo:20,  noExpansion:true, desc:'40 canais · sem expansão digital' }
+  };
+
+  const BRANDS = [
+    { title:'Behringer / Midas', keys:['x32','x32compact','x32producer','x32rack','wing','wingcompact','wingrack','xr18','pro2','prox'] },
+    { title:'DiGiCo',            keys:['sd9','sd8','quantum225','quantum338','s21s31'] },
+    { title:'Soundcraft',        keys:['siexpr1','siexpr2','siexpr3','vi1000','vi2000','vi3000','vi5000','vi7000','ui24r'] },
+    { title:'Yamaha',            keys:['cl5','cl3','cl1','ql5','ql1','dm7','dm7compact','dm3','v01v96i'] },
+    { title:'Mesas analógicas',  keys:['analog16','analog24','analog32','analog40'] }
+  ];
+
+  let brandAtual = BRANDS[0].title;
+  let consoleAtual = 'x32';
+  let expansaoState = { usar:false, tipo:'s16', qtd:1 };
+  let processadorState = { usar:false, saidas:8, nome:'' };
+
+  let fontes = []; // { id, type, qty }
+  let fonteCounter = 0;
+
+
+  const PESO_BUMPER_SOM = 2;       // kg — peso de referência do frame/olhal de voo por caixa
+  const PESO_TALHA_CORPO = 8;      // kg — peso do corpo da talha manual de corrente (sem a corrente)
+  const PESO_CORRENTE_KG_M = 1;    // kg por metro de corrente de carga (referência de mercado)
+  const CABEAMENTO_KG_M_PADRAO = 0.4;
+
+  // ===== tipos de box truss (peso por metro, referência de mercado — alumínio, linha Q) =====
+  // Mesma tabela usada na calculadora de luz — útil pra torres/goal-post de PA e ground stack em truss.
+  const TRUSS_TIPOS = {
+    q15: { label: 'Q15', kgPorM: 2.5 },
+    q20: { label: 'Q20', kgPorM: 4   },
+    q25: { label: 'Q25', kgPorM: 6   },
+    q30: { label: 'Q30', kgPorM: 8   }
+  };
+
+  // ===== grupos do sistema de PA (mesma lógica de rigging usada na calculadora de luz) =====
+  // Começa com 1 grupo só — use o botão de copiar (⧉) em cada card pra duplicar e renomear
+  // (PA Principal L, PA Principal R, Sub, Monitor 1...), do mesmo jeito que a calculadora de luz.
+  let grupos = [
+    { id:'g1', nome:'Posição 1', items:[], comprimento:0, suspenso:true, usaAncoragem:true, qtdPontos:1, capacidadePonto:500, usaTalha:false, qtdTalhas:0, comprimentoTalha:3, isBoxtruss:false, trussTipo:'q30', comprimentoTruss:0, useDelay:false, delayDistancia:0, delayAltura:0, delayTemperatura:25, delayMargem:0 }
+  ];
+  let grupoCounter = 1;
+  let ultimoCalculo = {};
+
+  // ===== fontes de entrada =====
+  function buildSelFonte(){
+    $('selFonte').innerHTML = Object.keys(FONTES).map(k => `<option value="${k}">${FONTES[k].label}</option>`).join('');
+  }
+
+  function addFonte(){
+    const type = $('selFonte').value;
+    const qty = Math.max(1, parseInt($('qtyFonte').value, 10) || 1);
+    fonteCounter++;
+    fontes.push({ id:'f'+fonteCounter, type, qty });
+    calc();
+  }
+
+  function removeFonte(id){
+    fontes = fontes.filter(f => f.id !== id);
+    calc();
+  }
+
+  function updateFonteQty(id, val){
+    const f = fontes.find(f => f.id === id);
+    if (f) f.qty = Math.max(1, parseInt(val,10) || 1);
+    calc();
+  }
+
+  // ===== cálculo de delay por grupo =====
+  // Velocidade do som no ar em função da temperatura ambiente.
+  function velocidadeSom(tempC){
+    return 331.3 + 0.606 * tempC;
+  }
+
+  function calcDelayGrupo(g){
+    const distancia = Math.max(0, Number(g.delayDistancia) || 0);
+    const altura = Math.max(0, Number(g.delayAltura) || 0);
+    const temp = Number.isFinite(Number(g.delayTemperatura)) ? Number(g.delayTemperatura) : 25;
+    const margem = Math.max(0, Number(g.delayMargem) || 0);
+    const v = velocidadeSom(temp);
+    const distanciaReal = Math.sqrt((distancia ** 2) + (altura ** 2));
+    const delayMs = v > 0 ? (distanciaReal / v) * 1000 : 0;
+    return { distancia, altura, temp, margem, v, distanciaReal, delayMs, delayFinal: delayMs + margem };
+  }
+
+  // ===== mesa: abas de marca + lista de modelos =====
+  function buildBrandTabs(){
+    const wrap = $('brandTabs');
+    wrap.innerHTML = BRANDS.map(b => `<button type="button" data-brand="${b.title}" class="${b.title === brandAtual ? 'active' : ''}">${b.title}</button>`).join('');
+    wrap.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        brandAtual = btn.dataset.brand;
+        wrap.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+        const grp = BRANDS.find(b => b.title === brandAtual);
+        if (!grp.keys.includes(consoleAtual)) consoleAtual = grp.keys[0];
+        buildModelSelect();
+        onConsoleChanged();
+      });
+    });
+  }
+
+  function buildModelSelect(){
+    const grp = BRANDS.find(b => b.title === brandAtual);
+    const sel = $('modelSelect');
+    sel.innerHTML = grp.keys.map(key => `<option value="${key}" ${key===consoleAtual?'selected':''}>${CONSOLES[key].label}</option>`).join('');
+    sel.value = consoleAtual;
+    $('modelDesc').innerHTML = CONSOLES[consoleAtual].desc;
+  }
+
+  function onConsoleChanged(){
+    const c = CONSOLES[consoleAtual];
+    $('modelDesc').innerHTML = c.desc;
+    if (c.noExpansion){
+      expansaoState.usar = false;
+      $('usaExpansao').checked = false;
+      $('usaExpansao').disabled = true;
+    } else {
+      $('usaExpansao').disabled = false;
+      if (c.expansaoPadrao) $('tipoExpansao').value = c.expansaoPadrao;
+    }
+    updateExpansaoUI();
+    calc();
+  }
+
+  function bindModelSelect(){
+    $('modelSelect').addEventListener('change', e => {
+      consoleAtual = e.target.value;
+      onConsoleChanged();
+    });
+  }
+
+  function buildTipoExpansaoSelect(){
+    $('tipoExpansao').innerHTML = Object.keys(EXPANSOES).map(k => `<option value="${k}">${EXPANSOES[k].label} (${EXPANSOES[k].in} in / ${EXPANSOES[k].out} out)</option>`).join('');
+  }
+
+  function updateExpansaoUI(){
+    const usar = expansaoState.usar;
+    $('expansaoCampos').style.display = usar ? 'grid' : 'none';
+    const exp = EXPANSOES[$('tipoExpansao').value] || EXPANSOES['s16'];
+    $('entradasPorUnidade').value = `${exp.in} entradas / ${exp.out} saídas por unidade`;
+    $('processadorCampos').style.display = processadorState.usar ? 'grid' : 'none';
+  }
+
+  function bindExpansaoControls(){
+    buildTipoExpansaoSelect();
+    $('usaExpansao').addEventListener('change', e => {
+      expansaoState.usar = e.target.checked;
+      updateExpansaoUI();
+      calc();
+    });
+    $('tipoExpansao').addEventListener('change', () => {
+      updateExpansaoUI();
+      calc();
+    });
+    $('qtdExpansao').addEventListener('input', e => {
+      expansaoState.qtd = Math.max(1, parseInt(e.target.value,10) || 1);
+      calc();
+    });
+    $('usaProcessador').addEventListener('change', e => {
+      processadorState.usar = e.target.checked;
+      updateExpansaoUI();
+      calc();
+    });
+    $('saidasProcessador').addEventListener('input', e => {
+      processadorState.saidas = Math.max(1, parseInt(e.target.value,10) || 1);
+      calc();
+    });
+    $('nomeProcessador').addEventListener('input', e => {
+      processadorState.nome = e.target.value;
+      calc();
+    });
+    updateExpansaoUI();
+  }
+
+  // ===== grupos de PA (adaptado da calculadora de luz, sem boxtruss/DMX) =====
+  function buildGruposCards(){
+    const wrap = $('gruposWrap');
+    wrap.innerHTML = grupos.map(g => `
+      <div class="card">
+        <p class="section-title">
+          <input type="text" class="vara-nome-input" data-id="${g.id}" value="${g.nome}" style="background:transparent; border:none; color:var(--text); font:inherit; padding:0; width:160px;">
+          <span style="display:flex; gap:6px;">
+            <button type="button" class="btn-copy" data-grupo-copy="${g.id}" title="Copiar este grupo">⧉</button>
+            ${grupos.length > 1 ? `<button type="button" class="btn-remove btn-remove-grupo" data-grupo="${g.id}" title="Remover este grupo">×</button>` : ''}
+          </span>
+        </p>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="susp-grupo-${g.id}" ${g.suspenso ? 'checked' : ''}>
+          <div class="cb-text">Use Suspenso</div>
+        </div>
+        ${g.suspenso ? `
+        <div class="toggle-strip">
+          <label class="toggle-chip" title="Estrutura já existente no local — desligue se não tiver ponto de ancoragem">
+            <input type="checkbox" id="usaanc-grupo-${g.id}" ${g.usaAncoragem ? 'checked' : ''}> Ponto de ancoragem fixo
+          </label>
+          <label class="toggle-chip" title="Elevação por talha/ponto de içamento — desligue quando não for necessário">
+            <input type="checkbox" id="usatalha-grupo-${g.id}" ${g.usaTalha ? 'checked' : ''}> Usa talha
+          </label>
+        </div>
+        ${g.usaAncoragem ? `
+        <div class="subfields">
+          <div class="field">
+            <label>Pontos de ancoragem</label>
+            <input type="number" id="pontos-grupo-${g.id}" min="1" step="1" value="${g.qtdPontos || 1}">
+          </div>
+          <div class="field">
+            <label title="Carga que o espaço te dá por ponto">Capacidade/ponto (kg)</label>
+            <input type="number" id="capponto-grupo-${g.id}" min="0" step="10" value="${g.capacidadePonto || 500}">
+          </div>
+        </div>
+        ` : ''}
+        ${g.usaTalha ? `
+        <div class="subfields">
+          <div class="field">
+            <label>Quantas talhas</label>
+            <input type="number" id="talhas-grupo-${g.id}" min="0" step="1" value="${g.qtdTalhas || ''}" placeholder="0">
+          </div>
+          <div class="field">
+            <label title="Comprimento da corrente">Metros por talha</label>
+            <input type="number" id="comptalha-grupo-${g.id}" min="0" step="0.5" value="${g.comprimentoTalha || ''}" placeholder="0">
+          </div>
+        </div>
+        ` : ''}
+        ` : ''}
+
+        <div class="toggle-strip" style="padding-top:10px; border-top:1px solid var(--line);">
+          <label class="toggle-chip" title="Calcula o peso da treliça pelos metros informados (torre/goal-post de PA, ground stack em truss...)">
+            <input type="checkbox" id="box-grupo-${g.id}" ${g.isBoxtruss ? 'checked' : ''}> Use Boxtruss
+          </label>
+        </div>
+        ${g.isBoxtruss ? `
+        <div class="subfields">
+          <div class="field">
+            <label>Tipo de treliça</label>
+            <select id="truss-grupo-${g.id}">
+              ${Object.keys(TRUSS_TIPOS).map(k => `<option value="${k}" ${g.trussTipo === k ? 'selected' : ''}>${TRUSS_TIPOS[k].label} — ${fmt(TRUSS_TIPOS[k].kgPorM)}kg/m</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label>Metros de treliça</label>
+            <input type="number" id="comptruss-grupo-${g.id}" min="0" step="0.5" value="${g.comprimentoTruss || 0}">
+          </div>
+        </div>` : ''}
+
+        <div class="toggle-strip" style="padding-top:10px; border-top:1px solid var(--line);">
+          <label class="toggle-chip" title="Calcula o delay acústico considerando distância horizontal e diferença de altura entre o PA principal e esta posição.">
+            <input type="checkbox" id="delay-grupo-${g.id}" ${g.useDelay ? 'checked' : ''}> Use delay
+          </label>
+        </div>
+        ${g.useDelay ? `
+        <div class="subfields cols3">
+          <div class="field">
+            <label title="Distância horizontal entre o PA principal e a posição do delay">Distância horizontal (m)</label>
+            <input type="number" id="delaydist-grupo-${g.id}" min="0" step="0.1" value="${g.delayDistancia || 0}">
+          </div>
+          <div class="field">
+            <label title="Diferença vertical entre o PA principal e o delay">Diferença de altura (m)</label>
+            <input type="number" id="delayalt-grupo-${g.id}" min="0" step="0.1" value="${g.delayAltura || 0}">
+          </div>
+          <div class="field">
+            <label>Temperatura (°C)</label>
+            <input type="number" id="delaytemp-grupo-${g.id}" step="0.5" value="${g.delayTemperatura ?? 25}">
+          </div>
+          <div class="field">
+            <label>Margem extra (ms)</label>
+            <input type="number" id="delaymargem-grupo-${g.id}" min="0" step="1" value="${g.delayMargem || 0}">
+          </div>
+        </div>
+        <div class="delay-result" id="delayresult-grupo-${g.id}"></div>
+        ` : ''}
+
+        <div class="add-row" style="margin-top:14px; padding-top:14px; border-top:1px solid var(--line);">
+          <div class="field">
+            <label>Caixa</label>
+            <select id="sel-grupo-${g.id}">
+              ${Object.keys(CAIXAS).map(k => `<option value="${k}">${CAIXAS[k].label}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label>Qtd.</label>
+            <input type="number" id="qty-grupo-${g.id}" min="1" step="1" value="1">
+          </div>
+          <button type="button" class="btn-add" data-grupo-add="${g.id}">Adicionar</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Caixa</th>
+              <th class="num">Qtd.</th>
+              <th class="num">Consumo</th>
+              <th class="num">Peso</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbl-grupo-${g.id}"></tbody>
+        </table>
+        <div class="cat-subtotal" id="subtotal-grupo-${g.id}"></div>
+
+        <div class="field" style="margin-top:14px; padding-top:14px; border-top:1px solid var(--line);">
+          <label>Comprimento de cabeamento até esta posição (m)</label>
+          <input type="number" id="comp-grupo-${g.id}" min="0" step="1" value="${g.comprimento || 0}">
+        </div>
+        <p class="note tight" id="nota-grupo-${g.id}"></p>
+      </div>
+    `).join('');
+
+    // listeners de nome
+    wrap.querySelectorAll('.vara-nome-input').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const g = grupos.find(g => g.id === inp.dataset.id);
+        if (g) g.nome = inp.value;
+      });
+      inp.addEventListener('change', calc);
+    });
+    // remover grupo
+    wrap.querySelectorAll('.btn-remove-grupo').forEach(btn => {
+      btn.addEventListener('click', () => {
+        grupos = grupos.filter(g => g.id !== btn.dataset.grupo);
+        buildGruposCards();
+        calc();
+      });
+    });
+    // copiar grupo
+    wrap.querySelectorAll('[data-grupo-copy]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const orig = grupos.find(g => g.id === btn.dataset.grupoCopy);
+        if (!orig) return;
+        grupoCounter++;
+        const copia = JSON.parse(JSON.stringify(orig));
+        copia.id = 'g' + grupoCounter;
+        copia.nome = orig.nome + ' (cópia)';
+        grupos.push(copia);
+        buildGruposCards();
+        calc();
+      });
+    });
+    // suspenso toggle
+    wrap.querySelectorAll('[id^="susp-grupo-"]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const id = cb.id.replace('susp-grupo-','');
+        const g = grupos.find(g => g.id === id);
+        if (g) g.suspenso = cb.checked;
+        buildGruposCards();
+        calc();
+      });
+    });
+    wrap.querySelectorAll('[id^="usaanc-grupo-"]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const id = cb.id.replace('usaanc-grupo-','');
+        const g = grupos.find(g => g.id === id);
+        if (g) g.usaAncoragem = cb.checked;
+        buildGruposCards();
+        calc();
+      });
+    });
+    wrap.querySelectorAll('[id^="usatalha-grupo-"]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const id = cb.id.replace('usatalha-grupo-','');
+        const g = grupos.find(g => g.id === id);
+        if (g) g.usaTalha = cb.checked;
+        buildGruposCards();
+        calc();
+      });
+    });
+    wrap.querySelectorAll('[id^="box-grupo-"]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const id = cb.id.replace('box-grupo-','');
+        const g = grupos.find(g => g.id === id);
+        if (g) g.isBoxtruss = cb.checked;
+        buildGruposCards();
+        calc();
+      });
+    });
+    wrap.querySelectorAll('[id^="delay-grupo-"]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const id = cb.id.replace('delay-grupo-','');
+        const g = grupos.find(g => g.id === id);
+        if (g) g.useDelay = cb.checked;
+        buildGruposCards();
+        calc();
+      });
+    });
+    // campos numéricos de ancoragem/talha/comprimento
+    wrap.querySelectorAll('[id^="pontos-grupo-"]').forEach(inp => inp.addEventListener('input', () => { const g = grupos.find(g=>g.id===inp.id.replace('pontos-grupo-','')); if(g) g.qtdPontos = Math.max(1, parseInt(inp.value,10)||1); calc(); }));
+    wrap.querySelectorAll('[id^="capponto-grupo-"]').forEach(inp => inp.addEventListener('input', () => { const g = grupos.find(g=>g.id===inp.id.replace('capponto-grupo-','')); if(g) g.capacidadePonto = Math.max(0, parseFloat(inp.value)||0); calc(); }));
+    wrap.querySelectorAll('[id^="talhas-grupo-"]').forEach(inp => inp.addEventListener('input', () => { const g = grupos.find(g=>g.id===inp.id.replace('talhas-grupo-','')); if(g) g.qtdTalhas = Math.max(0, parseInt(inp.value,10)||0); calc(); }));
+    wrap.querySelectorAll('[id^="comptalha-grupo-"]').forEach(inp => inp.addEventListener('input', () => { const g = grupos.find(g=>g.id===inp.id.replace('comptalha-grupo-','')); if(g) g.comprimentoTalha = Math.max(0, parseFloat(inp.value)||0); calc(); }));
+    wrap.querySelectorAll('[id^="truss-grupo-"]').forEach(sel => sel.addEventListener('change', () => { const g = grupos.find(g=>g.id===sel.id.replace('truss-grupo-','')); if(g) g.trussTipo = sel.value; calc(); }));
+    wrap.querySelectorAll('[id^="comptruss-grupo-"]').forEach(inp => inp.addEventListener('input', () => { const g = grupos.find(g=>g.id===inp.id.replace('comptruss-grupo-','')); if(g) g.comprimentoTruss = Math.max(0, parseFloat(inp.value)||0); calc(); }));
+    wrap.querySelectorAll('[id^="delaydist-grupo-"]').forEach(inp => inp.addEventListener('input', () => { const g = grupos.find(g=>g.id===inp.id.replace('delaydist-grupo-','')); if(g) g.delayDistancia = Math.max(0, parseFloat(inp.value)||0); calc(); }));
+    wrap.querySelectorAll('[id^="delayalt-grupo-"]').forEach(inp => inp.addEventListener('input', () => { const g = grupos.find(g=>g.id===inp.id.replace('delayalt-grupo-','')); if(g) g.delayAltura = Math.max(0, parseFloat(inp.value)||0); calc(); }));
+    wrap.querySelectorAll('[id^="delaytemp-grupo-"]').forEach(inp => inp.addEventListener('input', () => { const g = grupos.find(g=>g.id===inp.id.replace('delaytemp-grupo-','')); if(g) g.delayTemperatura = parseFloat(inp.value) || 25; calc(); }));
+    wrap.querySelectorAll('[id^="delaymargem-grupo-"]').forEach(inp => inp.addEventListener('input', () => { const g = grupos.find(g=>g.id===inp.id.replace('delaymargem-grupo-','')); if(g) g.delayMargem = Math.max(0, parseFloat(inp.value)||0); calc(); }));
+    wrap.querySelectorAll('[id^="comp-grupo-"]').forEach(inp => inp.addEventListener('input', () => { const g = grupos.find(g=>g.id===inp.id.replace('comp-grupo-','')); if(g) g.comprimento = Math.max(0, parseFloat(inp.value)||0); calc(); }));
+
+    // adicionar caixa ao grupo
+    wrap.querySelectorAll('[data-grupo-add]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const gid = btn.dataset.grupoAdd;
+        const g = grupos.find(g => g.id === gid);
+        const type = $('sel-grupo-' + gid).value;
+        const qty = Math.max(1, parseInt($('qty-grupo-' + gid).value, 10) || 1);
+        if (g) g.items.push({ type, qty });
+        buildGruposCards();
+        calc();
+      });
+    });
+  }
+
+  function addGrupo(){
+    grupoCounter++;
+    grupos.push({ id:'g'+grupoCounter, nome:'Posição '+grupoCounter, items:[], comprimento:0, suspenso:false, usaAncoragem:false, qtdPontos:1, capacidadePonto:500, usaTalha:false, qtdTalhas:0, comprimentoTalha:3, isBoxtruss:false, trussTipo:'q30', comprimentoTruss:0, useDelay:false, delayDistancia:0, delayAltura:0, delayTemperatura:25, delayMargem:0 });
+    buildGruposCards();
+    calc();
+  }
+
+  function removeItemGrupo(gid, idx){
+    const g = grupos.find(g => g.id === gid);
+    if (g) g.items.splice(idx, 1);
+    buildGruposCards();
+    calc();
+  }
+  function updateQtyGrupoItem(gid, idx, val){
+    const g = grupos.find(g => g.id === gid);
+    if (g && g.items[idx]) g.items[idx].qty = Math.max(1, parseInt(val,10) || 1);
+    calc();
+  }
+
+  // ===== cálculo principal =====
+  function calc(){
+    // ---- canais de entrada ----
+    const totalCanaisEntrada = fontes.reduce((s,f) => s + f.qty * FONTES[f.type].ch, 0);
+    $('tblFontes').innerHTML = fontes.length === 0
+      ? `<tr class="empty-row"><td colspan="5">Adicione fontes de entrada.</td></tr>`
+      : fontes.map(f => {
+          const fo = FONTES[f.type];
+          return `
+        <tr>
+          <td>${fo.label}</td>
+          <td class="num"><input type="number" class="qty-input" min="1" step="1" value="${f.qty}" data-fid="${f.id}"></td>
+          <td class="num">${fo.ch}</td>
+          <td class="num">${fo.ch * f.qty}</td>
+          <td class="num"><button type="button" class="btn-remove" data-frem="${f.id}">×</button></td>
+        </tr>`;
+        }).join('');
+    $('totalCanaisEntrada').textContent = totalCanaisEntrada;
+    document.querySelectorAll('[data-fid]').forEach(inp => inp.addEventListener('change', () => updateFonteQty(inp.dataset.fid, inp.value)));
+    document.querySelectorAll('[data-frem]').forEach(btn => btn.addEventListener('click', () => removeFonte(btn.dataset.frem)));
+
+    // ---- saídas necessárias ----
+    const auxNecessarios = Math.max(0, parseInt($('auxNecessarios').value,10) || 0);
+    const matrizNecessarios = Math.max(0, parseInt($('matrizNecessarios').value,10) || 0);
+    const busesNecessarios = auxNecessarios + matrizNecessarios;
+    const saidasFisicasNecessarias = auxNecessarios + matrizNecessarios + 2; // + L/R principal
+
+    // ---- mesa / expansão ----
+    const console_ = CONSOLES[consoleAtual];
+    const exp = EXPANSOES[$('tipoExpansao').value] || EXPANSOES[console_.expansaoPadrao || 's16'];
+    const usaExp = expansaoState.usar && !console_.noExpansion;
+    const qtdExp = Math.max(1, parseInt($('qtdExpansao').value,10) || 1);
+
+    const entradasFisicasTotais = console_.inputsLocal + (usaExp ? qtdExp * exp.in : 0);
+    const usaProc = processadorState.usar;
+    const saidasProcessador = Math.max(0, parseInt($('saidasProcessador').value,10) || 0);
+    const nomeProcessador = $('nomeProcessador').value.trim();
+    const saidasFisicasTotais = console_.outputsLocal + (usaExp ? qtdExp * exp.out : 0) + (usaProc ? saidasProcessador : 0);
+
+    const canaisOk = totalCanaisEntrada <= console_.maxCh;
+    const entradasFisicasOk = totalCanaisEntrada <= entradasFisicasTotais;
+    const busesOk = busesNecessarios <= console_.busesTotal;
+    const saidasFisicasOk = saidasFisicasNecessarias <= saidasFisicasTotais;
+    const statusOk = canaisOk && entradasFisicasOk && busesOk && saidasFisicasOk;
+
+    $('statusMesaWrap').innerHTML = (totalCanaisEntrada > 0 || busesNecessarios > 0)
+      ? `<span class="status-pill ${statusOk ? 'ok' : 'bad'}">${statusOk ? '✓ dentro da capacidade' : '⚠ acima da capacidade'}</span>`
+      : '';
+
+    $('tblMesa').innerHTML = `
+      <tr><td>Mesa de som selecionada</td><td class="num">${console_.label}</td></tr>
+      <tr><td>Canais mixáveis da mesa</td><td class="num">${fmt(console_.maxCh)}</td></tr>
+      <tr><td style="font-weight:600;">Canais de entrada utilizados</td><td class="num" style="font-weight:600; color:var(--signal);">${fmt(totalCanaisEntrada)}</td></tr>
+      <tr><td>Canais mixáveis restantes</td><td class="num" style="font-weight:600; color:${console_.maxCh - totalCanaisEntrada < 0 ? 'var(--weight)' : 'var(--text)'};">${fmt(console_.maxCh - totalCanaisEntrada)}</td></tr>
+      <tr><td>Entradas físicas locais da mesa</td><td class="num">${fmt(console_.inputsLocal)}</td></tr>
+      ${usaExp ? `<tr><td>Entradas físicas adicionadas (${fmt(qtdExp)}x ${exp.label})</td><td class="num">${fmt(qtdExp*exp.in)}</td></tr>` : ''}
+      <tr><td style="font-weight:600;">Entradas físicas totais disponíveis</td><td class="num" style="font-weight:600;">${fmt(entradasFisicasTotais)}</td></tr>
+      <tr><td>Buses (aux + matriz) disponíveis na mesa</td><td class="num">${fmt(console_.busesTotal)}</td></tr>
+      <tr><td style="font-weight:600;">Buses necessários (retornos + matrizes)</td><td class="num" style="font-weight:600; color:var(--signal);">${fmt(busesNecessarios)}</td></tr>
+      <tr><td>Saídas físicas locais da mesa</td><td class="num">${fmt(console_.outputsLocal)}</td></tr>
+      ${usaExp ? `<tr><td>Saídas físicas adicionadas (${fmt(qtdExp)}x ${exp.label})</td><td class="num">${fmt(qtdExp*exp.out)}</td></tr>` : ''}
+      ${usaProc ? `<tr><td>Saídas do processador${nomeProcessador ? ' — ' + nomeProcessador : ''}</td><td class="num">${fmt(saidasProcessador)}</td></tr>` : ''}
+      <tr><td style="font-weight:600;">Saídas físicas totais disponíveis</td><td class="num" style="font-weight:600;">${fmt(saidasFisicasTotais)}</td></tr>
+      <tr><td>Saídas físicas necessárias (retornos + matrizes + L/R)</td><td class="num" style="font-weight:600; color:var(--signal);">${fmt(saidasFisicasNecessarias)}</td></tr>
+    `;
+
+    let notasMesa = [];
+    notasMesa.push(`Os <strong>canais mixáveis</strong> e os <strong>buses</strong> são fixos no processamento da mesa e não aumentam com stagebox — só trocando de mesa. Já as <strong>entradas/saídas físicas</strong> podem ser ampliadas com rack de expansão (entrada e saída) ou com um processador de sistema ligado depois da mesa (só saída).`);
+    if (!canaisOk){
+      notasMesa.push(`<span style="color:var(--weight);">⚠ O sistema usa <strong>${fmt(totalCanaisEntrada)} canais</strong>, acima dos <strong>${fmt(console_.maxCh)} canais mixáveis</strong> da ${console_.label}. É preciso uma mesa maior.</span>`);
+    }
+    if (!busesOk){
+      notasMesa.push(`<span style="color:var(--weight);">⚠ São necessários <strong>${fmt(busesNecessarios)} buses</strong> (retornos + matrizes), acima dos <strong>${fmt(console_.busesTotal)}</strong> disponíveis nesta mesa.</span>`);
+    }
+    if (console_.noExpansion && !entradasFisicasOk){
+      notasMesa.push(`<span style="color:var(--weight);">⚠ Esta mesa não tem rack de expansão disponível para entradas. Para mais entradas físicas, é necessário trocar de mesa.</span>`);
+    } else if (!entradasFisicasOk){
+      const faltam = totalCanaisEntrada - entradasFisicasTotais;
+      const unidadesNecessarias = Math.ceil((totalCanaisEntrada - console_.inputsLocal) / exp.in);
+      notasMesa.push(`<span style="color:var(--weight);">⚠ Faltam <strong>${fmt(faltam)} entradas físicas</strong>. Ative o rack de expansão e configure ao menos <strong>${fmt(unidadesNecessarias)}x ${exp.label}</strong> para cobrir os ${fmt(totalCanaisEntrada)} canais.</span>`);
+    }
+    if (!saidasFisicasOk){
+      const faltamOut = saidasFisicasNecessarias - saidasFisicasTotais;
+      if (console_.noExpansion){
+        notasMesa.push(`<span style="color:var(--weight);">⚠ Faltam <strong>${fmt(faltamOut)} saídas físicas</strong>. Esta mesa não tem rack de expansão — ative o processador e ajuste a quantidade de saídas dele para cobrir as ${fmt(saidasFisicasNecessarias)} saídas necessárias.</span>`);
+      } else {
+        const unidadesNecessariasOut = Math.ceil((saidasFisicasNecessarias - console_.outputsLocal - (usaProc?saidasProcessador:0)) / exp.out);
+        notasMesa.push(`<span style="color:var(--weight);">⚠ Faltam <strong>${fmt(faltamOut)} saídas físicas</strong>. Configure ao menos <strong>${fmt(Math.max(1,unidadesNecessariasOut))}x ${exp.label}</strong> (ou aumente as saídas do processador) para cobrir as ${fmt(saidasFisicasNecessarias)} saídas necessárias.</span>`);
+      }
+    }
+    if (statusOk && totalCanaisEntrada > 0){
+      notasMesa.push(`Restam <strong>${fmt(console_.maxCh - totalCanaisEntrada)} canais</strong>, <strong>${fmt(console_.busesTotal - busesNecessarios)} buses</strong>, <strong>${fmt(entradasFisicasTotais - totalCanaisEntrada)} entradas físicas</strong> e <strong>${fmt(saidasFisicasTotais - saidasFisicasNecessarias)} saídas físicas</strong> na configuração atual.`);
+    }
+    $('notaMesa').innerHTML = notasMesa.join(' ');
+    $('notaSaidas').innerHTML = `Total de saídas lógicas: <strong>${fmt(auxNecessarios)} retornos</strong> + <strong>${fmt(matrizNecessarios)} matrizes/zonas</strong> + 2 (L/R principal) = <strong>${fmt(saidasFisicasNecessarias)} saídas físicas</strong> necessárias.`;
+    $('modelDesc').innerHTML = `${console_.desc}${console_.noExpansion ? ' · <span style="color:var(--weight);">sem expansão de I/O</span>' : ` · expansível com <strong>${EXPANSOES[console_.expansaoPadrao].label}</strong> (até ${console_.expansaoMax} unidades)`}`;
+
+    // ---- grupos de PA ----
+    const cabeamentoKgM = parseFloat($('cabeamentoKgM').value) || 0;
+    let totalCaixas = 0, totalW = 0, totalKg = 0, totalCircuitos = 0;
+    const totaisPorTipo = {};
+    Object.keys(CAIXAS).forEach(k => totaisPorTipo[k] = 0);
+    const tensao = parseFloat($('tensaoRede').value) || 220;
+    const ampsCircuitoVal = parseFloat($('ampsCircuito').value) || 20;
+    $('notaCircuito').innerHTML = `Cada circuito suporta até <strong>${fmt(tensao * ampsCircuitoVal)} VA</strong> (${fmt(ampsCircuitoVal)}A × ${fmt(tensao)}V).`;
+
+    const gruposResultados = [];
+    const circuitosPorGrupo = [];
+    const riggingResultados = [];
+
+    grupos.forEach(g => {
+      let catQtd = 0, catW = 0, catKg = 0;
+      g.items.forEach(it => {
+        const cx = CAIXAS[it.type];
+        catQtd += it.qty;
+        catW += cx.watts * it.qty;
+        catKg += cx.peso * it.qty;
+        totaisPorTipo[it.type] += it.qty;
+      });
+      totalCaixas += catQtd;
+      totalW += catW;
+      totalKg += catKg;
+
+      const compGrupo = g.comprimento || 0;
+      const pesoCabeamento = compGrupo * cabeamentoKgM;
+
+      const trussLabel = g.isBoxtruss ? TRUSS_TIPOS[g.trussTipo].label : '';
+      const comprimentoTruss = g.isBoxtruss ? (g.comprimentoTruss || 0) : 0;
+      const pesoTruss = g.isBoxtruss ? comprimentoTruss * TRUSS_TIPOS[g.trussTipo].kgPorM : 0;
+
+      const ampsGrupo = catW / tensao;
+      const circuitosGrupo = catW > 0 ? Math.ceil(ampsGrupo / ampsCircuitoVal) : 0;
+      totalCircuitos += circuitosGrupo;
+      circuitosPorGrupo.push({ nome:g.nome, watts:catW, amps:ampsGrupo, circuitos:circuitosGrupo });
+
+      $('tbl-grupo-' + g.id).innerHTML = g.items.length === 0
+        ? `<tr class="empty-row"><td colspan="5">Nenhuma caixa adicionada.</td></tr>`
+        : g.items.map((it, idx) => {
+            const cx = CAIXAS[it.type];
+            return `
+          <tr>
+            <td>${cx.label}</td>
+            <td class="num"><input type="number" class="qty-input" min="1" step="1" value="${it.qty}" data-grupo="${g.id}" data-idx="${idx}"></td>
+            <td class="num">${fmt(cx.watts * it.qty)} W</td>
+            <td class="num">${fmt(cx.peso * it.qty)} kg</td>
+            <td class="num"><button type="button" class="btn-remove" data-grupo="${g.id}" data-idx="${idx}" data-rem="1">×</button></td>
+          </tr>`;
+          }).join('');
+
+      $('subtotal-grupo-' + g.id).innerHTML = g.items.length === 0 ? '' : `
+        <span><span class="swatch sw-neutral"></span>${catQtd} caixa${catQtd===1?'':'s'}</span>
+        <span><span class="swatch sw-power"></span><b>${fmt(catW)} W</b></span>
+        <span><span class="swatch sw-weight"></span><b>${fmt(catKg + pesoCabeamento + pesoTruss)} kg</b></span>
+      `;
+
+      // ---- ponto de fixação: bumper/frame de voo, talha, distribuição por ponto ----
+      const equipamentosGrupo = g.items.map(it => ({ label: CAIXAS[it.type].label, qty: it.qty, watts: CAIXAS[it.type].watts * it.qty, peso: CAIXAS[it.type].peso * it.qty }));
+      const pesoBumpers = g.suspenso ? catQtd * PESO_BUMPER_SOM : 0;
+      let usaTalhaFinal=false, qtdTalhasFinal=0, comprimentoTalhaFinal=0, pesoTalhasFinal=0;
+      let usaAncoragemFinal=false, qtdPontosFinal=0, capacidadePontoFinal=0, pesoSuspensoFinal=null, pesoPorPontoFinal=null, pesoDisponivelFinal=null, sobrecarregadoFinal=false;
+
+      const notaPartes = [];
+      if (g.useDelay){
+        const dr = calcDelayGrupo(g);
+        const delayEl = $('delayresult-grupo-' + g.id);
+        if (delayEl){
+          delayEl.innerHTML = `
+            <span>Distância horizontal: <strong>${fmt(dr.distancia)} m</strong></span>
+            <span>Diferença de altura: <strong>${fmt(dr.altura)} m</strong></span>
+            <span>Distância acústica: <strong>${fmt(dr.distanciaReal)} m</strong></span>
+            <span>Velocidade do som: <strong>${fmt(dr.v)} m/s</strong></span>
+            <span>Delay: <strong>${fmt(dr.delayMs)} ms</strong></span>
+            ${dr.margem > 0 ? `<span>Delay final: <strong class="final">${fmt(dr.delayFinal)} ms</strong></span>` : ''}`;
+        }
+        notaPartes.push(`Delay: <strong>${fmt(dr.delayFinal)} ms</strong> (${fmt(dr.distanciaReal)} m de distância acústica)`);
+      }
+      if (compGrupo > 0) notaPartes.push(`Cabeamento: <strong>${fmt(pesoCabeamento)}kg</strong>`);
+      if (g.isBoxtruss && comprimentoTruss > 0) notaPartes.push(`Treliça ${trussLabel} (${fmt(comprimentoTruss)}m): <strong>${fmt(pesoTruss)}kg</strong>`);
+
+      if (g.suspenso){
+        usaTalhaFinal = !!g.usaTalha;
+        qtdTalhasFinal = usaTalhaFinal ? (g.qtdTalhas||0) : 0;
+        comprimentoTalhaFinal = usaTalhaFinal ? (g.comprimentoTalha||0) : 0;
+        pesoTalhasFinal = usaTalhaFinal ? qtdTalhasFinal * (PESO_TALHA_CORPO + comprimentoTalhaFinal * PESO_CORRENTE_KG_M) : 0;
+        if (usaTalhaFinal && qtdTalhasFinal > 0){
+          notaPartes.push(`Talhas: <strong>${qtdTalhasFinal}</strong> × (${fmt(PESO_TALHA_CORPO)}kg + ${fmt(comprimentoTalhaFinal)}m × ${fmt(PESO_CORRENTE_KG_M)}kg/m) = <strong>${fmt(pesoTalhasFinal)}kg</strong>`);
+        }
+
+        usaAncoragemFinal = !!g.usaAncoragem;
+        pesoSuspensoFinal = catKg + pesoBumpers + pesoCabeamento + pesoTruss + pesoTalhasFinal;
+
+        if (usaAncoragemFinal){
+          qtdPontosFinal = g.qtdPontos || 1;
+          capacidadePontoFinal = g.capacidadePonto || 0;
+          pesoPorPontoFinal = pesoSuspensoFinal / qtdPontosFinal;
+          const capacidadeTotalGrupo = qtdPontosFinal * capacidadePontoFinal;
+          pesoDisponivelFinal = capacidadeTotalGrupo - pesoSuspensoFinal;
+          sobrecarregadoFinal = capacidadePontoFinal > 0 && pesoPorPontoFinal > capacidadePontoFinal;
+
+          notaPartes.push(sobrecarregadoFinal
+            ? `<span style="color:var(--weight);">⚠ ${fmt(pesoPorPontoFinal)}kg por ponto — acima da capacidade de ${fmt(capacidadePontoFinal)}kg/ponto</span>`
+            : `Distribuição: <strong>${fmt(pesoPorPontoFinal)}kg</strong> por ponto${capacidadePontoFinal > 0 ? ` (de ${fmt(capacidadePontoFinal)}kg/ponto)` : ''}`);
+          if (capacidadePontoFinal > 0){
+            notaPartes.push(pesoDisponivelFinal < 0
+              ? `<span style="color:var(--weight);">⚠ Capacidade excedida em ${fmt(Math.abs(pesoDisponivelFinal))}kg</span>`
+              : `Peso disponível no aéreo: <strong>${fmt(pesoDisponivelFinal)}kg</strong> (de ${fmt(capacidadeTotalGrupo)}kg no total)`);
+          }
+        }
+      }
+
+      if (catQtd > 0){
+        notaPartes.push(`${fmt(catW)}W ÷ ${fmt(tensao)}V = ${fmt(ampsGrupo)}A → <strong>${circuitosGrupo} circuito${circuitosGrupo === 1 ? '' : 's'} AC</strong>`);
+      }
+
+      $('nota-grupo-' + g.id).innerHTML = notaPartes.length
+        ? notaPartes.join(' · ') + '.'
+        : `Informe o comprimento para calcular o peso de cabeamento${g.isBoxtruss ? ' e da treliça' : ''}.`;
+
+      gruposResultados.push({
+        nome:g.nome, equipamentos:equipamentosGrupo, caixas:catQtd, watts:catW,
+        comprimentoCabos:compGrupo, pesoCabeamento, isBoxtruss:g.isBoxtruss, trussLabel,
+        comprimentoTruss, pesoTruss, suspenso:g.suspenso, pesoEquipamentos:catKg,
+        pesoBumpers, usaTalha:usaTalhaFinal, qtdTalhas:qtdTalhasFinal, comprimentoTalha:comprimentoTalhaFinal,
+        pesoTalhas:pesoTalhasFinal, pesoSuspenso:pesoSuspensoFinal, usaAncoragem:usaAncoragemFinal,
+        qtdPontos:qtdPontosFinal, capacidadePonto:capacidadePontoFinal, pesoPorPonto:pesoPorPontoFinal,
+        pesoDisponivel:pesoDisponivelFinal, sobrecarregado:sobrecarregadoFinal,
+        useDelay:!!g.useDelay, delayDistancia:Number(g.delayDistancia)||0, delayAltura:Number(g.delayAltura)||0,
+        delayTemperatura:Number.isFinite(Number(g.delayTemperatura)) ? Number(g.delayTemperatura) : 25, delayMargem:Number(g.delayMargem)||0,
+        delayDistanciaAcustica:g.useDelay ? calcDelayGrupo(g).distanciaReal : 0, delayMs:g.useDelay ? calcDelayGrupo(g).delayMs : 0, delayFinal:g.useDelay ? calcDelayGrupo(g).delayFinal : 0
+      });
+
+      if (g.suspenso){
+        riggingResultados.push({ nome:g.nome, caixas:catQtd, peso: (pesoSuspensoFinal!=null?pesoSuspensoFinal:(catKg+pesoBumpers+pesoCabeamento+pesoTruss)), usaAncoragem:usaAncoragemFinal, qtdPontos:qtdPontosFinal, capacidadePonto:capacidadePontoFinal, pesoPorPonto:pesoPorPontoFinal, usaTalha:usaTalhaFinal, qtdTalhas:qtdTalhasFinal, comprimentoTalha:comprimentoTalhaFinal, sobrecarregado:sobrecarregadoFinal });
+      }
+    });
+
+    document.querySelectorAll('#gruposWrap .btn-remove[data-idx]').forEach(btn => {
+      btn.addEventListener('click', () => removeItemGrupo(btn.dataset.grupo, parseInt(btn.dataset.idx,10)));
+    });
+    document.querySelectorAll('#gruposWrap .qty-input[data-grupo]').forEach(inp => {
+      inp.addEventListener('change', () => updateQtyGrupoItem(inp.dataset.grupo, parseInt(inp.dataset.idx,10), inp.value));
+    });
+
+    // ---- consumo da mesa entra no total geral ----
+    const consumoMesa = console_.consumo || 0;
+    const totalWGeral = totalW + consumoMesa;
+    const totalKVA = totalWGeral / 1000;
+    const totalAmpsGeral = totalWGeral / tensao;
+    const circuitosMesa = consumoMesa > 0 ? Math.ceil((consumoMesa / tensao) / ampsCircuitoVal) : 0;
+    const totalCircuitosGeral = totalCircuitos + circuitosMesa;
+
+    $('heroStat').innerHTML = `
+      <div class="cell"><div class="num">${totalCaixas}</div><div class="label">caixas de PA</div></div>
+      <div class="cell"><div class="num">${fmt(totalKVA)}</div><div class="label">kVA totais</div></div>
+      <div class="cell weight"><div class="num">${fmt(totalKg)} kg</div><div class="label">peso do PA</div></div>
+      <div class="cell"><div class="num">${totalCanaisEntrada}</div><div class="label">canais de entrada</div></div>
+      <div class="cell"><div class="num">${totalCircuitosGeral}</div><div class="label">circuitos AC</div></div>
+    `;
+
+    $('tblResumoGeral').innerHTML = `
+      <tr><td>Total de caixas de PA</td><td class="num">${totalCaixas}</td></tr>
+      <tr><td>Consumo das caixas de PA</td><td class="num">${fmt(totalW)} W</td></tr>
+      <tr><td>Consumo da mesa de som (${console_.label})</td><td class="num">${fmt(consumoMesa)} W</td></tr>
+      <tr><td style="font-weight:600;">Consumo total considerado</td><td class="num" style="font-weight:600;">${fmt(totalWGeral)} W (${fmt(totalKVA)} kVA)</td></tr>
+      <tr><td>Corrente total estimada em ${fmt(tensao)}V</td><td class="num">${fmt(totalAmpsGeral)} A</td></tr>
+      <tr><td style="font-weight:600;">Peso total do sistema de PA</td><td class="num" style="font-weight:600;">${fmt(totalKg)} kg</td></tr>
+    `;
+
+    const gruposComCarga = circuitosPorGrupo.filter(r => r.watts > 0);
+    $('tblCircuitos').innerHTML = (gruposComCarga.length === 0 && consumoMesa === 0)
+      ? `<tr class="empty-row"><td colspan="4">Adicione caixas para calcular os circuitos.</td></tr>`
+      : [...gruposComCarga.map(r => `
+        <tr>
+          <td>${r.nome}</td>
+          <td class="num">${fmt(r.watts)} W</td>
+          <td class="num">${fmt(r.amps)} A</td>
+          <td class="num">${r.circuitos}</td>
+        </tr>`), `
+        <tr>
+          <td>Mesa de som (${console_.label})</td>
+          <td class="num">${fmt(consumoMesa)} W</td>
+          <td class="num">${fmt(consumoMesa/tensao)} A</td>
+          <td class="num">${circuitosMesa}</td>
+        </tr>`].join('');
+    $('circuitosFinal').textContent = totalCircuitosGeral;
+
+    const tiposComQtd = Object.keys(totaisPorTipo).filter(k => totaisPorTipo[k] > 0);
+    let totalCases = 0;
+    $('tblCases').innerHTML = tiposComQtd.length === 0
+      ? `<tr class="empty-row"><td colspan="4">Adicione caixas para calcular os cases.</td></tr>`
+      : tiposComQtd.map(k => {
+          const cx = CAIXAS[k];
+          const qty = totaisPorTipo[k];
+          const cases = Math.ceil(qty / cx.casePor);
+          totalCases += cases;
+          return `<tr><td>${cx.label}</td><td class="num">${qty}</td><td class="num">${cx.casePor}</td><td class="num">${cases}</td></tr>`;
+        }).join('');
+    $('casesFinal').textContent = totalCases;
+
+    $('tblRigging').innerHTML = riggingResultados.length === 0
+      ? `<tr class="empty-row"><td colspan="4">Nenhuma posição marcada como voada/suspensa ainda.</td></tr>`
+      : riggingResultados.map(r => {
+          const partes = [];
+          if (r.usaAncoragem) partes.push(`${r.qtdPontos} ponto${r.qtdPontos===1?'':'s'}${r.capacidadePonto>0?` de ${fmt(r.capacidadePonto)}kg`:''} — ${fmt(r.pesoPorPonto)}kg/ponto`);
+          if (r.usaTalha) partes.push(`${r.qtdTalhas} talha${r.qtdTalhas===1?'':'s'}${r.comprimentoTalha>0?` de ${fmt(r.comprimentoTalha)}m`:''}`);
+          const fixacaoTexto = partes.length ? partes.join(' · ') : 'sem fixação definida';
+          return `
+        <tr>
+          <td>${r.nome}</td>
+          <td class="num">${r.caixas}</td>
+          <td class="num"${r.sobrecarregado?' style="color:var(--weight); font-weight:600;"':''}>${fmt(r.peso)} kg</td>
+          <td class="num"${r.sobrecarregado?' style="color:var(--weight); font-weight:600;"':''}>${fixacaoTexto}${r.sobrecarregado?' ⚠':''}</td>
+        </tr>`;
+        }).join('');
+    const totalCaixasSuspensas = riggingResultados.reduce((s,r)=>s+r.caixas,0);
+    const totalPesoSuspenso = riggingResultados.reduce((s,r)=>s+r.peso,0);
+    const totalTalhas = riggingResultados.filter(r=>r.usaTalha).reduce((s,r)=>s+(r.qtdTalhas||0),0);
+    $('riggingTotalCaixas').textContent = totalCaixasSuspensas;
+    $('riggingTotalPeso').textContent = fmt(totalPesoSuspenso) + ' kg';
+    $('riggingTotalTalhas').textContent = totalTalhas + ' talhas';
+
+    ultimoCalculo = {
+      totalCanaisEntrada, consoleLabel: console_.label, maxCh: console_.maxCh, busesTotal: console_.busesTotal,
+      busesNecessarios, entradasFisicasTotais, saidasFisicasTotais, saidasFisicasNecessarias,
+      saidasFisicasMesa: console_.outputsLocal, saidasExpansao: usaExp ? qtdExp * exp.out : 0,
+      usaExp, qtdExp, expLabel: exp.label, usaProc, saidasProcessador, nomeProcessador,
+      totalCaixas, totalW, consumoMesa, totalWGeral, totalKVA, totalKg, totalCircuitosGeral,
+      gruposResultados, circuitosPorGrupo, riggingResultados, totalCases, totaisPorTipo,
+      auxNecessarios, matrizNecessarios, tensao, ampsCircuitoVal
+    };
+    // O Descritivo Geral lê diretamente estes dados estruturados.
+    // Não é mais necessário gerar o descritivo nesta calculadora.
+    try {
+      localStorage.setItem('descritivo_dados_som', JSON.stringify(ultimoCalculo));
+      localStorage.setItem('descritivo_som_ts', String(Date.now()));
+    } catch (e) {}
+
+  }
+
+  // ===== persistência automática do projeto =====
+  const STORAGE_KEY_SOM = 'calculadora_som_estado_v1';
+  let saveTimerSom = null;
+  // ultimaEdicaoTs só muda quando o usuário edita algo de fato (input/change/click
+  // real). Sair da página (beforeunload) ou forçar um salvamento não conta como
+  // edição nova — senão o "editado em" fica sempre na frente do "gerado em" só
+  // por trocar de aba, e o aviso de desatualizado nunca some.
+  let ultimaEdicaoTs = Date.now();
+  function coletarEstadoSom(){
+    const campos = {};
+    document.querySelectorAll('input[id], select[id], textarea[id]').forEach(el => {
+      if (el.id === 'descritivoText') return;
+      campos[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+    });
+    return { campos, brandAtual, consoleAtual, expansaoState: JSON.parse(JSON.stringify(expansaoState)), processadorState: JSON.parse(JSON.stringify(processadorState)), fontes: JSON.parse(JSON.stringify(fontes)), fonteCounter, grupos: JSON.parse(JSON.stringify(grupos)), grupoCounter, ts: ultimaEdicaoTs };
+  }
+  function salvarEstadoSom(){ try { localStorage.setItem(STORAGE_KEY_SOM, JSON.stringify(coletarEstadoSom())); ultimoSalvamentoTs = Date.now(); atualizarSaveStatus(); } catch(e) {} }
+  function agendarSalvarSom(){ ultimaEdicaoTs = Date.now(); clearTimeout(saveTimerSom); saveTimerSom=setTimeout(salvarEstadoSom,120); }
+  function restaurarEstadoSom(){
+    try {
+      const s=JSON.parse(localStorage.getItem(STORAGE_KEY_SOM)||'null'); if(!s) return false;
+      if(s.brandAtual) brandAtual=s.brandAtual; if(s.consoleAtual) consoleAtual=s.consoleAtual;
+      if(s.expansaoState) expansaoState=s.expansaoState; if(s.processadorState) processadorState=s.processadorState;
+      if(Array.isArray(s.fontes)) fontes=s.fontes; if(Number.isFinite(s.fonteCounter)) fonteCounter=s.fonteCounter;
+      if(Array.isArray(s.grupos)&&s.grupos.length) grupos=s.grupos; if(Number.isFinite(s.grupoCounter)) grupoCounter=s.grupoCounter;
+      if(Number.isFinite(s.ts)) ultimaEdicaoTs=s.ts;
+      Object.entries(s.campos||{}).forEach(([id,val])=>{const el=$(id);if(!el)return;if(el.type==='checkbox')el.checked=!!val;else el.value=val;});
+      return true;
+    } catch(e){return false;}
+  }
+
+  // ===== sidebar: status de salvamento + navegação com scrollspy =====
+  let ultimoSalvamentoTs = Date.now();
+  function fmtRelativo(ts){
+    if (!ts) return '';
+    const diffSeg = Math.round((Date.now() - ts) / 1000);
+    if (diffSeg < 5) return 'agora mesmo';
+    if (diffSeg < 60) return 'há ' + diffSeg + 's';
+    const min = Math.floor(diffSeg / 60);
+    if (min < 60) return 'há ' + min + ' min';
+    const h = Math.floor(min / 60);
+    return 'há ' + h + 'h';
+  }
+  function atualizarSaveStatus(){
+    const el = $('saveStatusText');
+    if (el) el.textContent = 'Salvo automaticamente · ' + fmtRelativo(ultimoSalvamentoTs);
+  }
+  setInterval(atualizarSaveStatus, 5000);
+
+  const navLinks = Array.from(document.querySelectorAll('#sideNav a'));
+  const navSections = navLinks.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  function atualizarScrollspy(){
+    let atual = navSections[0];
+    for (const sec of navSections) {
+      if (sec.offsetParent === null) continue;
+      if (sec.getBoundingClientRect().top - 130 <= 0) atual = sec;
+    }
+    navLinks.forEach((a, i) => a.classList.toggle('active', navSections[i] === atual));
+  }
+  let scrollTicking = false;
+  document.addEventListener('scroll', () => {
+    if (scrollTicking) return;
+    scrollTicking = true;
+    requestAnimationFrame(() => { atualizarScrollspy(); scrollTicking = false; });
+  });
+  atualizarScrollspy();
+
+  // ===== init =====
+  // Junta os equipamentos cadastrados em catalogo.html (localStorage) aos
+  // catálogos padrão desta calculadora, antes de montar os seletores.
+  if (window.MMCatalogo) {
+    MMCatalogo.mergeCaixas(CAIXAS);
+    MMCatalogo.mergeExpansoes(EXPANSOES);
+    MMCatalogo.mergeConsolesSom(CONSOLES, BRANDS);
+  }
+
+  // Restaura o último projeto antes de reconstruir os blocos dinâmicos.
+  restaurarEstadoSom();
+
+  buildSelFonte();
+  buildBrandTabs();
+  buildModelSelect();
+  bindModelSelect();
+  bindExpansaoControls();
+  buildGruposCards();
+  $('btnAddFonte').addEventListener('click', addFonte);
+  $('btnAddGrupo').addEventListener('click', addGrupo);
+  $('auxNecessarios').addEventListener('input', calc);
+  $('matrizNecessarios').addEventListener('input', calc);
+  $('tensaoRede').addEventListener('input', calc);
+  $('tensaoRede').addEventListener('change', calc);
+  $('ampsCircuito').addEventListener('input', calc);
+  $('ampsCircuito').addEventListener('change', calc);
+  $('cabeamentoKgM').addEventListener('input', calc);
+  $('cabeamentoKgM').addEventListener('change', calc);
+  calc();
+  salvarEstadoSom();
+  atualizarSaveStatus();
+  document.addEventListener('input', agendarSalvarSom);
+  document.addEventListener('change', agendarSalvarSom);
+  document.addEventListener('click', agendarSalvarSom);
+  window.addEventListener('beforeunload', salvarEstadoSom);
+</script>
+
+</body>
+</html>

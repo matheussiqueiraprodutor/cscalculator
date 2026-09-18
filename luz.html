@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pré Produção de Luz — cscalculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="catalogo-dados.js"></script>
+<style>
+  :root{
+    --bg: #0a0a0b;
+    --panel: #131315;
+    --panel-2: #1a1a1d;
+    --line: #29292d;
+    --text: #f3f1ec;
+    --muted: #8c8c91;
+    --power: #1d4e73;
+    --signal: #7fa8c9;
+    --weight: #b3564a;
+    --ok: #7cae83;
+    --luz: #d1a24a;
+    --accent: var(--luz);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    line-height:1.5;
+  }
+  h1,h2,h3,.disp{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+
+  header{
+    border-bottom:1px solid var(--line);
+    background:
+      radial-gradient(ellipse 900px 300px at 15% 0%, rgba(209,162,74,0.10), transparent 70%);
+  }
+  header .header-inner{
+    max-width:1100px;
+    margin:0 auto;
+    padding:44px 20px 32px;
+  }
+  .back-link{
+    display:inline-block;
+    color:var(--muted);
+    text-decoration:none;
+    font-size:13px;
+    font-weight:500;
+    margin-bottom:18px;
+  }
+  .back-link:hover{ color:var(--accent); }
+  header .tag{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    color:var(--accent);
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    margin:0 0 14px;
+  }
+  header .tag::before{
+    content:'';
+    width:6px; height:6px;
+    background:var(--accent);
+    border-radius:1px;
+    display:inline-block;
+  }
+  header h1{
+    font-size:32px;
+    margin:0 0 10px;
+    line-height:1.12;
+    max-width:26ch;
+  }
+  header p{
+    color:var(--muted);
+    margin:0;
+    font-size:14.5px;
+    max-width:60ch;
+  }
+
+  html{ scroll-behavior:smooth; }
+
+  .layout{
+    display:flex;
+    max-width:1400px;
+    margin:0 auto;
+    align-items:flex-start;
+  }
+  .sidebar{
+    width:230px;
+    flex-shrink:0;
+    position:sticky;
+    top:0;
+    height:100vh;
+    overflow-y:auto;
+    box-sizing:border-box;
+    padding:24px 16px 20px 20px;
+    border-right:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+  }
+  .sidebar .save-status{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:8px 10px;
+    font-size:11.5px;
+    color:var(--muted);
+    margin-bottom:18px;
+  }
+  .sidebar-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    color:var(--muted);
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    margin:0 0 8px;
+  }
+  .sidebar nav{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    flex-grow:1;
+  }
+  .sidebar nav a{
+    display:block;
+    padding:8px 10px;
+    border-radius:3px;
+    font-size:13px;
+    color:var(--muted);
+    text-decoration:none;
+    scroll-margin-top:20px;
+  }
+  .sidebar nav a:hover{ color:var(--text); }
+  .sidebar nav a.active{
+    background:rgba(209,162,74,0.10);
+    color:var(--accent);
+    font-weight:600;
+  }
+  .sidebar .sidebar-btn{
+    margin-top:16px;
+    width:100%;
+  }
+  @media (max-width: 980px){
+    .layout{ flex-direction:column; }
+    .sidebar{
+      width:100%;
+      height:auto;
+      position:relative;
+      border-right:none;
+      border-bottom:1px solid var(--line);
+      flex-direction:row;
+      align-items:center;
+      overflow-x:auto;
+      padding:14px 20px;
+      gap:12px;
+    }
+    .sidebar .save-status{ margin-bottom:0; white-space:nowrap; }
+    .sidebar-label{ display:none; }
+    .sidebar nav{ flex-direction:row; flex-grow:0; }
+    .sidebar nav a{ white-space:nowrap; }
+    .sidebar .sidebar-btn{ margin-top:0; width:auto; white-space:nowrap; }
+  }
+
+  main{
+    flex-grow:1;
+    min-width:0;
+    max-width:1100px;
+    margin:0;
+    padding:32px 20px 80px;
+  }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-top:2px solid var(--accent);
+    border-radius:3px;
+    padding:22px;
+    scroll-margin-top:20px;
+  }
+  .card + .card{margin-top:20px;}
+
+  .section-title{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--text);
+    margin:0 0 16px;
+    padding-bottom:12px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .section-title .sub{
+    font-family:'Inter', sans-serif;
+    font-size:12px;
+    font-weight:400;
+    text-transform:none;
+    letter-spacing:0;
+    color:var(--muted);
+  }
+
+  .field{margin-bottom:14px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{
+    display:block;
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:5px;
+  }
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+
+  input[type=number], select{
+    width:100%;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:9px 10px;
+    border-radius:3px;
+    font-size:15px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  input[type=number]:focus, select:focus{
+    outline:none;
+    border-color:var(--accent);
+  }
+  select{font-family:'Inter', sans-serif;}
+
+  .pitch-toggle{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .pitch-toggle button{
+    flex:1;
+    min-width:160px;
+    padding:9px 10px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--muted);
+    border-radius:3px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    cursor:pointer;
+    text-align:left;
+  }
+  .pitch-toggle button .cnome{ display:block; color:var(--text); font-family:'Space Grotesk', sans-serif; font-size:13.5px; font-weight:600; margin-bottom:2px;}
+  .pitch-toggle button.active{
+    border-color:var(--accent);
+    background:rgba(209,162,74,0.08);
+  }
+  .pitch-toggle button.active .cnome{ color:var(--accent); }
+
+  .add-row{
+    display:grid;
+    grid-template-columns: 1fr 90px auto;
+    gap:10px;
+    align-items:end;
+    margin-bottom:14px;
+  }
+  .add-row .field{margin-bottom:0;}
+  .btn-add{
+    background:var(--accent);
+    border:1px solid var(--accent);
+    color:#151007;
+    padding:9px 16px;
+    border-radius:3px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .btn-add:hover{ opacity:0.88; }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13.5px;
+  }
+  table th{
+    text-align:left;
+    font-size:11.5px;
+    color:var(--muted);
+    font-weight:600;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    padding:8px 8px;
+    border-bottom:1px solid var(--line);
+  }
+  table td{
+    padding:9px 8px;
+    border-bottom:1px solid var(--line);
+    vertical-align:middle;
+  }
+  table tr:last-child td{border-bottom:none;}
+  td.num, th.num{text-align:right; font-family:'IBM Plex Mono', monospace;}
+  .qty-input{
+    width:60px;
+    padding:5px 6px;
+    font-size:13px;
+    text-align:center;
+  }
+  .btn-remove{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--muted);
+    width:26px; height:26px;
+    border-radius:3px;
+    cursor:pointer;
+    font-size:14px;
+    line-height:1;
+  }
+  .btn-remove:hover{ border-color:var(--weight); color:var(--weight); }
+  .btn-copy{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--muted);
+    width:26px; height:26px;
+    border-radius:3px;
+    cursor:pointer;
+    font-size:13px;
+    line-height:1;
+  }
+  .btn-copy:hover{ border-color:var(--accent); color:var(--accent); }
+  .checkbox-row{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:10px 12px;
+    margin-bottom:14px;
+  }
+  .checkbox-row input{margin-top:3px;}
+  .checkbox-row .cb-text{font-size:13px; color:var(--text);}
+  .checkbox-row .cb-text small{display:block; color:var(--muted); margin-top:2px;}
+
+  .toggle-strip{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px 20px;
+    align-items:center;
+    margin:2px 0 10px;
+  }
+  .toggle-chip{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-size:13px;
+    color:var(--text);
+    cursor:pointer;
+    user-select:none;
+  }
+  .toggle-chip input{ margin:0; cursor:pointer; accent-color:var(--accent); }
+  .toggle-chip:hover{ color:var(--accent); }
+  .subfields{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    padding:8px 10px;
+    margin:0 0 10px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:3px;
+  }
+  .subfields .field{ margin-bottom:0; }
+  .subfields .field label{
+    font-size:11.5px;
+    margin-bottom:3px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .subfields input[type=number], .subfields select{
+    padding:6px 8px;
+    font-size:13px;
+  }
+  .empty-row td{
+    color:var(--muted);
+    font-size:13px;
+    padding:14px 8px;
+    text-align:center;
+    border-bottom:none;
+  }
+
+  .cat-subtotal{
+    display:flex;
+    gap:18px;
+    flex-wrap:wrap;
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  .cat-subtotal b{ color:var(--text); font-family:'IBM Plex Mono', monospace; font-weight:600; }
+
+  .swatch{
+    display:inline-block;
+    width:8px; height:8px;
+    border-radius:1px;
+    margin-right:8px;
+  }
+  .sw-power{background:var(--accent);}
+  .sw-signal{background:var(--signal);}
+  .sw-weight{background:var(--weight);}
+  .sw-neutral{background:var(--muted);}
+  .sw-ok{background:var(--ok);}
+
+  .hero-stat{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-top:2px solid var(--accent);
+    border-radius:3px;
+    overflow:hidden;
+    margin-bottom:20px;
+  }
+  .hero-stat .cell{
+    background:var(--panel);
+    padding:20px 16px;
+  }
+  .hero-stat .cell .num{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:26px;
+    font-weight:600;
+    line-height:1;
+    color:var(--accent);
+  }
+  .hero-stat .cell .label{
+    font-size:11.5px;
+    color:var(--muted);
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    margin-top:8px;
+  }
+  .hero-stat .cell.weight .num{color:var(--weight);}
+
+  .note{
+    font-size:12.5px;
+    color:var(--muted);
+    margin-top:16px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+  }
+  .note strong{color:var(--text);}
+  .note.tight{margin-top:0; padding-top:0; border-top:none;}
+
+  .status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:12px;
+    font-weight:600;
+    padding:4px 10px;
+    border-radius:20px;
+    border:1px solid var(--line);
+  }
+  .status-pill.ok{ color:var(--ok); border-color:var(--ok); }
+  .status-pill.bad{ color:var(--weight); border-color:var(--weight); }
+
+  .cat-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:20px;
+    align-items:start;
+  }
+  .cat-grid > .card{ margin-top:0; }
+  @media (max-width: 860px){
+    .cat-grid{grid-template-columns: 1fr;}
+    .add-row{grid-template-columns: 1fr;}
+  }
+
+  footer{
+    max-width:1100px;
+    margin:0 auto;
+    padding:24px 20px 40px;
+    color:var(--muted);
+    font-size:12px;
+    border-top:1px solid var(--line);
+  }
+
+  .export-bar{
+    max-width:1100px;
+    margin:0 auto;
+    padding:16px 20px 0;
+    display:flex;
+    justify-content:flex-end;
+  }
+  .btn-export{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-top:2px solid var(--accent);
+    color:var(--text);
+    padding:10px 18px;
+    border-radius:3px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:0.03em;
+    cursor:pointer;
+  }
+  .btn-export:hover{ color:var(--accent); }
+
+  .descritivo-wrap{
+    max-width:1100px;
+    margin:0 auto;
+    padding:0 20px 40px;
+    display:none;
+  }
+  .descritivo-wrap.show{ display:block; }
+  #descritivoText{
+    width:100%;
+    min-height:180px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    line-height:1.6;
+    padding:20px;
+    border-radius:3px;
+    resize:vertical;
+  }
+  .btn-copiar{
+    margin-top:10px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--muted);
+    padding:8px 16px;
+    border-radius:3px;
+    font-family:'Inter', sans-serif;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .btn-copiar:hover{ color:var(--accent); border-color:var(--accent); }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="db-config.js"></script>
+<script src="auth.js"></script>
+</head>
+<body>
+<script>(async()=>{ await MMAuth.init({admin:false}); await MMAuth.refreshCatalog(); })();</script>
+
+<header>
+  <div class="header-inner">
+    <a href="index.html" class="back-link">← Voltar para áreas</a>
+    <p class="tag">Pré Produção de Luz</p>
+    <h1>Calculadora de Luz</h1>
+    <p>Monte o rig do evento por área, escolha a mesa de luz e o app calcula potência, peso, limite de aparelhos por circuito de energia e parâmetros necessários.</p>
+  </div>
+</header>
+
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="save-status" id="saveStatus"><span style="display:inline-flex;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h13l3 3v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M8 4v5h8V4"/><rect x="7.5" y="13" width="9" height="6"/></svg></span><span id="saveStatusText">salvando…</span></div>
+  <p class="sidebar-label">Seções</p>
+  <nav id="sideNav">
+    <a href="#sec-mesa">Mesa de luz</a>
+    <a href="#sec-energia">Energia (AC)</a>
+    <a href="#sec-equip">Equipamentos</a>
+    <a href="#sec-resumo">Resumo geral</a>
+    <a href="#sec-circuitos">Circuitos AC</a>
+    <a href="#sec-cases">Cases necessários</a>
+    <a href="#sec-dmx">DMX e mesa</a>
+    <a href="#cardRigging">Rigging suspenso</a>
+  </nav>
+</aside>
+
+<main>
+
+  <div class="card" id="sec-mesa">
+    <p class="section-title">Mesa de luz do evento <span class="sub">usada para todo o evento</span></p>
+    <div class="pitch-toggle" id="consoleToggle"></div>
+    <p class="note tight" id="notaConsole"></p>
+  </div>
+
+  <div class="card" id="sec-energia">
+    <p class="section-title">Circuito de energia (AC) <span class="sub">e peso de cabeamento</span></p>
+    <div class="row2">
+      <div class="field">
+        <label for="tensaoRede">Tensão (V)</label>
+        <select id="tensaoRede"><option value="110">110 V</option><option value="220" selected>220 V</option></select>
+      </div>
+      <div class="field">
+        <label for="ampsCircuito">Corrente do circuito / disjuntor (A)</label>
+        <input type="number" id="ampsCircuito" min="1" step="1" value="20">
+      </div>
+    </div>
+    <div class="field">
+      <label for="cabeamentoKgM">Peso de cabeamento (energia + DMX) por metro de vara/grid (kg/m)</label>
+      <input type="number" id="cabeamentoKgM" min="0" step="0.1" value="0.5">
+    </div>
+    <p class="note tight" id="notaCircuito"></p>
+  </div>
+
+  <div id="sec-equip" style="display:flex; justify-content:space-between; align-items:flex-end; gap:12px; margin-bottom:14px; flex-wrap:wrap; scroll-margin-top:20px;">
+    <div>
+      <p class="section-title" style="border-bottom:none; padding-bottom:0; margin-bottom:4px;">Equipamentos do evento</p>
+      <p class="note tight" style="margin-top:0;">Cada grupo é uma vara, área ou estrutura — dê o nome que quiser (Vara 1, Solo, Em cima do LED, Boxtruss...), adicione os equipamentos e marque as opções que se aplicam.</p>
+    </div>
+    <button type="button" class="btn-add" id="btnAddGrupo">+ Adicionar grupo</button>
+  </div>
+  <div class="cat-grid" id="gruposWrap" style="margin-bottom:20px;"></div>
+
+  <div class="hero-stat" id="heroStat" style="margin-top:20px;"></div>
+
+  <div class="card" id="sec-resumo">
+    <p class="section-title">Potência e peso — total geral</p>
+    <table>
+      <tbody id="tblResumoGeral"></tbody>
+    </table>
+  </div>
+
+  <div class="card" id="sec-circuitos">
+    <p class="section-title">Circuitos de energia (AC) necessários <span class="sub">por grupo — potência total ÷ tensão ÷ corrente do circuito</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Grupo</th>
+          <th class="num">Potência</th>
+          <th class="num">Corrente</th>
+          <th class="num">Circuitos</th>
+        </tr>
+      </thead>
+      <tbody id="tblCircuitos"></tbody>
+      <tfoot>
+        <tr style="border-top:1px solid var(--line);">
+          <td style="font-weight:600;">Total de circuitos AC</td>
+          <td class="num" colspan="3" style="font-weight:600;" id="circuitosFinal">0</td>
+        </tr>
+      </tfoot>
+    </table>
+    <p class="note tight">Cálculo: soma a potência (W) de todos os aparelhos do grupo, converte pra corrente (A = W ÷ V) e divide pela corrente do circuito/disjuntor pra saber quantos circuitos descer — sem separar por tipo de aparelho, do jeito que a planilha calcula na prática.</p>
+  </div>
+
+  <div class="card" id="sec-cases">
+    <p class="section-title">Cases necessários <span class="sub">total do projeto, por tipo de aparelho</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Equipamento</th>
+          <th class="num">Qtd. total</th>
+          <th class="num">Aparelhos/case</th>
+          <th class="num">Cases</th>
+        </tr>
+      </thead>
+      <tbody id="tblCases"></tbody>
+      <tfoot>
+        <tr style="border-top:1px solid var(--line);">
+          <td style="font-weight:600;">Total de cases</td>
+          <td class="num" colspan="3" style="font-weight:600;" id="casesFinal">0</td>
+        </tr>
+      </tfoot>
+    </table>
+    <p class="note tight">Soma a quantidade de cada equipamento em todos os grupos/varas do projeto e arredonda pra cima pelo tanto que cabe por case. Fita de LED não usa case padrão (vem em rolo).</p>
+  </div>
+
+  <div class="card" id="sec-dmx">
+    <p class="section-title">DMX e mesa de luz <span class="sub" id="statusDmxWrap"></span></p>
+
+    <div class="toggle-strip" style="margin-bottom:10px;">
+      <label class="toggle-chip" title="Use quando o sinal DMX será distribuído por splitter físico, dimensionado por universo DMX.">
+        <input type="checkbox" id="usaSplitter"> Usar Splitter DMX
+      </label>
+      <label class="toggle-chip" title="Use quando o sinal será distribuído por rede Art-Net.">
+        <input type="checkbox" id="usaArtnet"> Usar Art-Net
+      </label>
+    </div>
+
+    <div class="subfields" id="dmxInfraCampos" style="grid-template-columns:1fr 1fr; display:none;">
+      <div class="field" id="campoSplitter" style="display:none;">
+        <label for="saidasSplitter">Saídas DMX do Splitter por unidade</label>
+        <input type="number" id="saidasSplitter" min="1" step="1" value="1">
+      </div>
+      <div class="field" id="campoArtnet" style="display:none;">
+        <label for="saidasArtnet">Saídas DMX do Art-Net por unidade</label>
+        <input type="number" id="saidasArtnet" min="1" step="1" value="8">
+      </div>
+    </div>
+
+    <table>
+      <tbody id="tblDmx"></tbody>
+    </table>
+    <p class="note" id="notaDmx"></p>
+  </div>
+
+  <div class="card" id="cardRigging">
+    <p class="section-title">Rigging suspenso <span class="sub">grupos marcados como pendurado/suspenso</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Estrutura</th>
+          <th class="num">Aparelhos</th>
+          <th class="num">Peso suspenso</th>
+          <th class="num">Fixação</th>
+        </tr>
+      </thead>
+      <tbody id="tblRigging"></tbody>
+      <tfoot>
+        <tr style="border-top:1px solid var(--line);">
+          <td style="font-weight:600;">Total geral</td>
+          <td class="num" style="font-weight:600;" id="riggingTotalAparelhos">0</td>
+          <td class="num" style="font-weight:600;" id="riggingTotalPeso">0 kg</td>
+          <td class="num" style="font-weight:600;" id="riggingTotalTalhas">0</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+</main>
+
+</div><!-- /.layout -->
+</div>
+
+<footer>
+  Calculadora de referência para pré-produção de luz. Os valores de potência, peso e parâmetros são referências de mercado e podem variar conforme fabricante e configuração.
+</footer>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  // ===== catálogo de equipamentos =====
+  // Moving Beam 9R/10R/14R e BSW 481 CMY: potência/peso/canais pesquisados em modelos
+  // vendidos no mercado brasileiro de locação (Briwax, One Light, Prolight, Sanlight-class).
+  // Demais equipamentos: média de consumo entre modelos genéricos dessas mesmas marcas.
+  // casePor: quantos aparelhos vêm/cabem por flight case, pesquisado em cases de locação do mercado
+  // (moving heads e BSW: case duplo, 2 por case; par/COB: case de 8; brute e strobo: case duplo, 2 por case;
+  // fita de LED não usa case padrão — vem em rolo).
+  const EQUIPAMENTOS = {
+    beam9r:  { label: 'Moving Beam 9R (250W)',              watts: 300,  peso: 12,   dmx: 16, casePor: 2    },
+    beam10r: { label: 'Moving Beam 10R (280W)',             watts: 500,  peso: 15,   dmx: 20, casePor: 2    },
+    beam14r: { label: 'Moving Beam 14R (295W)',             watts: 440,  peso: 12.5, dmx: 16, casePor: 2    },
+    bsw481:  { label: 'BSW 481 CMY',                        watts: 500,  peso: 21,   dmx: 24, casePor: 2    },
+    wash:    { label: 'Moving Wash (LED 19×15W)',           watts: 350,  peso: 7,    dmx: 16, casePor: 4    },
+    parled:  { label: 'Par LED (18×15W RGBWA+UV)',          watts: 290,  peso: 4,    dmx: 8,  casePor: 10   },
+    cob:     { label: 'COB (100W RGBW)',                    watts: 120,  peso: 3,    dmx: 6,  casePor: 8    },
+    brute:   { label: 'Brute (4 lâmpadas PAR36/aircraft)',  watts: 2400, peso: 5,   dmx: 1,  casePor: 2    },
+    strobo:  { label: 'Strobo LED + Fita',                  watts: 700,  peso: 4,    dmx: 4,  casePor: 10   },
+    fita:    { label: 'Fita de LED (rolo de 5m)',           watts: 60,   peso: 0.5,  dmx: 3,  casePor: null }
+  };
+
+  // ===== mesas de luz (referência de mercado — grandMA2/3 sem NPU adicional; Pilot 512/2000 DMX simples) =====
+  const CONSOLES = {
+    pilot:   { label: 'Pilot 512 / Pilot 2000', parametros: 512,  saidasDmx: 1, aparelhosMax: 40, desc: '512 parâmetros · 1 saída DMX' },
+    ma2onpc: { label: 'grandMA2 onPC + Command Wing', parametros: 2048, saidasDmx: 2, desc: '2.048 parâmetros · 2 saídas DMX' },
+    ma2light:{ label: 'grandMA2 light', parametros: 4096, saidasDmx: 6, desc: '4.096 parâmetros · 6 saídas DMX' },
+    ma2full: { label: 'grandMA2 full-size', parametros: 8192, saidasDmx: 6, desc: '8.192 parâmetros · 6 saídas DMX' },
+    ma3onpc: { label: 'grandMA3 onPC + Command Wing', parametros: 4096, saidasDmx: 2, desc: '4.096 parâmetros · 2 saídas DMX' },
+    ma3full: { label: 'grandMA3 full-size', parametros: 20480, saidasDmx: 6, desc: '20.480 parâmetros · 6 saídas DMX' },
+    dmx1024: { label: 'Mesa DMX 1024', parametros: 1024, saidasDmx: 2, desc: '1.024 parâmetros · 2 saídas DMX (2 universos)' }
+  };
+  let consoleAtual = 'ma2full';
+  let infraDmx = {
+    usaSplitter: false,
+    saidasSplitter: 16,
+    usaArtnet: false,
+    saidasArtnet: 8
+  };
+
+  // ===== tipos de box truss (peso por metro, referência de mercado — alumínio, linha Q) =====
+  const TRUSS_TIPOS = {
+    q15: { label: 'Q15', kgPorM: 2.5 },
+    q20: { label: 'Q20', kgPorM: 4   },
+    q25: { label: 'Q25', kgPorM: 6   },
+    q30: { label: 'Q30', kgPorM: 8   }
+  };
+  const CABEAMENTO_KG_M_PADRAO = 0.5;
+
+  // ===== grupos de equipamentos (lista dinâmica e unificada) =====
+  // Cada grupo pode ser renomeado livremente (Vara 1, Solo, Em cima do LED, Boxtruss...),
+  // marcado como "pendurado/suspenso" (soma bumpers + entra no cálculo de talhas) e,
+  // opcionalmente, como "boxtruss" (calcula o peso da treliça Q15–Q30 pelo comprimento).
+  let grupos = [ { id: 'v1', nome: 'Vara 1', items: [], comprimento: 0, suspenso: true, isBoxtruss: false, trussTipo: 'q30', comprimentoTruss: 0, modoDmx: 'junto', usaAncoragem: true, qtdPontos: 1, capacidadePonto: 500, usaTalha: false, qtdTalhas: 0, comprimentoTalha: 3 } ];
+  let grupoCounter = 1;
+  let ultimoCalculo = {};
+
+  const PESO_BUMPER = 3;
+  const PESO_TALHA_CORPO = 8;      // kg — peso do corpo da talha manual de corrente (sem a corrente)
+  const PESO_CORRENTE_KG_M = 1;    // kg por metro de corrente de carga (referência de mercado)
+
+  function fmt(n){
+    return n.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+  }
+
+  // ===== monta o seletor de mesa de luz =====
+  function updateDmxInfraUI(){
+    const usaSplitter = infraDmx.usaSplitter;
+    const usaArtnet = infraDmx.usaArtnet;
+    const wrap = $('dmxInfraCampos');
+    const campoSplitter = $('campoSplitter');
+    const campoArtnet = $('campoArtnet');
+    if (wrap) wrap.style.display = (usaSplitter || usaArtnet) ? 'grid' : 'none';
+    if (campoSplitter) campoSplitter.style.display = usaSplitter ? 'block' : 'none';
+    if (campoArtnet) campoArtnet.style.display = usaArtnet ? 'block' : 'none';
+    if ($('saidasSplitter')) $('saidasSplitter').value = infraDmx.saidasSplitter;
+    if ($('saidasArtnet')) $('saidasArtnet').value = infraDmx.saidasArtnet;
+  }
+
+  // ===== mesa e infraestrutura DMX =====
+  function bindDmxInfraControls(){
+    $('usaSplitter').addEventListener('change', e => {
+      infraDmx.usaSplitter = e.target.checked;
+      updateDmxInfraUI();
+      calc();
+    });
+    $('usaArtnet').addEventListener('change', e => {
+      infraDmx.usaArtnet = e.target.checked;
+      updateDmxInfraUI();
+      calc();
+    });
+    $('saidasSplitter').addEventListener('input', e => {
+      infraDmx.saidasSplitter = Math.max(1, parseInt(e.target.value, 10) || 1);
+      calc();
+    });
+    $('saidasArtnet').addEventListener('input', e => {
+      infraDmx.saidasArtnet = Math.max(1, parseInt(e.target.value, 10) || 1);
+      calc();
+    });
+    updateDmxInfraUI();
+  }
+
+  function buildConsoleToggle(){
+    const wrap = $('consoleToggle');
+    wrap.innerHTML = Object.keys(CONSOLES).map(key => {
+      const c = CONSOLES[key];
+      return `<button type="button" data-console="${key}" class="${key === consoleAtual ? 'active' : ''}">
+        <span class="cnome">${c.label}</span>${c.desc}
+      </button>`;
+    }).join('');
+    wrap.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        consoleAtual = btn.dataset.console;
+        wrap.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+        calc();
+      });
+    });
+  }
+
+  // ===== monta os cards de grupo (lista dinâmica e unificada) =====
+
+  function buildGruposCards(){
+    const wrap = $('gruposWrap');
+    wrap.innerHTML = grupos.map(g => `
+      <div class="card">
+        <p class="section-title">
+          <input type="text" class="vara-nome-input" data-id="${g.id}" value="${g.nome}" style="background:transparent; border:none; color:var(--text); font:inherit; padding:0; width:140px;">
+          <span style="display:flex; gap:6px;">
+            <button type="button" class="btn-copy" data-grupo-copy="${g.id}" title="Copiar este grupo">⧉</button>
+            ${grupos.length > 1 ? `<button type="button" class="btn-remove btn-remove-grupo" data-grupo="${g.id}" title="Remover este grupo">×</button>` : ''}
+          </span>
+        </p>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="susp-grupo-${g.id}" ${g.suspenso ? 'checked' : ''}>
+          <div class="cb-text">Use Suspenso</div>
+        </div>
+        ${g.suspenso ? `
+        <div class="toggle-strip">
+          <label class="toggle-chip" title="Estrutura já existente no local — desligue se não tiver ponto de ancoragem">
+            <input type="checkbox" id="usaanc-grupo-${g.id}" ${g.usaAncoragem ? 'checked' : ''}> Ponto de ancoragem fixo
+          </label>
+          <label class="toggle-chip" title="Elevação por talha/ponto de içamento — desligue quando não for necessário">
+            <input type="checkbox" id="usatalha-grupo-${g.id}" ${g.usaTalha ? 'checked' : ''}> Usa talha
+          </label>
+        </div>
+        ${g.usaAncoragem ? `
+        <div class="subfields">
+          <div class="field">
+            <label>Pontos de ancoragem</label>
+            <input type="number" id="pontos-grupo-${g.id}" min="1" step="1" value="${g.qtdPontos || 1}">
+          </div>
+          <div class="field">
+            <label title="Carga que o espaço te dá por ponto">Capacidade/ponto (kg)</label>
+            <input type="number" id="capponto-grupo-${g.id}" min="0" step="10" value="${g.capacidadePonto || 500}">
+          </div>
+        </div>
+        ` : ''}
+        ${g.usaTalha ? `
+        <div class="subfields">
+          <div class="field">
+            <label>Quantas talhas</label>
+            <input type="number" id="talhas-grupo-${g.id}" min="0" step="1" value="${g.qtdTalhas || ''}" placeholder="0">
+          </div>
+          <div class="field">
+            <label title="Comprimento da corrente">Metros por talha</label>
+            <input type="number" id="comptalha-grupo-${g.id}" min="0" step="0.5" value="${g.comprimentoTalha || ''}" placeholder="0">
+          </div>
+        </div>
+        ` : ''}
+        ` : ''}
+
+        <div class="toggle-strip" style="padding-top:10px; border-top:1px solid var(--line);">
+          <label class="toggle-chip" title="Calcula o peso da treliça pelos metros informados">
+            <input type="checkbox" id="box-grupo-${g.id}" ${g.isBoxtruss ? 'checked' : ''}> Use Boxtruss
+          </label>
+        </div>
+        ${g.isBoxtruss ? `
+        <div class="subfields">
+          <div class="field">
+            <label>Tipo de treliça</label>
+            <select id="truss-grupo-${g.id}">
+              ${Object.keys(TRUSS_TIPOS).map(k => `<option value="${k}" ${g.trussTipo === k ? 'selected' : ''}>${TRUSS_TIPOS[k].label} — ${fmt(TRUSS_TIPOS[k].kgPorM)}kg/m</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label>Metros de treliça</label>
+            <input type="number" id="comptruss-grupo-${g.id}" min="0" step="0.5" value="${g.comprimentoTruss || 0}">
+          </div>
+        </div>` : ''}
+
+        <div class="add-row" style="margin-top:14px; padding-top:14px; border-top:1px solid var(--line);">
+          <div class="field">
+            <label>Equipamento</label>
+            <select id="sel-grupo-${g.id}">
+              ${Object.keys(EQUIPAMENTOS).map(k => `<option value="${k}">${EQUIPAMENTOS[k].label}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label>Qtd.</label>
+            <input type="number" id="qty-grupo-${g.id}" min="1" step="1" value="1">
+          </div>
+          <button type="button" class="btn-add" data-grupo-add="${g.id}">Adicionar</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Equipamento</th>
+              <th class="num">Qtd.</th>
+              <th class="num">Potência</th>
+              <th class="num">Peso</th>
+              <th class="num"></th>
+            </tr>
+          </thead>
+          <tbody id="tbl-grupo-${g.id}"></tbody>
+        </table>
+        <div class="cat-subtotal" id="sub-grupo-${g.id}"></div>
+
+        <div class="field" style="margin-top:14px; padding-top:14px; border-top:1px solid var(--line);">
+          <label>Comprimento de cabeamento (m)</label>
+          <input type="number" id="comp-grupo-${g.id}" min="0" step="0.5" value="${g.comprimento || 0}">
+        </div>
+
+        <div class="field" style="margin-top:14px; padding-top:14px; border-top:1px solid var(--line);">
+          <label>Sinal DMX deste grupo</label>
+          <div class="pitch-toggle">
+            <button type="button" data-dmxmodo="junto" data-grupo-dmx="${g.id}" class="${g.modoDmx !== 'separado' ? 'active' : ''}">
+              <span class="cnome">DMX Único</span>1 saída, limite 512 canais
+            </button>
+            <button type="button" data-dmxmodo="separado" data-grupo-dmx="${g.id}" class="${g.modoDmx === 'separado' ? 'active' : ''}">
+              <span class="cnome">Separado por aparelho</span>1 saída DMX por tipo de equipamento
+            </button>
+          </div>
+        </div>
+        <p class="note tight" id="nota-grupo-${g.id}"></p>
+      </div>
+    `).join('');
+
+    wrap.querySelectorAll('[data-grupo-add]').forEach(btn => {
+      btn.addEventListener('click', () => addItemGrupo(btn.dataset.grupoAdd));
+    });
+    wrap.querySelectorAll('.btn-remove-grupo').forEach(btn => {
+      btn.addEventListener('click', () => removeGrupo(btn.dataset.grupo));
+    });
+    wrap.querySelectorAll('[data-grupo-copy]').forEach(btn => {
+      btn.addEventListener('click', () => duplicateGrupo(btn.dataset.grupoCopy));
+    });
+    wrap.querySelectorAll('.vara-nome-input').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const g = grupos.find(x => x.id === inp.dataset.id);
+        if (g) g.nome = inp.value || g.nome;
+        calc();
+      });
+    });
+    grupos.forEach(g => {
+      $('susp-grupo-' + g.id).addEventListener('change', (e) => {
+        g.suspenso = e.target.checked;
+        buildGruposCards();
+        calc();
+      });
+      $('box-grupo-' + g.id).addEventListener('change', (e) => {
+        g.isBoxtruss = e.target.checked;
+        buildGruposCards();
+        calc();
+      });
+      const usaAncEl = $('usaanc-grupo-' + g.id);
+      if (usaAncEl){
+        usaAncEl.addEventListener('change', (e) => {
+          g.usaAncoragem = e.target.checked;
+          buildGruposCards();
+          calc();
+        });
+      }
+      const usaTalhaEl = $('usatalha-grupo-' + g.id);
+      if (usaTalhaEl){
+        usaTalhaEl.addEventListener('change', (e) => {
+          g.usaTalha = e.target.checked;
+          buildGruposCards();
+          calc();
+        });
+      }
+      const talhasEl = $('talhas-grupo-' + g.id);
+      if (talhasEl){
+        talhasEl.addEventListener('input', () => {
+          g.qtdTalhas = talhasEl.value === '' ? 0 : Math.max(0, parseInt(talhasEl.value, 10) || 0);
+          calc();
+        });
+      }
+      const comptalhaEl = $('comptalha-grupo-' + g.id);
+      if (comptalhaEl){
+        comptalhaEl.addEventListener('input', () => {
+          g.comprimentoTalha = comptalhaEl.value === '' ? 0 : Math.max(0, parseFloat(comptalhaEl.value) || 0);
+          calc();
+        });
+      }
+      const pontosEl = $('pontos-grupo-' + g.id);
+      if (pontosEl){
+        pontosEl.addEventListener('input', () => {
+          g.qtdPontos = Math.max(1, parseInt(pontosEl.value, 10) || 1);
+          calc();
+        });
+      }
+      const cappontoEl = $('capponto-grupo-' + g.id);
+      if (cappontoEl){
+        cappontoEl.addEventListener('input', () => {
+          g.capacidadePonto = Math.max(0, parseFloat(cappontoEl.value) || 0);
+          calc();
+        });
+      }
+      const compEl = $('comp-grupo-' + g.id);
+      compEl.addEventListener('input', () => {
+        g.comprimento = parseFloat(compEl.value) || 0;
+        calc();
+      });
+      compEl.addEventListener('change', () => {
+        g.comprimento = parseFloat(compEl.value) || 0;
+        calc();
+      });
+      const trussEl = $('truss-grupo-' + g.id);
+      if (trussEl){
+        trussEl.addEventListener('change', () => {
+          g.trussTipo = trussEl.value;
+          calc();
+        });
+      }
+      const comptrussEl = $('comptruss-grupo-' + g.id);
+      if (comptrussEl){
+        comptrussEl.addEventListener('input', () => {
+          g.comprimentoTruss = Math.max(0, parseFloat(comptrussEl.value) || 0);
+          calc();
+        });
+        comptrussEl.addEventListener('change', () => {
+          g.comprimentoTruss = Math.max(0, parseFloat(comptrussEl.value) || 0);
+          calc();
+        });
+      }
+    });
+    wrap.querySelectorAll('[data-grupo-dmx]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const g = grupos.find(x => x.id === btn.dataset.grupoDmx);
+        if (!g) return;
+        g.modoDmx = btn.dataset.dmxmodo;
+        wrap.querySelectorAll(`[data-grupo-dmx="${g.id}"]`).forEach(b => b.classList.toggle('active', b === btn));
+        calc();
+      });
+    });
+  }
+
+  function addGrupo(){
+    grupoCounter += 1;
+    grupos.push({ id: 'v' + grupoCounter, nome: 'Vara ' + grupoCounter, items: [], comprimento: 0, suspenso: true, isBoxtruss: false, trussTipo: 'q30', comprimentoTruss: 0, modoDmx: 'junto', usaAncoragem: true, qtdPontos: 1, capacidadePonto: 500, usaTalha: false, qtdTalhas: 0, comprimentoTalha: 3 });
+    buildGruposCards();
+    calc();
+  }
+
+  function duplicateGrupo(id){
+    const g = grupos.find(x => x.id === id);
+    if (!g) return;
+    grupoCounter += 1;
+    grupos.push({
+      id: 'v' + grupoCounter,
+      nome: g.nome + ' (cópia)',
+      items: g.items.map(it => ({ type: it.type, qty: it.qty })),
+      comprimento: g.comprimento || 0,
+      suspenso: g.suspenso,
+      isBoxtruss: g.isBoxtruss,
+      trussTipo: g.trussTipo,
+      comprimentoTruss: g.comprimentoTruss || 0,
+      modoDmx: g.modoDmx || 'junto',
+      usaAncoragem: g.usaAncoragem !== undefined ? g.usaAncoragem : true,
+      qtdPontos: g.qtdPontos || 1,
+      capacidadePonto: g.capacidadePonto || 500,
+      usaTalha: g.usaTalha || false,
+      qtdTalhas: g.qtdTalhas || 0,
+      comprimentoTalha: g.comprimentoTalha || 0
+    });
+    buildGruposCards();
+    calc();
+  }
+
+  function removeGrupo(id){
+    if (grupos.length <= 1) return;
+    grupos = grupos.filter(g => g.id !== id);
+    buildGruposCards();
+    calc();
+  }
+
+  function addItemGrupo(grupoId){
+    const g = grupos.find(x => x.id === grupoId);
+    if (!g) return;
+    const sel = $('sel-grupo-' + grupoId);
+    const qtyInput = $('qty-grupo-' + grupoId);
+    const type = sel.value;
+    const qty = Math.max(1, parseInt(qtyInput.value, 10) || 1);
+    const existing = g.items.find(it => it.type === type);
+    if (existing){
+      existing.qty += qty;
+    } else {
+      g.items.push({ type, qty });
+    }
+    qtyInput.value = 1;
+    calc();
+  }
+
+  function removeItemGrupo(grupoId, idx){
+    const g = grupos.find(x => x.id === grupoId);
+    if (!g) return;
+    g.items.splice(idx, 1);
+    calc();
+  }
+
+  function updateQtyGrupo(grupoId, idx, val){
+    const g = grupos.find(x => x.id === grupoId);
+    if (!g) return;
+    const q = Math.max(0, parseInt(val, 10) || 0);
+    if (q === 0){
+      g.items.splice(idx, 1);
+    } else {
+      g.items[idx].qty = q;
+    }
+    calc();
+  }
+
+  function calc(){
+    const tensao = Math.max(1, parseFloat($('tensaoRede').value) || 220);
+    const ampsCircuito = Math.max(1, parseFloat($('ampsCircuito').value) || 20);
+    const vaCircuito = tensao * ampsCircuito;
+    $('notaCircuito').innerHTML = `Cada circuito suporta até <strong>${fmt(vaCircuito)} VA</strong> (${fmt(ampsCircuito)}A × ${fmt(tensao)}V).`;
+
+    const cabeamentoKgM = Math.max(0, parseFloat($('cabeamentoKgM').value) || 0);
+
+    let totalAparelhos = 0, totalW = 0, totalKg = 0, totalDmxCh = 0, totalCircuitos = 0, totalLinhasDmx = 0;
+    const totaisPorTipo = {};
+    const circuitosPorGrupo = [];
+    const riggingResultados = [];
+    const gruposResultados = [];
+
+    grupos.forEach(g => {
+      const tbody = $('tbl-grupo-' + g.id);
+      let catW = 0, catKg = 0, catDmx = 0, catQtd = 0;
+      const canaisPorTipoGrupo = {};
+
+      if (g.items.length === 0){
+        tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Nenhum equipamento adicionado ainda.</td></tr>`;
+      } else {
+        tbody.innerHTML = g.items.map((it, idx) => {
+          const eq = EQUIPAMENTOS[it.type];
+          const w = eq.watts * it.qty;
+          const kg = eq.peso * it.qty;
+          const dmx = eq.dmx * it.qty;
+          catW += w; catKg += kg; catDmx += dmx; catQtd += it.qty;
+          totaisPorTipo[it.type] = (totaisPorTipo[it.type] || 0) + it.qty;
+          canaisPorTipoGrupo[it.type] = (canaisPorTipoGrupo[it.type] || 0) + dmx;
+
+          return `<tr>
+            <td>${eq.label}</td>
+            <td class="num"><input type="number" class="qty-input mono" min="0" value="${it.qty}" data-grupo="${g.id}" data-idx="${idx}"></td>
+            <td class="num">${fmt(w)} W</td>
+            <td class="num">${fmt(kg)} kg</td>
+            <td class="num"><button type="button" class="btn-remove" data-grupo="${g.id}" data-idx="${idx}">×</button></td>
+          </tr>`;
+        }).join('');
+      }
+
+      $('sub-grupo-' + g.id).innerHTML = g.items.length === 0 ? '' : `
+        <span><span class="swatch sw-neutral"></span>${catQtd} aparelho${catQtd === 1 ? '' : 's'}</span>
+        <span><span class="swatch sw-power"></span><b>${fmt(catW)} W</b></span>
+        <span><span class="swatch sw-weight"></span><b>${fmt(catKg)} kg</b></span>
+        <span><span class="swatch sw-signal"></span><b>${catDmx}</b> parâmetros</span>
+      `;
+
+      totalAparelhos += catQtd;
+      totalW += catW;
+      totalDmxCh += catDmx;
+
+      // circuito AC do grupo: soma a potência de tudo, converte pra corrente e divide pela corrente do circuito
+      const ampsGrupo = catW / tensao;
+      const circuitosGrupo = catW > 0 ? Math.ceil(catW / vaCircuito) : 0;
+      totalCircuitos += circuitosGrupo;
+      circuitosPorGrupo.push({ nome: g.nome, watts: catW, amps: ampsGrupo, circuitos: circuitosGrupo });
+
+      // sinal DMX do grupo: tudo junto (combina os canais, mínimo de saídas) ou separado por aparelho (1 saída por tipo)
+      let linhasDmxGrupo = 0;
+      if (g.modoDmx === 'separado'){
+        Object.keys(canaisPorTipoGrupo).forEach(tipo => {
+          linhasDmxGrupo += Math.max(1, Math.ceil(canaisPorTipoGrupo[tipo] / 512));
+        });
+      } else {
+        linhasDmxGrupo = catDmx > 0 ? Math.ceil(catDmx / 512) : 0;
+      }
+      totalLinhasDmx += linhasDmxGrupo;
+
+      const compGrupo = Math.max(0, parseFloat($('comp-grupo-' + g.id).value) || 0);
+      g.comprimento = compGrupo;
+      const pesoCabeamento = compGrupo * cabeamentoKgM;
+
+      let pesoTruss = 0, trussLabel = null, comprimentoTruss = 0;
+      if (g.isBoxtruss){
+        const trussEl = $('truss-grupo-' + g.id);
+        const tipo = trussEl ? trussEl.value : g.trussTipo;
+        g.trussTipo = tipo;
+        const comptrussEl = $('comptruss-grupo-' + g.id);
+        comprimentoTruss = comptrussEl ? Math.max(0, parseFloat(comptrussEl.value) || 0) : (g.comprimentoTruss || 0);
+        g.comprimentoTruss = comprimentoTruss;
+        pesoTruss = comprimentoTruss * TRUSS_TIPOS[tipo].kgPorM;
+        trussLabel = TRUSS_TIPOS[tipo].label;
+      }
+
+      totalKg += catKg + pesoCabeamento + pesoTruss;
+
+      const notaPartes = [];
+      if (compGrupo > 0){
+        notaPartes.push(`Cabeamento: <strong>${fmt(pesoCabeamento)}kg</strong>`);
+      }
+      if (g.isBoxtruss && comprimentoTruss > 0){
+        notaPartes.push(`Treliça ${trussLabel} (${fmt(comprimentoTruss)}m): <strong>${fmt(pesoTruss)}kg</strong>`);
+      }
+
+      if (g.suspenso){
+        const pesoBumpers = catQtd * PESO_BUMPER;
+        totalKg += pesoBumpers;
+
+        const usaAncEl = $('usaanc-grupo-' + g.id);
+        const usaAncoragem = usaAncEl ? usaAncEl.checked : !!g.usaAncoragem;
+        g.usaAncoragem = usaAncoragem;
+
+        const usaTalhaEl = $('usatalha-grupo-' + g.id);
+        const usaTalha = usaTalhaEl ? usaTalhaEl.checked : !!g.usaTalha;
+        g.usaTalha = usaTalha;
+
+        let pesoTalhas = 0, qtdTalhas = 0, comprimentoTalha = 0;
+        if (usaTalha){
+          const talhasEl = $('talhas-grupo-' + g.id);
+          const comptalhaEl = $('comptalha-grupo-' + g.id);
+          qtdTalhas = talhasEl && talhasEl.value !== '' ? Math.max(0, parseInt(talhasEl.value, 10) || 0) : 0;
+          comprimentoTalha = comptalhaEl && comptalhaEl.value !== '' ? Math.max(0, parseFloat(comptalhaEl.value) || 0) : 0;
+          g.qtdTalhas = qtdTalhas;
+          g.comprimentoTalha = comprimentoTalha;
+
+          const pesoPorTalhaUnidade = PESO_TALHA_CORPO + comprimentoTalha * PESO_CORRENTE_KG_M;
+          pesoTalhas = qtdTalhas * pesoPorTalhaUnidade;
+          totalKg += pesoTalhas;
+
+          if (qtdTalhas > 0){
+            notaPartes.push(`Talhas: <strong>${qtdTalhas}</strong> × (${fmt(PESO_TALHA_CORPO)}kg + ${fmt(comprimentoTalha)}m × ${fmt(PESO_CORRENTE_KG_M)}kg/m) = <strong>${fmt(pesoTalhas)}kg</strong>`);
+          }
+        }
+
+        const pesoSuspenso = catKg + pesoBumpers + pesoCabeamento + pesoTruss + pesoTalhas;
+
+        if (usaAncoragem){
+          const pontosEl = $('pontos-grupo-' + g.id);
+          const cappontoEl = $('capponto-grupo-' + g.id);
+          const qtdPontos = Math.max(1, parseInt(pontosEl ? pontosEl.value : g.qtdPontos, 10) || 1);
+          const capacidadePonto = Math.max(0, parseFloat(cappontoEl ? cappontoEl.value : g.capacidadePonto) || 0);
+          g.qtdPontos = qtdPontos;
+          g.capacidadePonto = capacidadePonto;
+
+          const capacidadeTotal = qtdPontos * capacidadePonto;
+          const pesoDisponivel = capacidadeTotal - pesoSuspenso;
+          const pesoPorPonto = pesoSuspenso / qtdPontos;
+          const sobrecarregado = capacidadePonto > 0 && pesoPorPonto > capacidadePonto;
+
+          notaPartes.push(sobrecarregado
+            ? `<span style="color:var(--weight);">⚠ ${fmt(pesoPorPonto)}kg por ponto — acima da capacidade de ${fmt(capacidadePonto)}kg/ponto</span>`
+            : `Distribuição: <strong>${fmt(pesoPorPonto)}kg</strong> por ponto${capacidadePonto > 0 ? ` (de ${fmt(capacidadePonto)}kg/ponto)` : ''}`);
+          if (capacidadePonto > 0){
+            notaPartes.push(pesoDisponivel < 0
+              ? `<span style="color:var(--weight);">⚠ Capacidade excedida em ${fmt(Math.abs(pesoDisponivel))}kg</span>`
+              : `Peso disponível no aéreo: <strong>${fmt(pesoDisponivel)}kg</strong> (de ${fmt(capacidadeTotal)}kg no total)`);
+          }
+
+          riggingResultados.push({ nome: g.nome, aparelhos: catQtd, peso: pesoSuspenso, usaAncoragem: true, usaTalha, qtdPontos, pesoPorPonto, capacidadePonto, capacidadeTotal, pesoDisponivel, sobrecarregado, qtdTalhas, comprimentoTalha });
+        } else {
+          riggingResultados.push({ nome: g.nome, aparelhos: catQtd, peso: pesoSuspenso, usaAncoragem: false, usaTalha, qtdTalhas, comprimentoTalha });
+        }
+      }
+
+      if (catQtd > 0){
+        notaPartes.push(`${fmt(catW)}W ÷ ${fmt(tensao)}V = ${fmt(ampsGrupo)}A → <strong>${circuitosGrupo} circuito${circuitosGrupo === 1 ? '' : 's'} AC</strong>`);
+        notaPartes.push(`${catDmx} parâmetros → <strong>${linhasDmxGrupo} saída${linhasDmxGrupo === 1 ? '' : 's'} DMX</strong> (${g.modoDmx === 'separado' ? 'separado por aparelho' : 'DMX único'})`);
+      }
+
+      $('nota-grupo-' + g.id).innerHTML = notaPartes.length
+        ? notaPartes.join(' · ') + '.'
+        : `Informe o comprimento para calcular o peso de cabeamento${g.isBoxtruss ? ' e da treliça' : ''}.`;
+
+      const equipamentosGrupo = g.items.map(it => ({
+        label: EQUIPAMENTOS[it.type].label,
+        qty: it.qty,
+        dmx: EQUIPAMENTOS[it.type].dmx * it.qty,
+        watts: EQUIPAMENTOS[it.type].watts * it.qty,
+        peso: EQUIPAMENTOS[it.type].peso * it.qty
+      }));
+      const pesoBumpersFinal = g.suspenso ? catQtd * PESO_BUMPER : 0;
+      let usaTalhaFinal = false, qtdTalhasFinal = 0, comprimentoTalhaFinal = 0, pesoTalhasFinal = 0;
+      let usaAncoragemFinal = false, qtdPontosFinal = 0, capacidadePontoFinal = 0, pesoSuspensoFinal = null, pesoPorPontoFinal = null, capacidadeTotalFinal = null, pesoDisponivelFinal = null, sobrecarregadoFinal = false;
+      if (g.suspenso){
+        const usaTalhaElFinal = $('usatalha-grupo-' + g.id);
+        usaTalhaFinal = usaTalhaElFinal ? usaTalhaElFinal.checked : !!g.usaTalha;
+        qtdTalhasFinal = usaTalhaFinal ? (g.qtdTalhas || 0) : 0;
+        comprimentoTalhaFinal = usaTalhaFinal ? (g.comprimentoTalha || 0) : 0;
+        pesoTalhasFinal = usaTalhaFinal ? qtdTalhasFinal * (PESO_TALHA_CORPO + comprimentoTalhaFinal * PESO_CORRENTE_KG_M) : 0;
+        const usaAncElFinal = $('usaanc-grupo-' + g.id);
+        usaAncoragemFinal = usaAncElFinal ? usaAncElFinal.checked : !!g.usaAncoragem;
+        if (usaAncoragemFinal){
+          qtdPontosFinal = g.qtdPontos || 1;
+          capacidadePontoFinal = g.capacidadePonto || 0;
+          pesoSuspensoFinal = catKg + pesoBumpersFinal + pesoCabeamento + pesoTruss + pesoTalhasFinal;
+          pesoPorPontoFinal = pesoSuspensoFinal / qtdPontosFinal;
+          capacidadeTotalFinal = qtdPontosFinal * capacidadePontoFinal;
+          pesoDisponivelFinal = capacidadeTotalFinal - pesoSuspensoFinal;
+          sobrecarregadoFinal = capacidadePontoFinal > 0 && pesoPorPontoFinal > capacidadePontoFinal;
+        }
+      }
+
+      gruposResultados.push({
+        nome: g.nome, equipamentos: equipamentosGrupo, aparelhos: catQtd, watts: catW, amps: ampsGrupo,
+        circuitos: circuitosGrupo, dmx: catDmx, saidasDmx: linhasDmxGrupo, modoDmx: g.modoDmx,
+        comprimentoCabos: compGrupo, pesoCabeamento, isBoxtruss: g.isBoxtruss, trussLabel,
+        comprimentoTruss, pesoTruss, suspenso: g.suspenso, pesoEquipamentos: catKg,
+        pesoBumpers: pesoBumpersFinal, usaTalha: usaTalhaFinal, qtdTalhas: qtdTalhasFinal,
+        comprimentoTalha: comprimentoTalhaFinal, pesoTalhas: pesoTalhasFinal, pesoSuspenso: pesoSuspensoFinal,
+        usaAncoragem: usaAncoragemFinal, qtdPontos: qtdPontosFinal, capacidadePonto: capacidadePontoFinal,
+        capacidadeTotal: capacidadeTotalFinal, pesoPorPonto: pesoPorPontoFinal,
+        pesoDisponivel: pesoDisponivelFinal, sobrecarregado: sobrecarregadoFinal
+      });
+    });
+
+    // rewire remove/qty listeners dos grupos (tbody foi reconstruído)
+    document.querySelectorAll('#gruposWrap .btn-remove[data-idx]').forEach(btn => {
+      btn.addEventListener('click', () => removeItemGrupo(btn.dataset.grupo, parseInt(btn.dataset.idx, 10)));
+    });
+    document.querySelectorAll('#gruposWrap .qty-input').forEach(inp => {
+      inp.addEventListener('change', () => updateQtyGrupo(inp.dataset.grupo, parseInt(inp.dataset.idx, 10), inp.value));
+    });
+
+    // hero
+    const totalKVA = totalW / 1000;
+    $('heroStat').innerHTML = `
+      <div class="cell"><div class="num">${totalAparelhos}</div><div class="label">aparelhos</div></div>
+      <div class="cell"><div class="num">${fmt(totalKVA)}</div><div class="label">kVA totais</div></div>
+      <div class="cell weight"><div class="num">${fmt(totalKg)} kg</div><div class="label">peso total</div></div>
+      <div class="cell"><div class="num">${totalDmxCh}</div><div class="label">parâmetros</div></div>
+      <div class="cell"><div class="num">${totalCircuitos}</div><div class="label">circuitos AC</div></div>
+    `;
+
+    // resumo geral
+    $('tblResumoGeral').innerHTML = `
+      <tr><td>Total de aparelhos</td><td class="num">${totalAparelhos}</td></tr>
+      <tr><td>Potência total considerada</td><td class="num">${fmt(totalW)} W</td></tr>
+      <tr><td>Potência total considerada</td><td class="num">${fmt(totalKVA)} kVA</td></tr>
+      <tr><td>Corrente total estimada em ${fmt(tensao)}V</td><td class="num">${fmt(totalW / tensao)} A</td></tr>
+      <tr><td style="font-weight:600;">Peso total</td><td class="num" style="font-weight:600;">${fmt(totalKg)} kg</td></tr>
+    `;
+
+    // circuitos AC — um linha por grupo, somando a potência total do grupo
+    const gruposComCarga = circuitosPorGrupo.filter(r => r.watts > 0);
+    $('tblCircuitos').innerHTML = gruposComCarga.length === 0
+      ? `<tr class="empty-row"><td colspan="4">Adicione equipamentos para calcular os circuitos.</td></tr>`
+      : gruposComCarga.map(r => `
+        <tr>
+          <td>${r.nome}</td>
+          <td class="num">${fmt(r.watts)} W</td>
+          <td class="num">${fmt(r.amps)} A</td>
+          <td class="num">${r.circuitos}</td>
+        </tr>
+      `).join('');
+    $('circuitosFinal').textContent = totalCircuitos;
+
+    // cases necessários — soma por tipo de equipamento em todo o projeto
+    const tiposComQtd = Object.keys(totaisPorTipo).filter(k => totaisPorTipo[k] > 0);
+    let totalCases = 0;
+    $('tblCases').innerHTML = tiposComQtd.length === 0
+      ? `<tr class="empty-row"><td colspan="4">Adicione equipamentos para calcular os cases.</td></tr>`
+      : tiposComQtd.map(k => {
+          const eq = EQUIPAMENTOS[k];
+          const qty = totaisPorTipo[k];
+          if (!eq.casePor){
+            return `<tr><td>${eq.label}</td><td class="num">${qty}</td><td class="num">—</td><td class="num">sem case padrão</td></tr>`;
+          }
+          const cases = Math.ceil(qty / eq.casePor);
+          totalCases += cases;
+          return `<tr><td>${eq.label}</td><td class="num">${qty}</td><td class="num">${eq.casePor}</td><td class="num">${cases}</td></tr>`;
+        }).join('');
+    $('casesFinal').textContent = totalCases;
+
+    // DMX / parâmetros / saídas físicas
+    const saidasNecessarias = totalLinhasDmx;
+    const console_ = CONSOLES[consoleAtual];
+    const parametrosMesa = Number(console_.parametros || 0);
+    const parametrosUtilizados = totalDmxCh;
+    const parametrosRestantes = parametrosMesa - parametrosUtilizados;
+    const parametrosOk = parametrosUtilizados <= parametrosMesa;
+    const aparelhosOk = console_.aparelhosMax ? totalAparelhos <= console_.aparelhosMax : true;
+    const saidasSplitter = Math.max(0, parseInt(infraDmx.saidasSplitter, 10) || 0);
+    const saidasArtnet = Math.max(0, parseInt(infraDmx.saidasArtnet, 10) || 0);
+    const saidasFisicasMesa = Number(console_.saidasDmx || 0);
+    const saidasFisicasExtras = (infraDmx.usaSplitter ? saidasSplitter : 0) + (infraDmx.usaArtnet ? saidasArtnet : 0);
+    const saidasFisicasTotais = saidasFisicasMesa + saidasFisicasExtras;
+    const saidasRestantes = saidasFisicasTotais - saidasNecessarias;
+    const saidasOk = saidasRestantes >= 0;
+    const precisaExpansaoFisica = saidasNecessarias > saidasFisicasMesa;
+    const statusOk = parametrosOk && aparelhosOk && saidasOk;
+
+    $('statusDmxWrap').innerHTML = totalDmxCh > 0
+      ? `<span class="status-pill ${statusOk ? 'ok' : 'bad'}">${statusOk ? '✓ dentro da capacidade' : '⚠ acima da capacidade'}</span>`
+      : '';
+
+    let infraLinhas = '';
+    if (infraDmx.usaSplitter){
+      infraLinhas += `
+        <tr><td>Splitter DMX — saídas configuradas</td><td class="num">${fmt(saidasSplitter)} saídas físicas</td></tr>`;
+    }
+    if (infraDmx.usaArtnet){
+      infraLinhas += `
+        <tr><td>Art-Net — saídas configuradas</td><td class="num">${fmt(saidasArtnet)} saídas físicas</td></tr>`;
+    }
+
+    $('tblDmx').innerHTML = `
+      <tr><td>Mesa de luz selecionada</td><td class="num">${console_.label}</td></tr>
+      <tr><td>Parâmetros da mesa</td><td class="num">${fmt(parametrosMesa)}</td></tr>
+      <tr><td style="font-weight:600;">Parâmetros utilizados pelos aparelhos</td><td class="num" style="font-weight:600; color:var(--signal);">${fmt(parametrosUtilizados)}</td></tr>
+      <tr><td>Parâmetros restantes na mesa</td><td class="num" style="font-weight:600; color:${parametrosRestantes < 0 ? 'var(--weight)' : 'var(--text)'};">${fmt(parametrosRestantes)}</td></tr>
+      <tr><td>Saídas físicas DMX da mesa</td><td class="num">${fmt(saidasFisicasMesa)}</td></tr>
+      <tr><td style="font-weight:600;">Saídas físicas DMX necessárias pelos grupos</td><td class="num" style="font-weight:600; color:var(--signal);">${fmt(saidasNecessarias)}</td></tr>
+      ${infraLinhas}
+      <tr><td style="font-weight:600;">Saídas físicas DMX restantes</td><td class="num" style="font-weight:600; color:${saidasRestantes < 0 ? 'var(--weight)' : 'var(--signal)'};">${fmt(saidasRestantes)}</td></tr>
+      ${console_.aparelhosMax ? `<tr><td>Limite de aparelhos da mesa</td><td class="num">${totalAparelhos} / ${console_.aparelhosMax}</td></tr>` : ''}
+    `;
+
+    let notas = [];
+    notas.push(`Cada grupo continua sendo dimensionado em DMX por universo, mas a capacidade da mesa é conferida por <strong>parâmetros</strong>. Cada parâmetro utilizado pelos aparelhos é descontado da capacidade da mesa selecionada.`);
+    notas.push(`Saídas físicas necessárias pelos grupos = ${fmt(saidasNecessarias)}. Saídas físicas configuradas = ${fmt(saidasFisicasTotais)}. Saldo de saídas físicas = ${fmt(saidasFisicasTotais)} − ${fmt(saidasNecessarias)} = <strong>${fmt(saidasRestantes)}</strong>.`);
+    if (infraDmx.usaSplitter){
+      notas.push(`Splitter DMX configurado com <strong>${fmt(saidasSplitter)} saídas físicas</strong>.`);
+    }
+    if (infraDmx.usaArtnet){
+      notas.push(`Art-Net configurado com <strong>${fmt(saidasArtnet)} saídas físicas</strong>.`);
+    }
+    if (!parametrosOk){
+      notas.push(`O rig utiliza <strong>${fmt(parametrosUtilizados)} parâmetros</strong>, acima dos <strong>${fmt(parametrosMesa)} parâmetros</strong> disponíveis na ${console_.label}.`);
+    } else if (totalDmxCh > 0){
+      notas.push(`Restam <strong>${fmt(parametrosRestantes)} parâmetros</strong> na ${console_.label}.`);
+    }
+    if (!saidasOk){
+      const faltamSaidas = saidasNecessarias - saidasFisicasTotais;
+      notas.push(`<span style="color:var(--weight);">⚠ Faltam <strong>${fmt(faltamSaidas)} saídas físicas DMX</strong> para atender os ${fmt(saidasNecessarias)} necessários. Adicione/configure Splitter DMX ou Art-Net.</span>`);
+    } else if (precisaExpansaoFisica && !infraDmx.usaSplitter && !infraDmx.usaArtnet){
+      notas.push(`<strong>A mesa sozinha não possui saídas físicas suficientes</strong> (${fmt(saidasFisicasMesa)} disponíveis para ${fmt(saidasNecessarias)} necessárias). Ative Splitter DMX ou Art-Net para complementar as saídas.`);
+    }
+    if (console_.aparelhosMax && !aparelhosOk){
+      notas.push(`A ${console_.label} controla até <strong>${totalAparelhos}</strong> aparelhos no cálculo configurado, acima do limite cadastrado de <strong>${console_.aparelhosMax}</strong>.`);
+    }
+    $('notaDmx').innerHTML = notas.join(' ');
+
+    // rigging suspenso — uma linha por grupo marcado como pendurado/suspenso
+    $('tblRigging').innerHTML = riggingResultados.length === 0
+      ? `<tr class="empty-row"><td colspan="4">Nenhum grupo marcado como "pendurado/suspenso" ainda.</td></tr>`
+      : riggingResultados.map(r => {
+          const partes = [];
+          if (r.usaAncoragem){
+            partes.push(`${r.qtdPontos} ponto${r.qtdPontos === 1 ? '' : 's'}${r.capacidadePonto > 0 ? ` de ${fmt(r.capacidadePonto)}kg` : ''} — ${fmt(r.pesoPorPonto)}kg/ponto`);
+          }
+          if (r.usaTalha){
+            partes.push(`${r.qtdTalhas} talha${r.qtdTalhas === 1 ? '' : 's'}${r.comprimentoTalha > 0 ? ` de ${fmt(r.comprimentoTalha)}m` : ''}`);
+          }
+          const fixacaoTexto = partes.length ? partes.join(' · ') : 'sem fixação definida';
+          return `
+        <tr>
+          <td>${r.nome}</td>
+          <td class="num">${r.aparelhos}</td>
+          <td class="num">${fmt(r.peso)} kg</td>
+          <td class="num"${r.sobrecarregado ? ' style="color:var(--weight); font-weight:600;"' : ''}>${fixacaoTexto}${r.sobrecarregado ? ' ⚠' : ''}</td>
+        </tr>
+      `;
+        }).join('');
+
+    const totalAparelhosSuspensos = riggingResultados.reduce((s, r) => s + r.aparelhos, 0);
+    const totalPesoSuspenso = riggingResultados.reduce((s, r) => s + r.peso, 0);
+    const totalTalhas = riggingResultados.filter(r => r.usaTalha).reduce((s, r) => s + (r.qtdTalhas || 0), 0);
+    $('riggingTotalAparelhos').textContent = totalAparelhosSuspensos;
+    $('riggingTotalPeso').textContent = fmt(totalPesoSuspenso) + ' kg';
+    $('riggingTotalTalhas').textContent = totalTalhas + ' talhas';
+
+    // guarda os valores calculados pra montar o descritivo
+    ultimoCalculo = {
+      totalAparelhos, totalW, totalKVA, totalKg, totalDmxCh, saidasNecessarias,
+      parametrosMesa, parametrosUtilizados, parametrosRestantes, saidasFisicasMesa, saidasFisicasTotais, saidasRestantes,
+      totalCircuitos, consoleLabel: console_.label, consoleKey: consoleAtual, totaisPorTipo,
+      gruposResultados, circuitosPorGrupo, riggingResultados, totalCases,
+      infraDmx: { ...infraDmx },
+      saidasSplitter, saidasArtnet
+    };
+    // O Descritivo Geral lê diretamente estes dados estruturados.
+    // Não é mais necessário gerar o descritivo nesta calculadora.
+    try {
+      localStorage.setItem('descritivo_dados_luz', JSON.stringify(ultimoCalculo));
+      localStorage.setItem('descritivo_luz_ts', String(Date.now()));
+    } catch (e) {}
+
+  }
+
+  // ===== persistência automática do projeto =====
+  const STORAGE_KEY_LUZ = 'calculadora_luz_estado_v1';
+  let saveTimerLuz = null;
+  // ultimaEdicaoTs só muda quando o usuário edita algo de fato (input/change/click
+  // real). Sair da página (beforeunload) ou forçar um salvamento não conta como
+  // edição nova — senão o "editado em" fica sempre na frente do "gerado em" só
+  // por trocar de aba, e o aviso de desatualizado nunca some.
+  let ultimaEdicaoTs = Date.now();
+  function coletarEstadoLuz(){
+    const campos = {};
+    document.querySelectorAll('input[id], select[id], textarea[id]').forEach(el => {
+      if (el.id === 'descritivoText') return;
+      campos[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+    });
+    return { campos, consoleAtual, infraDmx: JSON.parse(JSON.stringify(infraDmx)), grupos: JSON.parse(JSON.stringify(grupos)), grupoCounter, ts: ultimaEdicaoTs };
+  }
+  function salvarEstadoLuz(){ try { localStorage.setItem(STORAGE_KEY_LUZ, JSON.stringify(coletarEstadoLuz())); ultimoSalvamentoTs = Date.now(); atualizarSaveStatus(); } catch(e) {} }
+  function agendarSalvarLuz(){ ultimaEdicaoTs = Date.now(); clearTimeout(saveTimerLuz); saveTimerLuz=setTimeout(salvarEstadoLuz,120); }
+  function restaurarEstadoLuz(){
+    try {
+      const s=JSON.parse(localStorage.getItem(STORAGE_KEY_LUZ)||'null'); if(!s) return false;
+      if(s.consoleAtual) consoleAtual=s.consoleAtual; if(s.infraDmx) infraDmx=s.infraDmx;
+      if(Array.isArray(s.grupos)&&s.grupos.length) grupos=s.grupos; if(Number.isFinite(s.grupoCounter)) grupoCounter=s.grupoCounter;
+      if(Number.isFinite(s.ts)) ultimaEdicaoTs=s.ts;
+      Object.entries(s.campos||{}).forEach(([id,val])=>{const el=$(id);if(!el)return;if(el.type==='checkbox')el.checked=!!val;else el.value=val;});
+      return true;
+    } catch(e){return false;}
+  }
+
+  // ===== sidebar: status de salvamento + navegação com scrollspy =====
+  let ultimoSalvamentoTs = Date.now();
+  function fmtRelativo(ts){
+    if (!ts) return '';
+    const diffSeg = Math.round((Date.now() - ts) / 1000);
+    if (diffSeg < 5) return 'agora mesmo';
+    if (diffSeg < 60) return 'há ' + diffSeg + 's';
+    const min = Math.floor(diffSeg / 60);
+    if (min < 60) return 'há ' + min + ' min';
+    const h = Math.floor(min / 60);
+    return 'há ' + h + 'h';
+  }
+  function atualizarSaveStatus(){
+    const el = $('saveStatusText');
+    if (el) el.textContent = 'Salvo automaticamente · ' + fmtRelativo(ultimoSalvamentoTs);
+  }
+  setInterval(atualizarSaveStatus, 5000);
+
+  const navLinks = Array.from(document.querySelectorAll('#sideNav a'));
+  const navSections = navLinks.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  function atualizarScrollspy(){
+    let atual = navSections[0];
+    for (const sec of navSections) {
+      if (sec.offsetParent === null) continue;
+      if (sec.getBoundingClientRect().top - 130 <= 0) atual = sec;
+    }
+    navLinks.forEach((a, i) => a.classList.toggle('active', navSections[i] === atual));
+  }
+  let scrollTicking = false;
+  document.addEventListener('scroll', () => {
+    if (scrollTicking) return;
+    scrollTicking = true;
+    requestAnimationFrame(() => { atualizarScrollspy(); scrollTicking = false; });
+  });
+  atualizarScrollspy();
+
+  // ===== init =====
+  // Junta os equipamentos cadastrados em catalogo.html (localStorage) aos
+  // catálogos padrão desta calculadora, antes de montar os seletores.
+  if (window.MMCatalogo) {
+    MMCatalogo.mergeEquipamentosLuz(EQUIPAMENTOS);
+    MMCatalogo.mergeConsolesLuz(CONSOLES);
+  }
+
+  // Restaura o último projeto antes de reconstruir os blocos dinâmicos.
+  restaurarEstadoLuz();
+
+  buildConsoleToggle();
+  buildGruposCards();
+  bindDmxInfraControls();
+  $('btnAddGrupo').addEventListener('click', addGrupo);
+  $('tensaoRede').addEventListener('input', calc);
+  $('tensaoRede').addEventListener('change', calc);
+  $('ampsCircuito').addEventListener('input', calc);
+  $('ampsCircuito').addEventListener('change', calc);
+  $('cabeamentoKgM').addEventListener('input', calc);
+  $('cabeamentoKgM').addEventListener('change', calc);
+  calc();
+  salvarEstadoLuz();
+  atualizarSaveStatus();
+  document.addEventListener('input', agendarSalvarLuz);
+  document.addEventListener('change', agendarSalvarLuz);
+  document.addEventListener('click', agendarSalvarLuz);
+  window.addEventListener('beforeunload', salvarEstadoLuz);
+</script>
+
+</body>
+</html>
