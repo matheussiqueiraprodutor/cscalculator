@@ -770,7 +770,15 @@ function buildAereoEstruturas(){
     if (lg) rows = rows.concat(artEquipRowsGrupo(lg));
     if (sg) rows = rows.concat(artEquipRowsGrupo(sg));
     if (!rows.length) continue;
-    const pontos = Math.max((lg&&lg.qtdPontos)||0, (sg&&sg.qtdPontos)||0) || 1;
+    const pontosLuz = (lg && lg.usaTalha && (lg.qtdTalhas || 0) > 0)
+  ? lg.qtdTalhas
+  : ((lg && lg.qtdPontos) || 0);
+
+const pontosSom = (sg && sg.usaTalha && (sg.qtdTalhas || 0) > 0)
+  ? sg.qtdTalhas
+  : ((sg && sg.qtdPontos) || 0);
+
+const pontos = Math.max(pontosLuz, pontosSom) || 1;
     const nomes = [lg&&lg.nome, sg&&sg.nome].filter(Boolean).join(' + ');
     estruturas.push({ titulo: nomes || ('Estrutura '+(i+1)), pontos, rows });
   }
