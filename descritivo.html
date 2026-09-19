@@ -878,7 +878,7 @@ async function gerarArtAereo(){
   });
   zip.file('xl/worksheets/sheet1.xml', xml);
   const blob = await zip.generateAsync({ type:'blob', mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  artDownloadBlob(blob, 'Memorial_Aereo_Maurinho_Rigging.xlsx');
+  artDownloadBlob(blob, 'Memorial de Calculo Aereo - ' + (cab.evento || 'Sem Nome') + '.xlsx');
 }
 async function gerarArtSolo(){
   const estruturas = buildSoloEstruturas();
@@ -920,7 +920,7 @@ async function gerarArtSolo(){
   });
   zip.file(sheetPath, xml);
   const blob = await zip.generateAsync({ type:'blob', mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  artDownloadBlob(blob, 'Memorial_Solo_Maurinho_Rigging.xlsx');
+  artDownloadBlob(blob, 'Memorial de Calculo de Solo - ' + (cab.evento || 'Sem Nome') + '.xlsx');
 }
 document.getElementById('btnArtAereo').onclick = () => { gerarArtAereo().catch(e=>{ console.error(e); alert('Não foi possível gerar o Memorial Aéreo: '+e.message); }); };
 document.getElementById('btnArtSolo').onclick = () => { gerarArtSolo().catch(e=>{ console.error(e); alert('Não foi possível gerar o Memorial Solo: '+e.message); }); };
