@@ -1,3 +1,312 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Login — cscalculator</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="db-config.js"></script><script src="auth.js"></script>
-<style>:root{--bg:#0a0a0b;--panel:#131315;--line:#29292d;--text:#f3f1ec;--muted:#8c8c91;--blue:#1d4e73;--red:#d6473c}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,sans-serif;min-height:100vh;display:grid;place-items:center;background-image:radial-gradient(ellipse 800px 420px at 50% 0%,rgba(29,78,115,.18),transparent 70%)}.wrap{width:min(430px,calc(100% - 32px))}.brand{margin-bottom:24px}.tag{color:var(--blue);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}.brand h1{font:600 32px 'Space Grotesk';margin:8px 0}.brand p{color:var(--muted);font-size:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px}.field{margin-bottom:17px}label{display:block;font-size:12px;color:var(--muted);margin-bottom:7px}input{width:100%;background:#0e0e10;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:13px 14px;outline:none}input:focus{border-color:var(--blue)}button{width:100%;border:0;border-radius:8px;padding:13px;background:var(--blue);color:white;font-weight:700;cursor:pointer}.msg{min-height:20px;margin-top:14px;font-size:13px;color:#e17b72}.foot{text-align:center;color:#666;font-size:11px;margin-top:18px}</style></head><body><div class="wrap"><div class="brand"><div class="tag">cscalculator · Pré-produção</div><h1>Acesso ao sistema</h1><p>Entre para acessar as calculadoras e seus recursos.</p></div><div class="card"><form id="f"><div class="field"><label>E-mail</label><input id="email" type="email" autocomplete="username" required></div><div class="field"><label>Senha</label><input id="senha" type="password" autocomplete="current-password" required></div><button id="b">Entrar</button><div class="msg" id="msg"></div></form></div><div class="foot">Acesso protegido · Supabase Auth</div></div><script>(async()=>{const q=new URLSearchParams(location.search);if(q.get('blocked'))msg.textContent='Este usuário está bloqueado.';const r=await MMAuth.client.auth.getUser();if(r.data&&r.data.user)location.href='index.html';f.onsubmit=async e=>{e.preventDefault();b.disabled=true;msg.textContent='Entrando...';const r=await MMAuth.client.auth.signInWithPassword({email:email.value.trim(),password:senha.value});if(r.error){msg.textContent='E-mail ou senha inválidos.';b.disabled=false;return}await MMAuth.refreshCatalog();location.href='index.html'}})();</script></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Login — HIVE PRO</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="db-config.js"></script>
+<script src="auth.js"></script>
+
+<style>
+:root{
+  --bg:#05070a;
+  --panel:#0c1016;
+  --panel2:#10151d;
+  --line:#1d2733;
+  --text:#f4f7fb;
+  --muted:#7e8b99;
+  --blue:#168cff;
+  --blue2:#0b5fae;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  background:
+    radial-gradient(circle at 50% 35%,rgba(22,140,255,.07),transparent 38%),
+    #05070a;
+  color:var(--text);
+  font-family:Inter,sans-serif;
+  overflow:hidden;
+}
+
+/* Padrão hexagonal discreto */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  opacity:.18;
+  background-image:
+    linear-gradient(30deg,transparent 24%,rgba(22,140,255,.08) 25%,rgba(22,140,255,.08) 26%,transparent 27%,transparent 74%,rgba(22,140,255,.08) 75%,rgba(22,140,255,.08) 76%,transparent 77%),
+    linear-gradient(150deg,transparent 24%,rgba(22,140,255,.08) 25%,rgba(22,140,255,.08) 26%,transparent 27%,transparent 74%,rgba(22,140,255,.08) 75%,rgba(22,140,255,.08) 76%,transparent 77%);
+  background-size:90px 52px;
+}
+
+.wrap{
+  width:min(430px,calc(100% - 32px));
+  position:relative;
+  z-index:1;
+}
+
+/* Identidade */
+.brand{
+  text-align:center;
+  margin-bottom:26px;
+}
+
+.logo{
+  width:72px;
+  height:72px;
+  margin:0 auto 18px;
+  display:grid;
+  place-items:center;
+  position:relative;
+}
+
+.logo svg{
+  width:72px;
+  height:72px;
+  filter:drop-shadow(0 0 14px rgba(22,140,255,.18));
+}
+
+.brand h1{
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:34px;
+  font-weight:700;
+  letter-spacing:.08em;
+}
+
+.brand h1 span{
+  color:var(--blue);
+}
+
+.tag{
+  margin-top:9px;
+  color:#718091;
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+}
+
+.brand p{
+  margin:12px 0 0;
+  color:var(--muted);
+  font-size:13px;
+}
+
+/* Card */
+.card{
+  background:rgba(12,16,22,.96);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:30px;
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.45),
+    0 0 0 1px rgba(255,255,255,.015);
+}
+
+.field{
+  margin-bottom:18px;
+}
+
+label{
+  display:block;
+  margin-bottom:8px;
+  color:#8996a5;
+  font-size:12px;
+  font-weight:500;
+}
+
+input{
+  width:100%;
+  height:46px;
+  padding:0 14px;
+  background:#080b10;
+  border:1px solid #202b37;
+  border-radius:9px;
+  color:var(--text);
+  font-family:Inter,sans-serif;
+  font-size:14px;
+  outline:none;
+  transition:.2s;
+}
+
+input:hover{
+  border-color:#2b3948;
+}
+
+input:focus{
+  border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(22,140,255,.08);
+}
+
+button{
+  width:100%;
+  height:46px;
+  border:0;
+  border-radius:9px;
+  background:var(--blue);
+  color:#fff;
+  font-family:Inter,sans-serif;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.02em;
+  cursor:pointer;
+  transition:.2s;
+}
+
+button:hover{
+  background:#2a99ff;
+  box-shadow:0 6px 20px rgba(22,140,255,.18);
+}
+
+button:disabled{
+  opacity:.65;
+  cursor:default;
+  box-shadow:none;
+}
+
+.msg{
+  min-height:20px;
+  margin-top:14px;
+  font-size:13px;
+  color:#e17b72;
+  text-align:center;
+}
+
+.foot{
+  margin-top:18px;
+  text-align:center;
+  color:#4f5b67;
+  font-size:10px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+/* Responsivo */
+@media(max-width:480px){
+  .card{
+    padding:24px;
+  }
+
+  .brand h1{
+    font-size:30px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+  <div class="brand">
+
+    <div class="logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M50 7L86 28V72L50 93L14 72V28L50 7Z"
+          stroke="#168CFF"
+          stroke-width="3"
+        />
+        <path
+          d="M50 22L73 35.5V64.5L50 78L27 64.5V35.5L50 22Z"
+          stroke="#168CFF"
+          stroke-width="1.5"
+          opacity=".45"
+        />
+        <path
+          d="M50 22V78M27 35.5L73 64.5M73 35.5L27 64.5"
+          stroke="#168CFF"
+          stroke-width="1"
+          opacity=".3"
+        />
+        <circle cx="50" cy="50" r="5" fill="#168CFF"/>
+      </svg>
+    </div>
+
+    <h1>HIVE <span>PRO</span></h1>
+
+    <div class="tag">EVENT PRODUCTION SYSTEM</div>
+
+    <p>Acesso ao sistema de pré-produção</p>
+
+  </div>
+
+  <div class="card">
+
+    <form id="f">
+
+      <div class="field">
+        <label>E-mail</label>
+        <input id="email" type="email" autocomplete="username" required>
+      </div>
+
+      <div class="field">
+        <label>Senha</label>
+        <input id="senha" type="password" autocomplete="current-password" required>
+      </div>
+
+      <button id="b">Entrar</button>
+
+      <div class="msg" id="msg"></div>
+
+    </form>
+
+  </div>
+
+  <div class="foot">
+    Acesso protegido · HIVE PRO
+  </div>
+
+</div>
+
+<script>
+(async()=>{
+  const q=new URLSearchParams(location.search);
+
+  if(q.get('blocked'))
+    msg.textContent='Este usuário está bloqueado.';
+
+  const r=await MMAuth.client.auth.getUser();
+
+  if(r.data&&r.data.user)
+    location.href='index.html';
+
+  f.onsubmit=async e=>{
+    e.preventDefault();
+
+    b.disabled=true;
+    msg.textContent='Entrando...';
+
+    const r=await MMAuth.client.auth.signInWithPassword({
+      email:email.value.trim(),
+      password:senha.value
+    });
+
+    if(r.error){
+      msg.textContent='E-mail ou senha inválidos.';
+      b.disabled=false;
+      return;
+    }
+
+    await MMAuth.refreshCatalog();
+    location.href='index.html';
+  }
+})();
+</script>
+
+</body>
+</html>
