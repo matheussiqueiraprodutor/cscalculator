@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>HIVE PRO — Áreas</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,22 +10,24 @@
 
 <style>
 :root{
-  --bg:#05070a;
-  --panel:#0b1016;
-  --panel2:#101720;
-  --line:#1b2733;
-  --line2:#263442;
-  --text:#f4f7fb;
-  --muted:#7f8d9b;
-  --blue:#168cff;
-  --blue-soft:rgba(22,140,255,.12);
+  --bg:#03070d;
+  --bg-2:#06111d;
+  --panel:#071019;
+  --panel-2:#0b1621;
+  --line:#183044;
+  --line-blue:#075b91;
+  --text:#f4f7fa;
+  --muted:#8495a6;
+  --blue:#00a3ff;
+  --blue-soft:#168bd0;
 
-  --som:#3d9cff;
-  --luz:#8d7cff;
-  --video:#29b8ff;
-  --catalogo:#4dbb91;
-  --ok:#55bd8a;
-  --warn:#e27669;
+  --som:#ff244f;
+  --luz:#ffe600;
+  --video:#00f078;
+
+  --catalogo:#55d58a;
+  --ok:#35d99a;
+  --weight:#ff6a68;
 }
 
 *{
@@ -34,159 +35,169 @@
 }
 
 html{
-  scroll-behavior:smooth;
+  background:var(--bg);
 }
 
 body{
   margin:0;
-  min-height:100vh;
   background:
-    radial-gradient(circle at 50% -10%,rgba(22,140,255,.10),transparent 34%),
-    #05070a;
+    radial-gradient(circle at 50% -10%, rgba(0,163,255,.10), transparent 38%),
+    radial-gradient(circle at 10% 40%, rgba(0,83,140,.08), transparent 35%),
+    var(--bg);
   color:var(--text);
   font-family:'Inter',sans-serif;
   line-height:1.5;
+  min-height:100vh;
+  position:relative;
 }
 
-/* Hexágonos discretos */
+/* textura hexagonal sutil */
 body::before{
-  content:"";
+  content:'';
   position:fixed;
   inset:0;
   pointer-events:none;
-  opacity:.12;
+  opacity:.16;
   background-image:
-    linear-gradient(30deg,transparent 24%,rgba(22,140,255,.10) 25%,rgba(22,140,255,.10) 26%,transparent 27%,transparent 74%,rgba(22,140,255,.10) 75%,rgba(22,140,255,.10) 76%,transparent 77%),
-    linear-gradient(150deg,transparent 24%,rgba(22,140,255,.10) 25%,rgba(22,140,255,.10) 26%,transparent 27%,transparent 74%,rgba(22,140,255,.10) 75%,rgba(22,140,255,.10) 76%,transparent 77%);
-  background-size:90px 52px;
+    linear-gradient(30deg, rgba(0,163,255,.10) 12%, transparent 12.5%, transparent 87%, rgba(0,163,255,.10) 87.5%, rgba(0,163,255,.10)),
+    linear-gradient(150deg, rgba(0,163,255,.10) 12%, transparent 12.5%, transparent 87%, rgba(0,163,255,.10) 87.5%, rgba(0,163,255,.10)),
+    linear-gradient(30deg, rgba(0,163,255,.10) 12%, transparent 12.5%, transparent 87%, rgba(0,163,255,.10) 87.5%, rgba(0,163,255,.10)),
+    linear-gradient(150deg, rgba(0,163,255,.10) 12%, transparent 12.5%, transparent 87%, rgba(0,163,255,.10) 87.5%, rgba(0,163,255,.10)),
+    linear-gradient(60deg, rgba(0,163,255,.06) 25%, transparent 25.5%, transparent 75%, rgba(0,163,255,.06) 75%);
+  background-position:
+    0 0,
+    0 0,
+    40px 70px,
+    40px 70px,
+    0 0;
+  background-size:80px 140px;
 }
 
 h1,h2,h3{
   font-family:'Space Grotesk',sans-serif;
+  font-weight:600;
+  letter-spacing:-.02em;
 }
 
-button,
-input{
-  font-family:inherit;
+.mono{
+  font-family:'IBM Plex Mono',monospace;
 }
 
 /* =========================
-   HEADER
-========================= */
+   CABEÇALHO
+   ========================= */
 
 header{
+  border-bottom:1px solid rgba(0,163,255,.18);
+  background:
+    linear-gradient(180deg,rgba(3,8,15,.98),rgba(3,8,15,.88));
   position:relative;
-  border-bottom:1px solid var(--line);
-  background:rgba(5,7,10,.92);
+  z-index:1;
 }
 
-.header-inner{
-  max-width:1160px;
+header .header-inner{
+  max-width:1100px;
   margin:0 auto;
-  padding:30px 24px 28px;
-  position:relative;
+  padding:34px 20px 32px;
 }
 
-.brand-row{
+/* HIVE PRO */
+.brand{
   display:flex;
   align-items:center;
-  gap:13px;
-  margin-bottom:28px;
+  gap:14px;
+  margin-bottom:30px;
 }
 
-.logo-mini{
+.brand-mark{
   width:42px;
   height:42px;
-  flex:0 0 42px;
-}
-
-.logo-mini svg{
-  width:100%;
-  height:100%;
-  filter:drop-shadow(0 0 10px rgba(22,140,255,.15));
+  color:var(--blue);
+  flex:none;
 }
 
 .brand-name{
   font-family:'Space Grotesk',sans-serif;
-  font-size:19px;
+  font-size:24px;
   font-weight:700;
-  letter-spacing:.10em;
+  line-height:1;
+  letter-spacing:-.03em;
 }
 
-.brand-name span{
+.brand-name .pro{
   color:var(--blue);
 }
 
 .brand-sub{
-  color:#687685;
+  margin-top:6px;
+  color:#718497;
   font-size:9px;
-  letter-spacing:.17em;
-  margin-top:2px;
-}
-
-.header-main{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-end;
-  gap:24px;
-}
-
-.header-tag{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  color:var(--blue);
-  font-size:10px;
-  font-weight:700;
-  letter-spacing:.17em;
+  letter-spacing:.20em;
   text-transform:uppercase;
-  margin:0 0 9px;
 }
 
-.header-tag::before{
-  content:"";
-  width:5px;
-  height:5px;
+/* etiqueta */
+header .tag{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  color:var(--blue);
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  margin:0 0 14px;
+}
+
+header .tag::before{
+  content:'';
+  width:7px;
+  height:7px;
   background:var(--blue);
   transform:rotate(45deg);
+  display:inline-block;
 }
 
 header h1{
-  font-size:30px;
-  font-weight:600;
-  letter-spacing:-.025em;
-  margin:0 0 8px;
+  font-size:32px;
+  margin:0 0 10px;
+  line-height:1.12;
+  max-width:26ch;
 }
 
 header p.sub{
-  color:var(--muted);
+  color:#8495a6;
   margin:0;
-  font-size:13.5px;
+  font-size:14px;
+  max-width:60ch;
 }
 
 /* =========================
-   MAIN
-========================= */
+   CONTEÚDO
+   ========================= */
 
 main{
-  max-width:1160px;
+  max-width:1100px;
   margin:0 auto;
-  padding:30px 24px 60px;
+  padding:34px 20px 70px;
   position:relative;
   z-index:1;
 }
 
 /* =========================
-   EVENT CARD
-========================= */
+   DADOS DO EVENTO
+   ========================= */
 
 .event-card{
-  background:rgba(11,16,22,.96);
-  border:1px solid var(--line);
-  border-radius:12px;
-  padding:22px;
-  margin-bottom:26px;
-  box-shadow:0 16px 45px rgba(0,0,0,.20);
+  background:
+    linear-gradient(145deg,rgba(8,18,29,.96),rgba(4,11,18,.96));
+  border:1px solid #17364d;
+  border-radius:15px;
+  padding:22px 24px;
+  margin-bottom:28px;
+  box-shadow:
+    0 0 0 1px rgba(0,163,255,.025),
+    0 18px 50px rgba(0,0,0,.20);
 }
 
 .event-card-header{
@@ -195,145 +206,164 @@ main{
   align-items:flex-start;
   gap:16px;
   flex-wrap:wrap;
-  margin-bottom:20px;
+  margin-bottom:18px;
 }
 
-.section-title{
+.event-card-header .section-title{
   font-family:'Space Grotesk',sans-serif;
-  font-size:12px;
+  font-size:13px;
   font-weight:600;
   letter-spacing:.12em;
   text-transform:uppercase;
-  color:#aab5c0;
   margin:0 0 7px;
-}
-
-.stats{
-  display:flex;
-  gap:18px;
-  flex-wrap:wrap;
-  align-items:center;
-  font-size:11.5px;
-  color:var(--muted);
-}
-
-.stats .stat{
-  display:flex;
-  align-items:center;
-  gap:6px;
-}
-
-.stats .dot{
-  width:6px;
-  height:6px;
-  border-radius:50%;
-  display:inline-block;
+  color:#dbe5ed;
 }
 
 .btn-new-project{
-  background:#0b1118;
-  border:1px solid var(--line2);
-  color:#9aa7b4;
+  background:rgba(3,13,22,.75);
+  border:1px solid #24445b;
+  color:#9eb1c1;
   padding:9px 14px;
-  border-radius:8px;
+  border-radius:9px;
   font-family:'Space Grotesk',sans-serif;
   font-weight:600;
-  font-size:11.5px;
+  font-size:12px;
   cursor:pointer;
   white-space:nowrap;
-  transition:.2s;
+  transition:.15s ease;
 }
 
 .btn-new-project:hover{
   border-color:var(--blue);
   color:var(--blue);
-  background:var(--blue-soft);
+  box-shadow:0 0 16px rgba(0,163,255,.12);
+}
+
+.stats{
+  display:flex;
+  gap:20px;
+  flex-wrap:wrap;
+  align-items:center;
+  font-size:12px;
+  color:#7f93a5;
+}
+
+.stats .stat{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+
+.stats .dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  display:inline-block;
 }
 
 .cab-grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:13px;
+  gap:14px;
+}
+
+@media (max-width:720px){
+  .cab-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media (max-width:480px){
+  .cab-grid{
+    grid-template-columns:1fr;
+  }
 }
 
 .cab-field label{
   display:block;
-  color:#71808f;
-  font-size:9.5px;
+  color:#71869a;
+  font-size:10px;
   text-transform:uppercase;
-  letter-spacing:.08em;
+  letter-spacing:.10em;
   margin-bottom:6px;
 }
 
 .cab-field input{
   width:100%;
-  height:40px;
-  background:#080c11;
-  border:1px solid var(--line);
-  border-radius:7px;
+  background:#050c13;
+  border:1px solid #17364d;
+  border-radius:8px;
   color:var(--text);
-  font-size:12.5px;
-  padding:0 11px;
-  outline:none;
-  transition:.2s;
-}
-
-.cab-field input::placeholder{
-  color:#465361;
+  font-family:'Inter',sans-serif;
+  font-size:13px;
+  padding:11px 12px;
+  box-sizing:border-box;
+  transition:.15s ease;
 }
 
 .cab-field input:focus{
+  outline:none;
   border-color:var(--blue);
-  box-shadow:0 0 0 3px rgba(22,140,255,.07);
+  box-shadow:0 0 0 2px rgba(0,163,255,.08);
 }
 
 /* =========================
-   AREA CARDS
-========================= */
+   CARDS DAS ÁREAS
+   ========================= */
 
 .area-grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:16px;
+  gap:20px;
+}
+
+@media (max-width:860px){
+  .area-grid{
+    grid-template-columns:1fr;
+  }
 }
 
 .area-card{
   display:block;
-  min-height:250px;
-  position:relative;
-  overflow:hidden;
-  background:rgba(11,16,22,.97);
-  border:1px solid var(--line);
-  border-radius:12px;
-  padding:22px;
+  background:
+    linear-gradient(145deg,rgba(7,17,27,.97),rgba(4,11,18,.97));
+  border:1px solid #16405c;
+  border-top:3px solid var(--accent);
+  border-radius:15px;
+  padding:22px 22px 20px;
   text-decoration:none;
   color:var(--text);
   transition:
-    transform .18s ease,
-    border-color .18s ease,
-    background .18s ease,
-    box-shadow .18s ease;
+    transform .15s ease,
+    border-color .15s ease,
+    background .15s ease,
+    box-shadow .15s ease;
+  position:relative;
+  min-height:255px;
+  overflow:hidden;
 }
 
 .area-card::after{
-  content:"";
+  content:'';
   position:absolute;
-  top:0;
-  left:20px;
-  right:20px;
-  height:2px;
+  width:130px;
+  height:130px;
+  left:-45px;
+  top:-50px;
   background:var(--accent);
-  opacity:.8;
+  opacity:.045;
+  filter:blur(30px);
+  pointer-events:none;
 }
 
 .area-card:hover{
   transform:translateY(-3px);
-  background:#0e151d;
-  border-color:#2a3948;
-  box-shadow:0 16px 38px rgba(0,0,0,.28);
+  border-color:rgba(0,163,255,.65);
+  background:#081522;
+  box-shadow:0 12px 35px rgba(0,0,0,.35);
 }
 
-.card-top{
+.area-card .card-top{
   display:flex;
   justify-content:space-between;
   align-items:flex-start;
@@ -341,180 +371,149 @@ main{
 }
 
 .area-card .icon{
-  width:42px;
-  height:42px;
-  border-radius:9px;
-  background:color-mix(in srgb,var(--accent) 12%,#080c11);
-  border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);
+  width:48px;
+  height:48px;
+  border-radius:10px;
+  background:rgba(0,0,0,.20);
+  border:1px solid color-mix(in srgb,var(--accent) 55%,#17364d);
   display:flex;
   align-items:center;
   justify-content:center;
   color:var(--accent);
+  box-shadow:
+    0 0 18px color-mix(in srgb,var(--accent) 14%,transparent);
 }
 
 .area-card .icon svg{
-  width:20px;
-  height:20px;
+  width:29px;
+  height:29px;
 }
 
 .area-card .tag-num{
   font-family:'IBM Plex Mono',monospace;
-  font-size:9.5px;
-  color:#687685;
-  letter-spacing:.10em;
+  font-size:10px;
+  color:#71869a;
+  letter-spacing:.13em;
   text-transform:uppercase;
   margin:0 0 7px;
 }
 
 .area-card h2{
-  font-size:21px;
-  font-weight:600;
-  margin:0 0 8px;
-  color:#f0f4f8;
+  font-size:23px;
+  margin:0 0 7px;
+  color:#f4f7fa;
 }
 
 .area-card p{
-  color:var(--muted);
-  font-size:12.5px;
-  margin:0 0 16px;
+  color:#8294a5;
+  font-size:13px;
+  margin:0 0 18px;
   min-height:38px;
-}
-
-.area-card .meta{
-  font-family:'IBM Plex Mono',monospace;
-  font-size:9.5px;
-  color:#596774;
-  margin:-4px 0 15px;
-  min-height:14px;
 }
 
 .area-card .go{
   display:inline-flex;
   align-items:center;
-  gap:7px;
-  font-size:11.5px;
+  gap:9px;
+  font-size:13px;
   font-weight:600;
   font-family:'Space Grotesk',sans-serif;
-  color:#dce4eb;
+  color:#edf4f8;
+  position:absolute;
+  left:22px;
+  bottom:18px;
 }
 
 .area-card .go .arrow{
-  color:var(--accent);
-  transition:transform .18s ease;
+  color:var(--blue);
+  font-size:19px;
+  transition:transform .15s ease;
 }
 
 .area-card:hover .go .arrow{
   transform:translateX(5px);
 }
 
+.area-card.disabled{
+  opacity:.5;
+  cursor:default;
+  pointer-events:none;
+}
+
+.area-card.disabled .go{
+  color:var(--muted);
+}
+
+/* badges */
+
 .badge{
   font-family:'Space Grotesk',sans-serif;
-  font-size:8.5px;
+  font-size:9px;
   font-weight:600;
   letter-spacing:.06em;
-  padding:4px 8px;
+  padding:5px 10px;
   border-radius:20px;
   white-space:nowrap;
+  border:1px solid rgba(53,217,154,.18);
 }
 
 .badge-ok{
-  background:rgba(85,189,138,.10);
+  background:rgba(53,217,154,.08);
   color:var(--ok);
-  border:1px solid rgba(85,189,138,.16);
 }
 
 .badge-warn{
-  background:rgba(226,118,105,.10);
-  color:var(--warn);
-  border:1px solid rgba(226,118,105,.16);
+  background:rgba(255,80,80,.10);
+  color:#ff7b72;
 }
 
 .badge-neutral{
-  background:rgba(127,141,155,.09);
-  color:#758391;
-  border:1px solid rgba(127,141,155,.12);
+  background:rgba(132,149,166,.08);
+  color:#8ea0af;
+  border-color:rgba(132,149,166,.15);
 }
 
-/* =========================
-   USER / LOGOUT
-========================= */
-
-.user-bar{
-  margin-top:22px;
-  display:flex;
-  justify-content:flex-end;
-  gap:12px;
-  align-items:center;
-}
-
-#loggedUser{
+.badge-em-breve{
+  position:absolute;
+  top:20px;
+  right:20px;
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:.06em;
+  text-transform:uppercase;
   color:var(--muted);
-  font-size:11.5px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:3px 7px;
+}
+
+.area-card .meta{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  color:#607486;
+  margin:-8px 0 14px;
+  min-height:0;
 }
 
 /* =========================
-   FOOTER
-========================= */
+   RODAPÉ
+   ========================= */
 
 footer{
-  max-width:1160px;
+  max-width:1100px;
   margin:0 auto;
-  padding:22px 24px 36px;
-  color:#4f5c69;
-  font-size:9.5px;
-  letter-spacing:.05em;
-  border-top:1px solid var(--line);
-}
-
-/* =========================
-   RESPONSIVO
-========================= */
-
-@media(max-width:900px){
-  .area-grid{
-    grid-template-columns:repeat(2,1fr);
-  }
-
-  .cab-grid{
-    grid-template-columns:repeat(2,1fr);
-  }
-}
-
-@media(max-width:620px){
-  .header-inner,
-  main,
-  footer{
-    padding-left:16px;
-    padding-right:16px;
-  }
-
-  .header-main{
-    display:block;
-  }
-
-  header h1{
-    font-size:26px;
-  }
-
-  .area-grid,
-  .cab-grid{
-    grid-template-columns:1fr;
-  }
-
-  .area-card{
-    min-height:220px;
-  }
-
-  .event-card{
-    padding:18px;
-  }
+  padding:24px 20px 40px;
+  color:#526575;
+  font-size:11px;
+  border-top:1px solid rgba(0,163,255,.12);
+  position:relative;
+  z-index:1;
 }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="db-config.js"></script>
 <script src="auth.js"></script>
-
 </head>
 
 <body>
@@ -527,55 +526,50 @@ footer{
 </script>
 
 <header>
-
   <div class="header-inner">
 
-    <div class="brand-row">
+    <div class="brand">
 
-      <div class="logo-mini">
-        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M50 7L86 28V72L50 93L14 72V28L50 7Z"
-            stroke="#168CFF"
-            stroke-width="3"
-          />
-          <path
-            d="M50 22L73 35.5V64.5L50 78L27 64.5V35.5L50 22Z"
-            stroke="#168CFF"
-            stroke-width="1.5"
-            opacity=".45"
-          />
-          <path
-            d="M50 22V78M27 35.5L73 64.5M73 35.5L27 64.5"
-            stroke="#168CFF"
-            stroke-width="1"
-            opacity=".3"
-          />
-          <circle cx="50" cy="50" r="5" fill="#168CFF"/>
-        </svg>
-      </div>
+      <svg class="brand-mark" viewBox="0 0 48 48" fill="none">
+        <path d="M24 3L40 12.5V35.5L24 45L8 35.5V12.5L24 3Z"
+              stroke="currentColor"
+              stroke-width="1.5"/>
+
+        <path d="M24 9L34 15V27L24 33L14 27V15L24 9Z"
+              stroke="currentColor"
+              stroke-width="1.2"
+              opacity=".75"/>
+
+        <path d="M24 16L29 19V25L24 28L19 25V19L24 16Z"
+              fill="currentColor"
+              opacity=".35"/>
+
+        <path d="M24 3V9M8 12.5L14 15M40 12.5L34 15M8 35.5L14 32M40 35.5L34 32"
+              stroke="currentColor"
+              stroke-width="1"
+              opacity=".7"/>
+      </svg>
 
       <div>
-        <div class="brand-name">HIVE <span>PRO</span></div>
-        <div class="brand-sub">EVENT PRODUCTION SYSTEM</div>
+        <div class="brand-name">
+          HIVE <span class="pro">PRO</span>
+        </div>
+        <div class="brand-sub">
+          EVENT PRODUCTION SYSTEM
+        </div>
       </div>
 
     </div>
 
-    <div class="header-main">
+    <p class="tag">Pré-produção de eventos</p>
 
-      <div>
-        <p class="header-tag">Pré-produção de eventos</p>
-        <h1>Escolha a área</h1>
-        <p class="sub">
-          Selecione o módulo de calculadora que você quer usar para o seu evento.
-        </p>
-      </div>
+    <h1>Escolha a área</h1>
 
-    </div>
+    <p class="sub">
+      Selecione o módulo de calculadora que você quer usar para o seu evento.
+    </p>
 
   </div>
-
 </header>
 
 <main>
@@ -631,30 +625,36 @@ footer{
       </div>
 
     </div>
-
   </div>
+
 
   <div class="area-grid">
 
     <!-- SOM -->
-
-    <a
-      href="som.html"
-      class="area-card"
-      style="--accent:var(--som);">
+    <a href="som.html"
+       class="area-card"
+       style="--accent:var(--som);">
 
       <div class="card-top">
 
         <div class="icon">
-          <svg viewBox="0 0 24 24" fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round">
-            <path d="M4 9v6h3l5 4V5L7 9H4z"/>
-            <path d="M16 8.5a5 5 0 0 1 0 7"/>
-            <path d="M18.7 6a8.5 8.5 0 0 1 0 12"/>
+
+          <!-- ALTO-FALANTE -->
+          <svg viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="1.8"
+               stroke-linecap="round"
+               stroke-linejoin="round">
+
+            <path d="M4 9v6h4l5 4V5L8 9H4z"/>
+
+            <path d="M16 9a4 4 0 0 1 0 6"/>
+
+            <path d="M18.5 6.5a7.5 7.5 0 0 1 0 11"/>
+
           </svg>
+
         </div>
 
         <span class="badge" id="badge-som"></span>
@@ -680,23 +680,44 @@ footer{
 
 
     <!-- LUZ -->
-
-    <a
-      href="luz.html"
-      class="area-card"
-      style="--accent:var(--luz);">
+    <a href="luz.html"
+       class="area-card"
+       style="--accent:var(--luz);">
 
       <div class="card-top">
 
         <div class="icon">
-          <svg viewBox="0 0 24 24" fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round">
-            <rect x="9" y="3" width="6" height="5" rx="1.4"/>
-            <path d="M10 8L6 21h12L14 8"/>
+
+          <!-- MOVING HEAD -->
+          <svg viewBox="0 0 64 64"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2.2"
+               stroke-linecap="round"
+               stroke-linejoin="round">
+
+            <rect x="19" y="43" width="26" height="8" rx="2"/>
+
+            <path d="M23 43L18 25"/>
+
+            <path d="M41 43L46 25"/>
+
+            <path d="M18 25
+                     C18 17 23 12 32 12
+                     C41 12 46 17 46 25"/>
+
+            <path d="M18 25
+                     C21 31 25 34 32 34
+                     C39 34 43 31 46 25"/>
+
+            <ellipse cx="32" cy="22" rx="8" ry="6"/>
+
+            <ellipse cx="32" cy="22" rx="4" ry="3"/>
+
+            <path d="M27 51v4M37 51v4"/>
+
           </svg>
+
         </div>
 
         <span class="badge" id="badge-luz"></span>
@@ -722,24 +743,36 @@ footer{
 
 
     <!-- VIDEO -->
-
-    <a
-      href="video.html"
-      class="area-card"
-      style="--accent:var(--video);">
+    <a href="video.html"
+       class="area-card"
+       style="--accent:var(--video);">
 
       <div class="card-top">
 
         <div class="icon">
-          <svg viewBox="0 0 24 24" fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round">
-            <rect x="3" y="4" width="18" height="13" rx="1.4"/>
-            <path d="M3 9.3h18M3 13.7h18M9 4v13M15 4v13"/>
+
+          <!-- MESMO ÍCONE DE VÍDEO -->
+          <svg viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="1.8"
+               stroke-linecap="round"
+               stroke-linejoin="round">
+
+            <rect x="3"
+                  y="4"
+                  width="18"
+                  height="13"
+                  rx="1.4"/>
+
+            <path d="M3 9.3h18"/>
+            <path d="M3 13.7h18"/>
+            <path d="M9 4v13"/>
+            <path d="M15 4v13"/>
             <path d="M9 20h6"/>
+
           </svg>
+
         </div>
 
         <span class="badge" id="badge-video"></span>
@@ -765,24 +798,31 @@ footer{
 
 
     <!-- DESCRITIVO -->
-
-    <a
-      href="descritivo.html"
-      class="area-card"
-      style="--accent:#d9e0e7;">
+    <a href="descritivo.html"
+       class="area-card"
+       style="--accent:var(--text);">
 
       <div class="card-top">
 
         <div class="icon">
-          <svg viewBox="0 0 24 24" fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round">
+
+          <svg viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="1.8"
+               stroke-linecap="round"
+               stroke-linejoin="round">
+
             <path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/>
+
             <path d="M14 3v4h4"/>
-            <path d="M9 12h7M9 15.5h7M9 8.5h3"/>
+
+            <path d="M9 12h7"/>
+            <path d="M9 15.5h7"/>
+            <path d="M9 8.5h3"/>
+
           </svg>
+
         </div>
 
         <span class="badge" id="badge-descritivo"></span>
@@ -807,26 +847,31 @@ footer{
     </a>
 
 
-    <!-- CATALOGO — SOMENTE ADMIN -->
-
-    <a
-      href="catalogo.html"
-      id="adminCatalogCard"
-      class="area-card"
-      style="display:none;--accent:var(--catalogo);">
+    <!-- CATÁLOGO -->
+    <a href="catalogo.html"
+       id="adminCatalogCard"
+       class="area-card"
+       style="display:none;--accent:var(--catalogo);">
 
       <div class="card-top">
 
         <div class="icon">
-          <svg viewBox="0 0 24 24" fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round">
+
+          <svg viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="1.8"
+               stroke-linecap="round"
+               stroke-linejoin="round">
+
             <rect x="3" y="4" width="18" height="5" rx="1"/>
+
             <path d="M5 9v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/>
+
             <path d="M10 13h4"/>
+
           </svg>
+
         </div>
 
         <span class="badge" id="badge-catalogo"></span>
@@ -851,21 +896,21 @@ footer{
     </a>
 
 
-    <!-- ADMINISTRACAO — SOMENTE ADMIN -->
-
-    <a
-      href="admin.html"
-      id="adminUsersCard"
-      class="area-card"
-      style="display:none;--accent:#4d83b8;">
+    <!-- ADMIN -->
+    <a href="admin.html"
+       id="adminUsersCard"
+       class="area-card"
+       style="display:none;--accent:#315b7d;">
 
       <div class="card-top">
 
         <div class="icon">
-          <span style="font-size:18px;">♙</span>
+          👤
         </div>
 
-        <span class="badge">ADMIN</span>
+        <span class="badge">
+          ADMIN
+        </span>
 
       </div>
 
@@ -891,9 +936,17 @@ footer{
   </div>
 
 
-  <div class="user-bar">
+  <div style="
+    margin-top:22px;
+    display:flex;
+    justify-content:flex-end;
+    gap:12px;
+    align-items:center">
 
-    <span id="loggedUser"></span>
+    <span
+      id="loggedUser"
+      style="color:var(--muted);font-size:13px">
+    </span>
 
     <button
       id="btnLogout"
@@ -906,636 +959,500 @@ footer{
 
 </main>
 
+
 <footer>
-  HIVE PRO · Sistema de pré-produção de eventos.
+  HIVE PRO — sistema de apoio à pré-produção de eventos.
 </footer>
+
 
 <script src="catalogo-dados.js"></script>
 
 <script>
+  const keys = ['som', 'luz', 'video'];
+  const shortNames = { som: 'Som', luz: 'Luz', video: 'Vídeo' };
 
-const keys = ['som', 'luz', 'video'];
+  function fmtRelativo(ts) {
+    if (!ts) return '';
+    const diffSeg = Math.round((Date.now() - ts) / 1000);
+    if (diffSeg < 5) return 'agora mesmo';
+    if (diffSeg < 60) return 'há ' + diffSeg + 's';
+    const min = Math.floor(diffSeg / 60);
+    if (min < 60) return 'há ' + min + ' min';
+    const h = Math.floor(min / 60);
+    if (h < 24) return 'há ' + h + 'h';
+    const d = Math.floor(h / 24);
+    return d === 1 ? 'ontem' : 'há ' + d + ' dias';
+  }
 
-const shortNames = {
-  som:'Som',
-  luz:'Luz',
-  video:'Vídeo'
-};
+  function getStatus(key) {
+    let estadoTs = null, descTs = null;
 
-function fmtRelativo(ts){
+    try {
+      const raw = localStorage.getItem(
+        'calculadora_' + key + '_estado_v1'
+      );
 
-  if(!ts) return '';
+      if (raw) {
+        const s = JSON.parse(raw);
+        estadoTs = s && s.ts ? Number(s.ts) : null;
+      }
 
-  const diffSeg=Math.round((Date.now()-ts)/1000);
+    } catch (e) {}
 
-  if(diffSeg<5) return 'agora mesmo';
+    try {
+      const raw = localStorage.getItem(
+        'descritivo_' + key + '_ts'
+      );
 
-  if(diffSeg<60)
-    return 'há '+diffSeg+'s';
+      if (raw) descTs = Number(raw);
 
-  const min=Math.floor(diffSeg/60);
+    } catch (e) {}
 
-  if(min<60)
-    return 'há '+min+' min';
+    const hasDados =
+      !!localStorage.getItem('descritivo_dados_' + key);
 
-  const h=Math.floor(min/60);
+    const hasDescritivoLegado =
+      !!localStorage.getItem('descritivo_' + key);
 
-  if(h<24)
-    return 'há '+h+'h';
-
-  const d=Math.floor(h/24);
-
-  return d===1?'ontem':'há '+d+' dias';
-}
-
-
-function getStatus(key){
-
-  let estadoTs=null,
-      descTs=null;
-
-  try{
-
-    const raw=localStorage.getItem(
-      'calculadora_'+key+'_estado_v1'
-    );
-
-    if(raw){
-
-      const s=JSON.parse(raw);
-
-      estadoTs=s&&s.ts
-        ?Number(s.ts)
-        :null;
-
-    }
-
-  }catch(e){}
-
-
-  try{
-
-    const raw=localStorage.getItem(
-      'descritivo_'+key+'_ts'
-    );
-
-    if(raw)
-      descTs=Number(raw);
-
-  }catch(e){}
-
-
-  const hasDados=
-    !!localStorage.getItem(
-      'descritivo_dados_'+key
-    );
-
-  const hasDescritivoLegado=
-    !!localStorage.getItem(
-      'descritivo_'+key
-    );
-
-
-  if(!estadoTs&&!hasDados&&!hasDescritivoLegado)
-
-    return {
-      state:'sem-dados',
-      estadoTs,
-      descTs
-    };
-
-
-  if(hasDados)
-
-    return {
-      state:'atualizado',
-      estadoTs,
-      descTs
-    };
-
-
-  if(hasDescritivoLegado){
-
-    if(
-      descTs &&
-      estadoTs &&
-      descTs<estadoTs
-    )
-
+    if (!estadoTs && !hasDados && !hasDescritivoLegado)
       return {
-        state:'desatualizado',
+        state:'sem-dados',
         estadoTs,
         descTs
       };
 
+    if (hasDados)
+      return {
+        state:'atualizado',
+        estadoTs,
+        descTs
+      };
+
+    if (hasDescritivoLegado) {
+
+      if (
+        descTs &&
+        estadoTs &&
+        descTs < estadoTs
+      )
+        return {
+          state:'desatualizado',
+          estadoTs,
+          descTs
+        };
+
+      return {
+        state:'atualizado',
+        estadoTs,
+        descTs
+      };
+    }
+
     return {
-      state:'atualizado',
+      state:'em-andamento',
       estadoTs,
       descTs
     };
-
   }
 
 
-  return {
-    state:'em-andamento',
-    estadoTs,
-    descTs
-  };
+  function badgeHtml(state) {
 
-}
+    if (state === 'sem-dados')
+      return '<span class="badge badge-neutral">SEM DADOS</span>';
 
+    if (state === 'em-andamento')
+      return '<span class="badge badge-neutral">EM ANDAMENTO</span>';
 
-function badgeHtml(state){
+    if (state === 'atualizado')
+      return '<span class="badge badge-ok">ATUALIZADO</span>';
 
-  if(state==='sem-dados')
-
-    return '<span class="badge badge-neutral">SEM DADOS</span>';
-
-  if(state==='em-andamento')
-
-    return '<span class="badge badge-neutral">EM ANDAMENTO</span>';
-
-  if(state==='atualizado')
-
-    return '<span class="badge badge-ok">ATUALIZADO</span>';
-
-  return '<span class="badge badge-warn">DESATUALIZADO</span>';
-
-}
+    return '<span class="badge badge-warn">DESATUALIZADO</span>';
+  }
 
 
-function preencherArea(key){
+  function preencherArea(key) {
 
-  const status=getStatus(key);
+    const status = getStatus(key);
 
-  const badgeEl=
-    document.getElementById(
-      'badge-'+key
-    );
+    const badgeEl =
+      document.getElementById('badge-' + key);
 
-  const metaEl=
-    document.getElementById(
-      'meta-'+key
-    );
+    const metaEl =
+      document.getElementById('meta-' + key);
+
+    if (badgeEl)
+      badgeEl.innerHTML =
+        badgeHtml(status.state);
+
+    if (metaEl) {
+
+      if (status.state === 'sem-dados') {
+
+        metaEl.textContent =
+          'Nenhum dado cadastrado ainda';
+
+      } else {
+
+        const partes = [];
+
+        if (status.estadoTs)
+          partes.push(
+            'editado ' +
+            fmtRelativo(status.estadoTs)
+          );
+
+        if (status.descTs)
+          partes.push(
+            'dados atualizados ' +
+            fmtRelativo(status.descTs)
+          );
+        else
+          partes.push(
+            'dados ainda não salvos'
+          );
+
+        metaEl.textContent =
+          partes.join(' · ');
+      }
+    }
+
+    return status;
+  }
 
 
-  if(badgeEl)
+  function preencherDescritivoGeral(statusPorArea) {
 
-    badgeEl.innerHTML=
-      badgeHtml(status.state);
+    const disponiveis =
+      keys.filter(k =>
+        statusPorArea[k].state !== 'sem-dados' &&
+        statusPorArea[k].descTs
+      );
 
+    const desatualizados =
+      keys.filter(k =>
+        statusPorArea[k].state === 'desatualizado'
+      );
 
-  if(metaEl){
+    const badgeEl =
+      document.getElementById('badge-descritivo');
 
-    if(status.state==='sem-dados'){
+    const metaEl =
+      document.getElementById('meta-descritivo');
 
-      metaEl.textContent=
-        'Nenhum dado cadastrado ainda';
+    if (badgeEl) {
 
-    }else{
+      if (disponiveis.length === 0)
+        badgeEl.innerHTML =
+          badgeHtml('sem-dados');
 
-      const partes=[];
-
-      if(status.estadoTs)
-
-        partes.push(
-          'editado '+fmtRelativo(status.estadoTs)
-        );
-
-      if(status.descTs)
-
-        partes.push(
-          'dados atualizados '+
-          fmtRelativo(status.descTs)
-        );
+      else if (desatualizados.length)
+        badgeEl.innerHTML =
+          '<span class="badge badge-warn">' +
+          desatualizados.length +
+          ' DE 3 DESATUALIZADOS</span>';
 
       else
+        badgeEl.innerHTML =
+          badgeHtml('atualizado');
+    }
 
-        partes.push(
-          'dados ainda não salvos'
+    if (metaEl) {
+
+      let pdfTs = null;
+
+      try {
+        pdfTs =
+          Number(
+            localStorage.getItem(
+              'descritivo_geral_pdf_ts'
+            )
+          ) || null;
+
+      } catch (e) {}
+
+      metaEl.textContent =
+        disponiveis.length +
+        ' de 3 descritivos disponíveis' +
+        (
+          pdfTs
+            ? ' · última exportação ' +
+              fmtRelativo(pdfTs)
+            : ''
+        );
+    }
+  }
+
+
+  function preencherCatalogo() {
+
+    const badgeEl =
+      document.getElementById('badge-catalogo');
+
+    const metaEl =
+      document.getElementById('meta-catalogo');
+
+    let total = 0;
+
+    if (window.MMCatalogo) {
+
+      const d =
+        MMCatalogo.carregar();
+
+      Object.keys(d).forEach(k => {
+
+        total +=
+          Object.keys(d[k] || {}).length;
+
+      });
+    }
+
+    if (badgeEl)
+      badgeEl.innerHTML =
+        total > 0
+          ? '<span class="badge badge-ok">' +
+            total +
+            ' ITENS</span>'
+          : badgeHtml('sem-dados');
+
+    if (metaEl)
+      metaEl.textContent =
+        total > 0
+          ? 'Salvo neste navegador — use "Exportar backup" pra levar pra outro computador'
+          : 'Nenhum modelo customizado cadastrado ainda';
+  }
+
+
+  function preencherProjectStats(statusPorArea) {
+
+    const comDados =
+      keys.filter(k =>
+        statusPorArea[k].state !== 'sem-dados'
+      );
+
+    const desatualizados =
+      keys.filter(k =>
+        statusPorArea[k].state === 'desatualizado'
+      );
+
+    const todosTs =
+      keys
+        .map(k => statusPorArea[k].estadoTs)
+        .filter(Boolean);
+
+    const ultimaEdicao =
+      todosTs.length
+        ? Math.max(...todosTs)
+        : null;
+
+    const stats =
+      document.getElementById('projectStats');
+
+    const partes = [];
+
+    partes.push(
+      '<div class="stat">' +
+      '<span class="dot" style="background:' +
+      (
+        comDados.length === 3
+          ? '#35d99a'
+          : '#71869a'
+      ) +
+      ';"></span>' +
+      comDados.length +
+      ' de 3 áreas com dados</div>'
+    );
+
+    if (desatualizados.length) {
+
+      partes.push(
+        '<div class="stat" style="color:#ff7b72;">' +
+        '<span class="dot" style="background:#ff6a68;"></span>' +
+        desatualizados
+          .map(k => shortNames[k])
+          .join(', ') +
+        ' desatualizado' +
+        (
+          desatualizados.length > 1
+            ? 's'
+            : ''
+        ) +
+        '</div>'
+      );
+    }
+
+    if (ultimaEdicao)
+      partes.push(
+        '<div class="stat">' +
+        'Última edição: ' +
+        fmtRelativo(ultimaEdicao) +
+        '</div>'
+      );
+
+    stats.innerHTML =
+      partes.join('');
+  }
+
+
+  /* ===== dados do evento ===== */
+
+  const CAB_STORAGE_KEY =
+    'descritivo_cabecalho';
+
+  const cabFieldIds = {
+    evento:'cabEvento',
+    local:'cabLocal',
+    dataEvento:'cabDataEvento',
+    dataMontagem:'cabDataMontagem',
+    sala:'cabSala',
+    hotel:'cabHotel'
+  };
+
+
+  function cabRead() {
+
+    try {
+
+      const raw =
+        localStorage.getItem(
+          CAB_STORAGE_KEY
         );
 
+      return raw
+        ? JSON.parse(raw)
+        : {};
 
-      metaEl.textContent=
-        partes.join(' · ');
+    } catch (e) {
+
+      return {};
+
+    }
+  }
+
+
+  function cabFillInputs() {
+
+    const d = cabRead();
+
+    for (const k in cabFieldIds) {
+
+      document.getElementById(
+        cabFieldIds[k]
+      ).value = d[k] || '';
+
+    }
+  }
+
+
+  function cabSave() {
+
+    const d = {};
+
+    for (const k in cabFieldIds) {
+
+      d[k] =
+        document.getElementById(
+          cabFieldIds[k]
+        ).value || '';
 
     }
 
-  }
+    try {
 
-
-  return status;
-
-}
-
-
-function preencherDescritivoGeral(statusPorArea){
-
-  const disponiveis=
-    keys.filter(
-      k=>
-        statusPorArea[k].state!=='sem-dados' &&
-        statusPorArea[k].descTs
-    );
-
-
-  const desatualizados=
-    keys.filter(
-      k=>
-        statusPorArea[k].state==='desatualizado'
-    );
-
-
-  const badgeEl=
-    document.getElementById(
-      'badge-descritivo'
-    );
-
-  const metaEl=
-    document.getElementById(
-      'meta-descritivo'
-    );
-
-
-  if(badgeEl){
-
-    if(disponiveis.length===0)
-
-      badgeEl.innerHTML=
-        badgeHtml('sem-dados');
-
-    else if(desatualizados.length)
-
-      badgeEl.innerHTML=
-        '<span class="badge badge-warn">'+
-        desatualizados.length+
-        ' DE 3 DESATUALIZADOS</span>';
-
-    else
-
-      badgeEl.innerHTML=
-        badgeHtml('atualizado');
-
-  }
-
-
-  if(metaEl){
-
-    let pdfTs=null;
-
-    try{
-
-      pdfTs=
-        Number(
-          localStorage.getItem(
-            'descritivo_geral_pdf_ts'
-          )
-        )||null;
-
-    }catch(e){}
-
-
-    metaEl.textContent=
-      disponiveis.length+
-      ' de 3 descritivos disponíveis'+
-      (
-        pdfTs
-        ?' · última exportação '+
-          fmtRelativo(pdfTs)
-        :''
+      localStorage.setItem(
+        CAB_STORAGE_KEY,
+        JSON.stringify(d)
       );
 
+    } catch (e) {}
+
+    return d;
   }
 
-}
 
+  /* ===== novo projeto ===== */
 
-function preencherCatalogo(){
+  function novoProjeto() {
 
-  const badgeEl=
-    document.getElementById(
-      'badge-catalogo'
+    const ok = confirm(
+      'Isso vai apagar os dados do projeto atual (Som, Luz, Vídeo e os dados do evento) neste navegador, pra você começar do zero.\n\nO catálogo de equipamentos cadastrados não é afetado.\n\nQuer continuar?'
     );
 
-  const metaEl=
-    document.getElementById(
-      'meta-catalogo'
-    );
+    if (!ok) return;
 
+    const chaves = [
 
-  let total=0;
+      'descritivo_cabecalho',
+      'descritivo_geral_pdf_ts',
 
+      'calculadora_som_estado_v1',
+      'descritivo_som',
+      'descritivo_som_ts',
+      'descritivo_dados_som',
 
-  if(window.MMCatalogo){
+      'calculadora_luz_estado_v1',
+      'descritivo_luz',
+      'descritivo_luz_ts',
+      'descritivo_dados_luz',
 
-    const d=
-      MMCatalogo.carregar();
+      'calculadora_video_estado_v1',
+      'descritivo_video',
+      'descritivo_video_ts',
+      'descritivo_dados_video'
 
-    Object.keys(d).forEach(k=>{
+    ];
 
-      total+=
-        Object.keys(
-          d[k]||{}
-        ).length;
+    chaves.forEach(k => {
+
+      try {
+        localStorage.removeItem(k);
+      } catch (e) {}
 
     });
 
+    location.reload();
   }
 
 
-  if(badgeEl)
+  const statusPorArea = {};
 
-    badgeEl.innerHTML=
-      total>0
-      ?'<span class="badge badge-ok">'+
-       total+
-       ' ITENS</span>'
-      :badgeHtml('sem-dados');
+  keys.forEach(k => {
 
-
-  if(metaEl)
-
-    metaEl.textContent=
-      total>0
-      ?'Salvo neste navegador — use "Exportar backup" pra levar pra outro computador'
-      :'Nenhum modelo customizado cadastrado ainda';
-
-}
-
-
-function preencherProjectStats(statusPorArea){
-
-  const comDados=
-    keys.filter(
-      k=>
-        statusPorArea[k].state!=='sem-dados'
-    );
-
-
-  const desatualizados=
-    keys.filter(
-      k=>
-        statusPorArea[k].state==='desatualizado'
-    );
-
-
-  const todosTs=
-    keys
-      .map(k=>statusPorArea[k].estadoTs)
-      .filter(Boolean);
-
-
-  const ultimaEdicao=
-    todosTs.length
-      ?Math.max(...todosTs)
-      :null;
-
-
-  const stats=
-    document.getElementById(
-      'projectStats'
-    );
-
-
-  const partes=[];
-
-
-  partes.push(
-    '<div class="stat">'+
-    '<span class="dot" style="background:'+
-    (
-      comDados.length===3
-      ?'#55bd8a'
-      :'#7f8d9b'
-    )+
-    ';"></span>'+
-    comDados.length+
-    ' de 3 áreas com dados</div>'
-  );
-
-
-  if(desatualizados.length){
-
-    partes.push(
-      '<div class="stat" style="color:#e27669;">'+
-      '<span class="dot" style="background:#e27669;"></span>'+
-      desatualizados
-        .map(k=>shortNames[k])
-        .join(', ')+
-      ' desatualizado'+
-      (
-        desatualizados.length>1
-        ?'s'
-        :''
-      )+
-      '</div>'
-    );
-
-  }
-
-
-  if(ultimaEdicao)
-
-    partes.push(
-      '<div class="stat">Última edição: '+
-      fmtRelativo(ultimaEdicao)+
-      '</div>'
-    );
-
-
-  stats.innerHTML=
-    partes.join('');
-
-}
-
-
-/* ===== dados do evento ===== */
-
-const CAB_STORAGE_KEY=
-  'descritivo_cabecalho';
-
-
-const cabFieldIds={
-  evento:'cabEvento',
-  local:'cabLocal',
-  dataEvento:'cabDataEvento',
-  dataMontagem:'cabDataMontagem',
-  sala:'cabSala',
-  hotel:'cabHotel'
-};
-
-
-function cabRead(){
-
-  try{
-
-    const raw=
-      localStorage.getItem(
-        CAB_STORAGE_KEY
-      );
-
-    return raw
-      ?JSON.parse(raw)
-      :{};
-
-  }catch(e){
-
-    return {};
-
-  }
-
-}
-
-
-function cabFillInputs(){
-
-  const d=cabRead();
-
-  for(
-    const k in cabFieldIds
-  ){
-
-    document.getElementById(
-      cabFieldIds[k]
-    ).value=
-      d[k]||'';
-
-  }
-
-}
-
-
-function cabSave(){
-
-  const d={};
-
-  for(
-    const k in cabFieldIds
-  ){
-
-    d[k]=
-      document.getElementById(
-        cabFieldIds[k]
-      ).value||'';
-
-  }
-
-
-  try{
-
-    localStorage.setItem(
-      CAB_STORAGE_KEY,
-      JSON.stringify(d)
-    );
-
-  }catch(e){}
-
-
-  return d;
-
-}
-
-
-/* ===== novo projeto ===== */
-
-function novoProjeto(){
-
-  const ok=confirm(
-    'Isso vai apagar os dados do projeto atual (Som, Luz, Vídeo e os dados do evento) neste navegador, pra você começar do zero.\n\nO catálogo de equipamentos cadastrados não é afetado.\n\nQuer continuar?'
-  );
-
-
-  if(!ok) return;
-
-
-  const chaves=[
-
-    'descritivo_cabecalho',
-    'descritivo_geral_pdf_ts',
-
-    'calculadora_som_estado_v1',
-    'descritivo_som',
-    'descritivo_som_ts',
-    'descritivo_dados_som',
-
-    'calculadora_luz_estado_v1',
-    'descritivo_luz',
-    'descritivo_luz_ts',
-    'descritivo_dados_luz',
-
-    'calculadora_video_estado_v1',
-    'descritivo_video',
-    'descritivo_video_ts',
-    'descritivo_dados_video'
-
-  ];
-
-
-  chaves.forEach(k=>{
-
-    try{
-
-      localStorage.removeItem(k);
-
-    }catch(e){}
+    statusPorArea[k] =
+      preencherArea(k);
 
   });
 
+  preencherDescritivoGeral(
+    statusPorArea
+  );
 
-  location.reload();
+  preencherCatalogo();
 
-}
-
-
-const statusPorArea={};
-
-keys.forEach(k=>{
-
-  statusPorArea[k]=
-    preencherArea(k);
-
-});
+  preencherProjectStats(
+    statusPorArea
+  );
 
 
-preencherDescritivoGeral(
-  statusPorArea
-);
+  cabFillInputs();
 
-preencherCatalogo();
+  for (const k in cabFieldIds) {
 
-preencherProjectStats(
-  statusPorArea
-);
+    document
+      .getElementById(cabFieldIds[k])
+      .addEventListener(
+        'input',
+        cabSave
+      );
 
-
-cabFillInputs();
-
-
-for(
-  const k in cabFieldIds
-){
+  }
 
   document
-    .getElementById(
-      cabFieldIds[k]
-    )
+    .getElementById('btnNovoProjeto')
     .addEventListener(
-      'input',
-      cabSave
+      'click',
+      novoProjeto
     );
-
-}
-
-
-document
-  .getElementById(
-    'btnNovoProjeto'
-  )
-  .addEventListener(
-    'click',
-    novoProjeto
-  );
 
 </script>
 
@@ -1550,53 +1467,45 @@ window.addEventListener(
 
       await MMAuth.refreshCatalog();
 
-      const admin=
+      const admin =
         MMAuth.isAdmin();
-
 
       document
         .getElementById(
           'adminCatalogCard'
         )
-        .style.display=
-          admin
-          ?'block'
-          :'none';
-
+        .style.display =
+          admin ? 'block' : 'none';
 
       document
         .getElementById(
           'adminUsersCard'
         )
-        .style.display=
-          admin
-          ?'block'
-          :'none';
-
+        .style.display =
+          admin ? 'block' : 'none';
 
       document
         .getElementById(
           'loggedUser'
         )
-        .textContent=
+        .textContent =
           (
             MMAuth.profile.full_name ||
             MMAuth.user.email
-          )+
-          ' · '+
+          ) +
+          ' · ' +
           (
             admin
-            ?'ADMIN'
-            :'USER'
+              ? 'ADMIN'
+              : 'USER'
           );
-
 
       document
         .getElementById(
           'btnLogout'
         )
-        .onclick=
-          ()=>MMAuth.logout();
+        .onclick =
+          () => MMAuth.logout();
 
     }
 
