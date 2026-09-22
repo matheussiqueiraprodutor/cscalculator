@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Descritivo Geral — cscalculator</title>
+<title>Descritivo Geral — HIVE PRO</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -82,27 +82,111 @@ h3.blk-title{font-size:12.5px;margin:14px 0 8px;text-transform:uppercase;letter-
 .rpt-print .warn{color:#a83f34}
 
 @media print{
-  @page{size:A4 landscape;margin:9mm 10mm 10mm 10mm}
-  body{background:#fff;color:#172033;font-family:Arial,Helvetica,sans-serif}
+  @page{size:16in 9in;margin:0}
+  html,body{margin:0!important;padding:0!important;background:#fff!important}
+  body{color:#172033;font-family:Arial,Helvetica,sans-serif}
   header,.export-bar,main{display:none!important}
   #printReport{display:block!important}
 }
 #printReport{display:none}
-.print-page{width:100%;max-width:277mm;margin:0 auto;color:#172033;font-family:Arial,Helvetica,sans-serif;font-size:9.5pt;line-height:1.3}
-.print-cover{background:#111a2d;color:#fff;border-radius:6px;padding:13px 18px 12px;margin-bottom:10px}
-.print-cover .kicker{color:#19b9ff;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 8px}
-.print-cover h1{font-size:21px;line-height:1.18;margin:0 0 6px;font-weight:800;letter-spacing:.01em}
-.print-cover p{margin:0;color:#aeb8ca;font-size:10.5px}
+.print-page{
+  width:100%;
+  max-width:none;
+  margin:0 auto;
+  color:#172033;
+  font-family:Arial,Helvetica,sans-serif;
+  font-size:9.5pt;
+  line-height:1.3;
+}
+.print-brand{
+  min-height:58px;
+  background:linear-gradient(110deg,#03070d 0%,#071522 72%,#0b1d2e 100%);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 24px;
+  border-bottom:2px solid #00a3ff;
+  position:relative;
+  overflow:hidden;
+}
+.print-brand:after{
+  content:'';
+  position:absolute;
+  right:-28px;
+  top:-42px;
+  width:150px;
+  height:150px;
+  border:1px solid rgba(0,163,255,.22);
+  transform:rotate(30deg);
+  border-radius:18px;
+}
+.print-brand-main{display:flex;align-items:center;gap:10px;position:relative;z-index:1}
+.print-brand-mark{width:38px;height:38px;flex:none}
+.print-brand-name{font-family:'Arial',sans-serif;font-size:23px;font-weight:800;letter-spacing:.02em;white-space:nowrap}
+.print-brand-name .pro{color:#00a3ff}
+.print-brand-divider{width:1px;height:28px;background:rgba(255,255,255,.28);margin:0 8px}
+.print-brand-sub{font-size:8.5px;line-height:1.35;letter-spacing:.08em;color:#b7c5d5;font-weight:700}
+.print-brand-event{position:relative;z-index:1;text-align:right;font-size:8px;line-height:1.35;color:#91a5b8;letter-spacing:.08em;text-transform:uppercase}
+.print-brand-event strong{display:block;color:#fff;font-size:9.5px;letter-spacing:.03em;margin-top:2px;max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.print-cover{
+  background:#fff;
+  color:#172033;
+  border:1px solid #d8e2ec;
+  border-top:0;
+  border-radius:0 0 5px 5px;
+  padding:10px 18px 11px;
+  margin:0 0 8px;
+}
+.print-cover .kicker{color:#00a3ff;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin:0 0 4px}
+.print-cover h1{font-size:20px;line-height:1.18;margin:0 0 4px;font-weight:800;letter-spacing:-.01em}
+.print-cover p{margin:0;color:#536176;font-size:9.5px}
 .print-section{margin:0 0 8px;break-inside:auto}
-.print-section-title{font-size:12.5px;font-weight:800;margin:0 0 10px;padding:0 0 5px;border-bottom:3px solid #172033;text-transform:uppercase;letter-spacing:.02em}
-.print-section-title .num{margin-right:6px}
-.print-footer-page{margin-top:12px;border-top:1px solid #d7dee7;padding-top:5px;color:#68778b;font-size:8.5pt;display:flex;justify-content:space-between}
+.print-section-title{
+  font-size:12.5px;
+  font-weight:800;
+  margin:0 0 9px;
+  padding:0 0 5px;
+  border-bottom:2px solid #00a3ff;
+  color:#172033;
+  text-transform:uppercase;
+  letter-spacing:.02em;
+}
+.print-section-title .num{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:22px;
+  height:18px;
+  margin-right:6px;
+  padding:0 5px;
+  border:1px solid #00a3ff;
+  border-radius:4px;
+  color:#00a3ff;
+  font-size:9px;
+}
+.print-footer-page{
+  margin-top:9px;
+  border-top:1px solid #d7dee7;
+  padding-top:4px;
+  color:#68778b;
+  font-size:8pt;
+  display:flex;
+  justify-content:space-between;
+}
 .print-note{background:#f4f7fa;border:1px dashed #c5cfdb;border-radius:3px;padding:7px 9px;color:#536176;font-size:9pt;break-inside:avoid}
 .print-note b{color:#172033}
-.print-resumo{text-align:center;margin:0 0 10px;padding:11px 14px;border:1px solid #d9e0e8;border-radius:4px;background:#f4f7fa}
-.print-resumo h3{margin:0 0 12px;font-size:13.5pt;color:#172033}
-.print-resumo p{margin:0 0 5px;font-size:9.5pt;line-height:1.5;color:#172033}
-.print-resumo .rt-spacer{height:6px}
+.print-resumo{
+  text-align:center;
+  margin:0 0 9px;
+  padding:9px 14px;
+  border:1px solid #cfe0ee;
+  border-radius:4px;
+  background:#f7fafc;
+}
+.print-resumo h3{margin:0 0 9px;font-size:12.5pt;color:#172033}
+.print-resumo p{margin:0 0 4px;font-size:9.2pt;line-height:1.45;color:#172033}
+.print-resumo .rt-spacer{height:5px}
 .print-page-break{break-before:page}
 @media print{.print-page-break{break-before:page}}
 </style>
@@ -112,7 +196,7 @@ h3.blk-title{font-size:12.5px;margin:14px 0 8px;text-transform:uppercase;letter-
 </head>
 <body>
 <script>(async()=>{ await MMAuth.init({admin:false}); await MMAuth.refreshCatalog(); })();</script>
-<header><div class="header-inner"><a class="back-link" href="index.html">← Voltar para áreas</a><p class="tag">cscalculator · Tecnologia para eventos</p><h1>Descritivo Geral</h1><p>Reúne os descritivos gerados nas calculadoras de som, luz e vídeo em um único documento para conferência e exportação em PDF. Evento, local, datas, sala e hotel agora são preenchidos na <a href="index.html" style="color:var(--text);text-decoration:underline;">Home</a>.</p></div></header>
+<header><div class="header-inner"><a class="back-link" href="index.html">← Voltar para áreas</a><p class="tag">HIVE PRO · EVENT PRODUCTION SYSTEM</p><h1>Descritivo Geral</h1><p>Reúne os descritivos gerados nas calculadoras de som, luz e vídeo em um único documento para conferência e exportação em PDF. Evento, local, datas, sala e hotel agora são preenchidos na <a href="index.html" style="color:var(--text);text-decoration:underline;">Home</a>.</p></div></header>
 <div class="export-bar"><button class="btn" id="btnAtualizar">Atualizar descritivos</button><button class="btn" id="btnPDF">Exportar PDF</button><button class="btn" id="btnArtAereo">Exportar Memorial Aéreo (Excel)</button><button class="btn" id="btnArtSolo">Exportar Memorial Solo (Excel)</button></div>
 <main>
 <p class="status" id="status"></p>
@@ -435,20 +519,40 @@ function buildPrint(){
   keys.forEach(k=>{ const c=sectionContent(k); if(c.available){ available++; sections.push({key:k,content:c}); } });
 
   const dataFmt=new Date().toLocaleDateString('pt-BR');
+  const cab=cabRead();
   const resumo=gerarResumoTecnico();
+
+  const hiveLogo=`
+    <svg class="print-brand-mark" viewBox="0 0 48 48" aria-label="HIVE PRO">
+      <polygon points="24,2 43,13 43,35 24,46 5,35 5,13" fill="none" stroke="#00a3ff" stroke-width="2.5"/>
+      <path d="M16 14v20M32 14v20M16 24h16M16 14h7v20h9" fill="none" stroke="#00a3ff" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+
   const body=sections.map((s,i)=>`
     <div class="print-section rpt-print${i>0?' print-page-break':''}">
       <h2 class="print-section-title"><span class="num">${String(i+1).padStart(2,'0')}</span>${esc(titles[s.key])}</h2>
       ${s.content.legacy?`<div class="print-note" style="margin-bottom:10px;">Este descritivo foi gerado antes da atualização do layout. Gere o descritivo novamente na calculadora de ${esc(titles[s.key].toLowerCase())} para ver o relatório completo.</div>`:''}
       ${s.content.inner}
-      <div class="print-footer-page"><span>cscalculator · Descritivo Técnico</span><span>Página ${i+1} de ${sections.length||3}</span></div>
+      <div class="print-footer-page"><span>HIVE PRO · Descritivo Técnico</span><span>Página ${i+1} de ${sections.length||3}</span></div>
     </div>`).join('');
 
   report.innerHTML=`<div class="print-page">
+    <div class="print-brand">
+      <div class="print-brand-main">
+        ${hiveLogo}
+        <div class="print-brand-name">HIVE <span class="pro">PRO</span></div>
+        <div class="print-brand-divider"></div>
+        <div class="print-brand-sub">DESCRITIVO TÉCNICO<br>DE EVENTO</div>
+      </div>
+      <div class="print-brand-event">
+        PLANEJAMENTO E PRÉ-PRODUÇÃO
+        <strong>${esc(cab.evento||'EVENTO')}</strong>
+      </div>
+    </div>
     <div class="print-cover">
-      <p class="kicker">cscalculator</p>
+      <p class="kicker">HIVE PRO · EVENT PRODUCTION SYSTEM</p>
       <h1>Descritivo Técnico de Evento</h1>
-      <p>Data: ${dataFmt} · Pré-produção &amp; Infraestrutura</p>
+      <p>${cab.evento?'<strong>Evento:</strong> '+esc(cab.evento)+' · ':''}Data: ${dataFmt} · Pré-produção &amp; Infraestrutura</p>
     </div>
     ${resumo.texto ? `<div class="print-resumo">${resumo.html}</div>` : ''}
     ${body || '<div class="print-note">Nenhum descritivo disponível. Preencha os dados nas calculadoras de Som, Luz e Vídeo antes de exportar o PDF.</div>'}
@@ -629,7 +733,15 @@ function cabRead(){
 /* ================= Memorial de Cálculo (Excel) ================= */
 
 document.getElementById('btnAtualizar').onclick=carregar;
-document.getElementById('btnPDF').onclick=()=>{buildPrint();try{localStorage.setItem('descritivo_geral_pdf_ts',String(Date.now()));}catch(e){}window.print()};
+document.getElementById('btnPDF').onclick=()=>{
+  buildPrint();
+  try{localStorage.setItem('descritivo_geral_pdf_ts',String(Date.now()));}catch(e){}
+  const cab=cabRead();
+  const oldTitle=document.title;
+  document.title=cab.evento ? ('HIVE PRO - Descritivo - '+cab.evento) : 'HIVE PRO - Descritivo Técnico';
+  window.addEventListener('afterprint',()=>{document.title=oldTitle;},{once:true});
+  window.print();
+};
 document.getElementById('btnCopiarResumo').onclick=()=>{
   if(!ultimoResumoTexto) return;
   navigator.clipboard.writeText(ultimoResumoTexto).then(()=>{
