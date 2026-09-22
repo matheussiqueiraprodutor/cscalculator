@@ -187,6 +187,15 @@ h3.blk-title{font-size:12.5px;margin:14px 0 8px;text-transform:uppercase;letter-
 .print-resumo h3{margin:0 0 9px;font-size:12.5pt;color:#172033}
 .print-resumo p{margin:0 0 4px;font-size:9.2pt;line-height:1.45;color:#172033}
 .print-resumo .rt-spacer{height:5px}
+.case-summary{margin:0 0 10px;border:1px solid #cfe0ee;border-radius:5px;background:#fff;overflow:hidden}
+.case-summary-title{background:#071522;color:#fff;padding:8px 12px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-bottom:2px solid #00a3ff}
+.case-summary-grid{display:grid;grid-template-columns:repeat(3,1fr)}
+.case-summary-item{padding:9px 12px;border-right:1px solid #d9e0e8}
+.case-summary-item:last-child{border-right:0}
+.case-summary-area{color:#00a3ff;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.case-summary-value{color:#172033;font-size:17px;font-weight:800;line-height:1.15}
+.case-summary-note{color:#68778b;font-size:8.5px;margin-top:3px}
+@media print{.case-summary{break-inside:avoid}}
 .print-page-break{break-before:page}
 @media print{.print-page-break{break-before:page}}
 </style>
@@ -528,7 +537,39 @@ function buildPrint(){
       <path d="M16 14v20M32 14v20M16 24h16M16 14h7v20h9" fill="none" stroke="#00a3ff" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
 
-  const body=sections.map((s,i)=>`
+  const caseData={
+    som:{label:'SOM',value:null,note:'Cases totais do sistema de áudio'},
+    luz:{label:'LUZ',value:null,note:'Cases totais do sistema de iluminação'},
+    video:{label:'VÍDEO',value:null,note:'Cases totais do sistema de vídeo, incluindo backup quando previsto'}
+  };
+  try{
+    const ds=JSON.parse(localStorage.getItem('descritivo_dados_som')||'null');
+    if(ds) caseData.som.value=Number(ds.totalCases||0);
+  }catch(e){}
+  try{
+    const dl=JSON.parse(localStorage.getItem('descritivo_dados_luz')||'null');
+    if(dl) caseData.luz.value=Number(dl.totalCases||0);
+  }catch(e){}
+  try{
+    const dv=JSON.parse(localStorage.getItem('descritivo_dados_video')||'null');
+    if(dv) caseData.video.value=Number(dv.casesTotal||0);
+  }catch(e){}
+
+  const caseSummary=\`
+    <div class="case-summary">
+      <div class="case-summary-title">Resumo de Cases para Solicitação</div>
+      <div class="case-summary-grid">
+        \${Object.values(caseData).map(item=>\`
+          <div class="case-summary-item">
+            <div class="case-summary-area">\${item.label}</div>
+            <div class="case-summary-value">\${item.value===null?'—':fmtInt(item.value)+' '+(item.value===1?'CASE':'CASES')}</div>
+            <div class="case-summary-note">\${item.note}</div>
+          </div>
+        \`).join('')}
+      </div>
+    </div>\`;
+
+  const body=sections.map((s,i)=>\`
     <div class="print-section rpt-print${i>0?' print-page-break':''}">
       <h2 class="print-section-title"><span class="num">${String(i+1).padStart(2,'0')}</span>${esc(titles[s.key])}</h2>
       ${s.content.legacy?`<div class="print-note" style="margin-bottom:10px;">Este descritivo foi gerado antes da atualização do layout. Gere o descritivo novamente na calculadora de ${esc(titles[s.key].toLowerCase())} para ver o relatório completo.</div>`:''}
@@ -555,6 +596,7 @@ function buildPrint(){
       <p>${cab.evento?'<strong>Evento:</strong> '+esc(cab.evento)+' · ':''}Data: ${dataFmt} · Pré-produção &amp; Infraestrutura</p>
     </div>
     ${resumo.texto ? `<div class="print-resumo">${resumo.html}</div>` : ''}
+    ${caseSummary}
     ${body || '<div class="print-note">Nenhum descritivo disponível. Preencha os dados nas calculadoras de Som, Luz e Vídeo antes de exportar o PDF.</div>'}
   </div>`;
 }
