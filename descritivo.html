@@ -571,7 +571,7 @@ function buildPrint(){
       '</div>' +
     '</div>';;
 
-  const body=sections.map((s,i)=>\`
+  const body=sections.map((s,i)=>`
     <div class="print-section rpt-print${i>0?' print-page-break':''}">
       <h2 class="print-section-title"><span class="num">${String(i+1).padStart(2,'0')}</span>${esc(titles[s.key])}</h2>
       ${s.content.legacy?`<div class="print-note" style="margin-bottom:10px;">Este descritivo foi gerado antes da atualização do layout. Gere o descritivo novamente na calculadora de ${esc(titles[s.key].toLowerCase())} para ver o relatório completo.</div>`:''}
