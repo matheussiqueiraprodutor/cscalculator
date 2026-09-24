@@ -1247,6 +1247,17 @@ async function gerarOrdemServicoExcel(){
     alert('Nenhum dado de Som, Luz ou Vídeo foi encontrado para montar a ordem de serviço.');
     return;
   }
+
+  if(!window.XLSX){
+    await new Promise((resolve,reject)=>{
+      const s=document.createElement('script');
+      s.src='https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+      s.onload=resolve;
+      s.onerror=()=>reject(new Error('Não foi possível carregar o gerador de Excel.'));
+      document.head.appendChild(s);
+    });
+  }
+
   const cab=cabRead();
   const rowsByArea={
     som:osRowsFromArea(ds,'som','caixas'),
@@ -1254,25 +1265,54 @@ async function gerarOrdemServicoExcel(){
     video:osVideoRows(dv),
     cab:osCabosVideoRows(dv)
   };
-  const wb='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
-    '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'+
-    '<bookViews><workbookView/></bookViews><sheets><sheet name="Ordem de Serviço" sheetId="1" r:id="rId1"/></sheets></workbook>';
-  const rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
-    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
-    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>';
-  const rootRels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
-    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
-    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>';
-  const zip=new JSZip();
-  zip.file('[Content_Types].xml',osXlsxContentTypes());
-  zip.file('_rels/.rels',rootRels);
-  zip.file('xl/workbook.xml',wb);
-  zip.file('xl/_rels/workbook.xml.rels',rels);
-  zip.file('xl/styles.xml',osXlsxStyles());
-  zip.file('xl/worksheets/sheet1.xml',osXlsxSheet(rowsByArea,cab.evento||''));
-  const blob=await zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  const safe=(cab.evento||'Sem Nome').replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim() || 'Sem Nome';
-  artDownloadBlob(blob,'Ordem de Servico - '+safe+'.xlsx');
+
+  const maxRows=Math.max(rowsByArea.som.length,rowsByArea.luz.length,rowsByArea.video.length,rowsByArea.cab.length,1);
+  const aoa=[
+    ['SONORIZAÇÃO','', 'ILUMINAÇÃO','', 'VÍDEO','', 'CABEAMENTO DE VÍDEO',''],
+    ['ITEM','QUANTIDADE DE CASES','ITEM','QUANTIDADE DE CASES','ITEM','QUANTIDADE DE CASES','ITEM','QUANTIDADE']
+  ];
+
+  for(let i=0;i<maxRows;i++){
+    const s=rowsByArea.som[i], l=rowsByArea.luz[i], v=rowsByArea.video[i], cabv=rowsByArea.cab[i];
+    aoa.push([
+      s?s.item:'', s? s.value:'',
+      l?l.item:'', l?l.value:'',
+      v?v.item:'', v?v.value:'',
+      cabv?cabv.item:'', cabv?cabv.value:''
+    ]);
+  }
+
+  const totalCases=(rows)=>rows.reduce((n,x)=>n+(typeof x.value==='number'?x.value:0),0);
+  aoa.push([
+    'TOTAL DE CASES',totalCases(rowsByArea.som),
+    'TOTAL DE CASES',totalCases(rowsByArea.luz),
+    'TOTAL DE CASES',totalCases(rowsByArea.video),
+    'TOTAL DE CABOS',totalCases(rowsByArea.cab)
+  ]);
+
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!merges']=[
+    {s:{r:0,c:0},e:{r:0,c:1}},
+    {s:{r:0,c:2},e:{r:0,c:3}},
+    {s:{r:0,c:4},e:{r:0,c:5}},
+    {s:{r:0,c:6},e:{r:0,c:7}}
+  ];
+  ws['!cols']=[
+    {wch:30},{wch:18},{wch:30},{wch:18},
+    {wch:30},{wch:18},{wch:30},{wch:18}
+  ];
+  ws['!autofilter']={ref:'A2:H'+(maxRows+2)};
+  ws['!freeze']={xSplit:0,ySplit:2};
+
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Ordem de Serviço');
+
+  const safe=(cab.evento||'Sem Nome')
+    .replace(/[\\/:*?"<>|]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim() || 'Sem Nome';
+
+  XLSX.writeFile(wb,'Ordem de Servico - '+safe+'.xlsx');
 }
 
 document.getElementById('btnArtAereo').onclick = () => { gerarArtAereo().catch(e=>{ console.error(e); alert('Não foi possível gerar o Memorial Aéreo: '+e.message); }); };
