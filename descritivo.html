@@ -1242,7 +1242,7 @@ function osXlsxContentTypes(){
   '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'+
   '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>';
 }
-function gerarOrdemServicoExcel(){
+async function gerarOrdemServicoExcel(){
   const ds=artReadDados('som'), dl=artReadDados('luz'), dv=artReadDados('video');
   if(!ds && !dl && !dv){
     alert('Nenhum dado de Som, Luz ou Vídeo foi encontrado para montar a ordem de serviço.');
