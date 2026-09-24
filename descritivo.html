@@ -555,19 +555,21 @@ function buildPrint(){
     if(dv) caseData.video.value=Number(dv.casesTotal||0);
   }catch(e){}
 
-  const caseSummary=\`
-    <div class="case-summary">
-      <div class="case-summary-title">Resumo de Cases para Solicitação</div>
-      <div class="case-summary-grid">
-        \${Object.values(caseData).map(item=>\`
-          <div class="case-summary-item">
-            <div class="case-summary-area">\${item.label}</div>
-            <div class="case-summary-value">\${item.value===null?'—':fmtInt(item.value)+' '+(item.value===1?'CASE':'CASES')}</div>
-            <div class="case-summary-note">\${item.note}</div>
-          </div>
-        \`).join('')}
-      </div>
-    </div>\`;
+  const caseSummary =
+    '<div class="case-summary">' +
+      '<div class="case-summary-title">Resumo de Cases para Solicitação</div>' +
+      '<div class="case-summary-grid">' +
+        Object.values(caseData).map(item =>
+          '<div class="case-summary-item">' +
+            '<div class="case-summary-area">' + esc(item.label) + '</div>' +
+            '<div class="case-summary-value">' +
+              (item.value===null ? '—' : fmtInt(item.value) + ' ' + (item.value===1 ? 'CASE' : 'CASES')) +
+            '</div>' +
+            '<div class="case-summary-note">' + esc(item.note) + '</div>' +
+          '</div>'
+        ).join('') +
+      '</div>' +
+    '</div>';;
 
   const body=sections.map((s,i)=>\`
     <div class="print-section rpt-print${i>0?' print-page-break':''}">
@@ -760,7 +762,7 @@ function carregar(){
   const resumo=gerarResumoTecnico();
   document.getElementById('resumoTecnicoBody').innerHTML=resumo.html;
   ultimoResumoTexto=resumo.texto;
-  buildPrint();
+  try{ buildPrint(); }catch(e){ console.error('Erro ao montar prévia de impressão:',e); }
 }
 
 /* ================= Cabeçalho (Evento / Local / Datas / Sala / Hotel) =================
@@ -776,7 +778,7 @@ function cabRead(){
 
 document.getElementById('btnAtualizar').onclick=carregar;
 document.getElementById('btnPDF').onclick=()=>{
-  buildPrint();
+  try{ buildPrint(); }catch(e){ alert('Não foi possível montar o PDF. Atualize a página e tente novamente.'); console.error(e); return; }
   try{localStorage.setItem('descritivo_geral_pdf_ts',String(Date.now()));}catch(e){}
   const cab=cabRead();
   const oldTitle=document.title;
