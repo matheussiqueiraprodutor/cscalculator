@@ -200,7 +200,7 @@ h3.blk-title{font-size:12.5px;margin:14px 0 8px;text-transform:uppercase;letter-
 @media print{.print-page-break{break-before:page}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script src="db-config.js"></script>
 <script src="auth.js"></script>
 </head>
@@ -1282,16 +1282,82 @@ async function gerarOrdemServicoExcel(){
   ]);
 
   const ws=XLSX.utils.aoa_to_sheet(aoa);
+
+  // Formatação baseada exatamente no modelo enviado pelo usuário.
+  const coresSetor=['FFFF0000','FFFFFF00','FF00B050','FF0070C0'];
+  const borda={style:'thin',color:{rgb:'FFD9D9D9'}};
+  const bordas={top:borda,bottom:borda,left:borda,right:borda};
+
+  function osStyle(cell, opts){
+    if(!cell) return;
+    cell.s={
+      font:{
+        name:'Calibri',
+        sz:opts.sz||12,
+        bold:!!opts.bold
+      },
+      fill:opts.fill ? {patternType:'solid',fgColor:{rgb:opts.fill}} : undefined,
+      alignment:{
+        horizontal:opts.align||'left',
+        vertical:'center',
+        wrapText:false
+      },
+      border:bordas
+    };
+  }
+
+  for(let r=0;r<aoa.length;r++){
+    for(let col=0;col<8;col++){
+      const cell=ws[XLSX.utils.encode_cell({r,c:col})];
+      osStyle(cell,{});
+    }
+  }
+
+  // Títulos dos setores: mesma cor e tamanho do modelo.
+  for(let col=0;col<8;col+=2){
+    osStyle(ws[XLSX.utils.encode_cell({r:0,c:col})],{
+      sz:14,bold:true,align:'center',fill:coresSetor[col/2]
+    });
+    osStyle(ws[XLSX.utils.encode_cell({r:0,c:col+1})],{
+      sz:12,fill:coresSetor[col/2]
+    });
+  }
+
+  // Cabeçalhos das colunas.
+  for(let col=0;col<8;col++){
+    osStyle(ws[XLSX.utils.encode_cell({r:1,c:col})],{
+      sz:12,bold:true,align:'center',fill:coresSetor[Math.floor(col/2)]
+    });
+  }
+
+  // Corpo e linha de totais.
+  for(let r=2;r<aoa.length;r++){
+    for(let col=0;col<8;col++){
+      const cell=ws[XLSX.utils.encode_cell({r,c:col})];
+      osStyle(cell,{sz:12,align:col%2===1?'center':'left'});
+    }
+  }
+
   ws['!merges']=[
     {s:{r:0,c:0},e:{r:0,c:1}},
     {s:{r:0,c:2},e:{r:0,c:3}},
     {s:{r:0,c:4},e:{r:0,c:5}},
     {s:{r:0,c:6},e:{r:0,c:7}}
   ];
+
+  // Larguras exatamente como no modelo enviado.
   ws['!cols']=[
-    {wch:30},{wch:18},{wch:30},{wch:18},
-    {wch:30},{wch:18},{wch:30},{wch:18}
+    {wch:28.1992},{wch:23.3984},
+    {wch:30.7969},{wch:25.2969},
+    {wch:30.7969},{wch:23.6992},
+    {wch:30.7969},{wch:18.7969}
   ];
+
+  ws['!rows']=[
+    {hpt:18},
+    {hpt:15.6}
+  ];
+
   ws['!autofilter']={ref:'A2:H'+(maxRows+2)};
   ws['!freeze']={xSplit:0,ySplit:2};
 
@@ -1303,7 +1369,7 @@ async function gerarOrdemServicoExcel(){
     .replace(/\s+/g,' ')
     .trim() || 'Sem Nome';
 
-  XLSX.writeFile(wb,'Ordem de Servico - '+safe+'.xlsx');
+  XLSX.writeFile(wb,'Ordem de Servico - '+safe+'.xlsx',{cellStyles:true});
 }
 
 document.getElementById('btnArtAereo').onclick = () => { gerarArtAereo().catch(e=>{ console.error(e); alert('Não foi possível gerar o Memorial Aéreo: '+e.message); }); };
