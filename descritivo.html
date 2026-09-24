@@ -1085,6 +1085,7 @@ const OS_CASES_LUZ = {"beam9r":{label:"Moving Beam 9R (250W)",casePor:2},"beam10
 
 function osXmlEsc(v){
   return String(v ?? '')
+    .replace(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\uD800-\\uDFFF]/g,'')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;').replace(/'/g,'&apos;');
 }
@@ -1160,7 +1161,7 @@ function osXlsxSheet(rowsByArea,eventName){
   );
   const dataRows=Math.max(maxRows,1);
   const totalRow=3+dataRows;
-  let xml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+  let xml='<?xml version="1.0" encoding="UTF-8"?>';
   xml+='<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">';
   xml+='<sheetPr><outlinePr summaryBelow="1" summaryRight="1"/></sheetPr>';
   xml+='<dimension ref="A1:H'+totalRow+'"/>';
