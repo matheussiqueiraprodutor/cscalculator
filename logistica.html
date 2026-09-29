@@ -116,7 +116,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);bo
 
 <script>
 (async()=>{
-  if(!(await MMAuth.init())) return;
+  try{
+    const authOk = await MMAuth.init();
+    if(!authOk) return;
+  }catch(e){
+    console.warn('HIVE PRO Logística: falha temporária na validação da sessão; continuando com o módulo local.', e);
+  }
 
   const KEY='hivepro_logistica_veiculos_v1';
   let state=load()||{
