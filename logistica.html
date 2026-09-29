@@ -126,6 +126,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);bo
     vehicles:[]
   };
 
+  try{
+    if(!state.event){
+      const cab=JSON.parse(localStorage.getItem('descritivo_cabecalho')||'{}');
+      state.event=cab.evento||'';
+    }
+  }catch(e){}
+
   function load(){
     try{const r=localStorage.getItem(KEY);return r?JSON.parse(r):null}catch(e){return null}
   }
@@ -195,7 +202,14 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);bo
       const v=state.vehicles.find(x=>x.id===el.dataset.vid); const p=v&&v[el.dataset.section].find(x=>x.id===el.dataset.pid); if(p)p.name=el.value; save(); renderPreview();
     }));
     document.querySelectorAll('[data-driver]').forEach(el=>el.addEventListener('change',()=>{
-      const v=state.vehicles.find(x=>x.id===el.dataset.vid); const p=v&&v[el.dataset.section].find(x=>x.id===el.dataset.pid); if(p)p.driver=el.checked; save(); renderPreview();
+      const v=state.vehicles.find(x=>x.id===el.dataset.vid);
+      const arr=v&&v[el.dataset.section];
+      const p=arr&&arr.find(x=>x.id===el.dataset.pid);
+      if(p){
+        if(el.checked) arr.forEach(x=>x.driver=(x.id===p.id));
+        else p.driver=false;
+      }
+      save(); renderPreview();
     }));
     document.querySelectorAll('[data-return-toggle]').forEach(el=>el.addEventListener('change',()=>{
       const v=state.vehicles.find(x=>x.id===el.dataset.returnToggle); if(v)v.returns=el.checked; save(); render();
