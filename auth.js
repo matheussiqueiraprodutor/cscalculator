@@ -7,12 +7,57 @@ A.isMaster=()=>!!(A.user&&String(A.user.email||'').toLowerCase()===MASTER_EMAIL)
 A.init=async function(opts){
   opts=opts||{};
   if(!S){location.href='login.html';return false}
-  const r=await S.auth.getUser();
-  if(r.error||!r.data.user){if(!opts.public) location.href='login.html';return false}
-  A.user=r.data.user;
-  const p=await S.from('profiles').select('*').eq('id',A.user.id).maybeSingle();
-  A.profile=p.data||null;
-  if(!A.profile||A.profile.active===false){await S.auth.signOut();location.href='login.html?blocked=1';return false}
+
+  // Primeiro tenta a sessão persistida localmente. Isso evita expulsar o usuário
+  // por uma falha momentânea de rede/Auth ao abrir uma página.
+  let sessionResult;
+  try{
+    sessionResult=await S.auth.getSession();
+  }catch(e){
+    console.error('HIVE PRO Auth: erro ao recuperar sessão.',e);
+    if(!opts.public) location.href='login.html';
+    return false;
+  }
+
+  const session=sessionResult&&sessionResult.data&&sessionResult.data.session;
+  if(!session||!session.user){
+    if(!opts.public) location.href='login.html';
+    return false;
+  }
+
+  // Confirma o usuário no servidor, mas não encerra a sessão só porque a
+  // consulta falhou temporariamente.
+  let user=session.user;
+  try{
+    const r=await S.auth.getUser();
+    if(r&&r.data&&r.data.user) user=r.data.user;
+  }catch(e){
+    console.warn('HIVE PRO Auth: não foi possível confirmar o usuário agora; usando sessão válida.',e);
+  }
+
+  A.user=user;
+
+  let pResult;
+  try{
+    pResult=await S.from('profiles').select('*').eq('id',A.user.id).maybeSingle();
+  }catch(e){
+    console.warn('HIVE PRO Auth: falha temporária ao consultar perfil.',e);
+    pResult={error:e,data:null};
+  }
+
+  // Só bloqueia se o banco respondeu explicitamente que o usuário está
+  // desativado. Erro de rede/consulta não deve fazer logout.
+  if(pResult&&pResult.error){
+    A.profile={id:A.user.id,active:true};
+  }else{
+    A.profile=pResult&&pResult.data?pResult.data:{id:A.user.id,active:true};
+    if(A.profile.active===false){
+      await S.auth.signOut();
+      location.href='login.html?blocked=1';
+      return false;
+    }
+  }
+
   // Administração é exclusiva do e-mail Master configurado acima.
   if(opts.admin&&!A.isMaster()){location.href='index.html';return false}
   document.documentElement.dataset.role=A.isMaster()?'master':'user';
