@@ -116,13 +116,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);bo
 
 <script>
 (async()=>{
-  try{
-    const authOk = await MMAuth.init();
-    if(!authOk) return;
-  }catch(e){
-    console.warn('HIVE PRO Logística: falha temporária na validação da sessão; continuando com o módulo local.', e);
-  }
-
   const KEY='hivepro_logistica_veiculos_v1';
   let state=load()||{
     event:'',
@@ -278,6 +271,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);bo
     save();
     try{ render(); }catch(e2){ console.error(e2); }
   }
+
+  // A autenticação acontece depois que os controles já foram conectados.
+  // Assim, uma falha momentânea de sessão não deixa os botões sem eventos.
+  MMAuth.init().catch(e=>{
+    console.error('HIVE PRO Logística: falha na autenticação.',e);
+    location.href='login.html';
+  });
 })();
 </script>
 </body>
