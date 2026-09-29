@@ -280,30 +280,39 @@ button:disabled{
   if(q.get('blocked'))
     msg.textContent='Este usuário está bloqueado.';
 
-  const r=await MMAuth.client.auth.getUser();
-
-  if(r.data&&r.data.user)
-    location.href='index.html';
-
   f.onsubmit=async e=>{
     e.preventDefault();
 
     b.disabled=true;
     msg.textContent='Entrando...';
 
-    const r=await MMAuth.client.auth.signInWithPassword({
-      email:email.value.trim(),
-      password:senha.value
-    });
+    try{
+      const r=await MMAuth.client.auth.signInWithPassword({
+        email:email.value.trim(),
+        password:senha.value
+      });
 
-    if(r.error){
-      msg.textContent='E-mail ou senha inválidos.';
+      if(r.error){
+        msg.textContent='E-mail ou senha inválidos.';
+        b.disabled=false;
+        return;
+      }
+
+      try{ await MMAuth.refreshCatalog(); }catch(_){}
+      location.href='index.html';
+    }catch(err){
+      console.error('HIVE PRO Login:',err);
+      msg.textContent='Não foi possível conectar ao servidor. Tente novamente.';
       b.disabled=false;
-      return;
     }
+  };
 
-    await MMAuth.refreshCatalog();
-    location.href='index.html';
+  try{
+    const r=await MMAuth.client.auth.getUser();
+    if(r.data&&r.data.user)
+      location.href='index.html';
+  }catch(err){
+    console.warn('HIVE PRO Login: sessão anterior indisponível; login normal continua disponível.',err);
   }
 })();
 </script>
