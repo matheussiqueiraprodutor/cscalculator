@@ -253,7 +253,27 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);bo
     const btn=document.getElementById('btnExport');
     btn.disabled=true;btn.textContent='Gerando PNG...';
     try{
-      const canvas=await html2canvas(target,{backgroundColor:'#061c3d',scale:2,useCORS:true,width:target.clientWidth,height:target.clientHeight,windowWidth:target.clientWidth,windowHeight:target.clientHeight});
+      const prev={width:target.style.width,height:target.style.height,aspectRatio:target.style.aspectRatio,minWidth:target.style.minWidth,overflow:target.style.overflow};
+      target.style.aspectRatio='auto';
+      target.style.width='1280px';
+      target.style.minWidth='1280px';
+      target.style.height='auto';
+      target.style.overflow='visible';
+      const sourceCanvas=await html2canvas(target,{backgroundColor:'#061c3d',scale:2,useCORS:true,width:1280,windowWidth:1280});
+      target.style.width=prev.width;
+      target.style.height=prev.height;
+      target.style.aspectRatio=prev.aspectRatio;
+      target.style.minWidth=prev.minWidth;
+      target.style.overflow=prev.overflow;
+
+      const out=document.createElement('canvas');
+      out.width=1600; out.height=900;
+      const ctx=out.getContext('2d');
+      ctx.fillStyle='#061c3d'; ctx.fillRect(0,0,out.width,out.height);
+      const scale=Math.min(out.width/sourceCanvas.width,out.height/sourceCanvas.height);
+      const dw=sourceCanvas.width*scale, dh=sourceCanvas.height*scale;
+      ctx.drawImage(sourceCanvas,(out.width-dw)/2,(out.height-dh)/2,dw,dh);
+      const canvas=out;
       const a=document.createElement('a');
       const safe=(state.event||'Sem Nome').replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim()||'Sem Nome';
       a.download='Fluxo de Veiculos - '+safe+'.png';
