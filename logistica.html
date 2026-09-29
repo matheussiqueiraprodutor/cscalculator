@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HIVE PRO — Logística</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="db-config.js"></script>
+<script src="auth.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+:root{
+  --bg:#03070d;--bg2:#06111d;--panel:#071019;--panel2:#0b1621;
+  --line:#183044;--text:#f4f7fa;--muted:#8495a6;--blue:#00a3ff;
+  --blue2:#168bd0;--green:#00f078;--red:#ff244f;--yellow:#ffe600;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,sans-serif}
+body{min-height:100vh;background:
+ radial-gradient(circle at 50% -10%,rgba(0,163,255,.10),transparent 38%),
+ radial-gradient(circle at 10% 40%,rgba(0,83,140,.08),transparent 35%),var(--bg)}
+body:before{content:'';position:fixed;inset:0;pointer-events:none;opacity:.14;
+background-image:linear-gradient(30deg,rgba(0,163,255,.10) 12%,transparent 12.5%,transparent 87%,rgba(0,163,255,.10) 87.5%,rgba(0,163,255,.10)),
+linear-gradient(150deg,rgba(0,163,255,.10) 12%,transparent 12.5%,transparent 87%,rgba(0,163,255,.10) 87.5%,rgba(0,163,255,.10));
+background-size:80px 140px}
+header{border-bottom:1px solid rgba(0,163,255,.18);background:linear-gradient(180deg,rgba(3,8,15,.98),rgba(3,8,15,.88))}
+.header-inner,main{max-width:1100px;margin:auto;position:relative;z-index:1}
+.header-inner{padding:30px 20px}
+.brand{display:flex;align-items:center;gap:14px;margin-bottom:24px}.brand-mark{width:42px;height:42px;color:var(--blue)}
+.brand-name{font:700 24px/1 'Space Grotesk';letter-spacing:-.03em}.pro{color:var(--blue)}
+.brand-sub{margin-top:6px;color:#718497;font-size:9px;letter-spacing:.20em}
+.back{color:#8da3b5;text-decoration:none;font-size:13px}.back:hover{color:var(--blue)}
+.tag{color:var(--blue);font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;margin:18px 0 10px}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;letter-spacing:-.02em}h1{font-size:32px;margin:0 0 8px}header p{color:var(--muted);margin:0;font-size:14px}
+main{padding:28px 20px 70px}
+.toolbar{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-bottom:18px}
+button{font:600 12px 'Space Grotesk';cursor:pointer;border-radius:9px;padding:10px 14px}
+.btn{background:#07121c;color:#dce8f0;border:1px solid #24445b}.btn:hover{border-color:var(--blue);color:var(--blue)}
+.btn-primary{background:var(--blue);color:#00111c;border:1px solid var(--blue)}.btn-primary:hover{filter:brightness(1.08)}
+.btn-danger{color:#ff7b72;border-color:rgba(255,80,80,.25)}
+.event-strip{background:linear-gradient(145deg,rgba(8,18,29,.96),rgba(4,11,18,.96));border:1px solid #17364d;border-radius:14px;padding:16px 18px;margin-bottom:18px}
+.event-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px}
+label{display:block;color:#71869a;font-size:10px;text-transform:uppercase;letter-spacing:.10em;margin-bottom:6px}
+input,select,textarea{width:100%;background:#050c13;border:1px solid #17364d;border-radius:8px;color:var(--text);font:13px Inter;padding:10px 11px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(0,163,255,.08)}
+.section-title{font:600 13px 'Space Grotesk';letter-spacing:.12em;text-transform:uppercase;color:#dbe5ed;margin:0 0 12px}
+.vehicle-list{display:grid;gap:16px}
+.vehicle-card{background:linear-gradient(145deg,rgba(7,17,27,.97),rgba(4,11,18,.97));border:1px solid #16405c;border-top:3px solid var(--blue);border-radius:14px;padding:18px}
+.vehicle-head{display:grid;grid-template-columns:70px 1fr 1fr auto;gap:12px;align-items:end}
+.vehicle-num{color:var(--blue);font:600 11px 'IBM Plex Mono';letter-spacing:.1em;padding-bottom:11px}
+.people-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+.people-panel{border:1px solid #183044;background:rgba(3,10,17,.45);border-radius:11px;padding:14px}
+.people-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.people-title strong{font:600 13px 'Space Grotesk';text-transform:uppercase;letter-spacing:.08em}
+.people-list{display:grid;gap:8px}.person-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.driver-check{display:flex;align-items:center;gap:7px;color:#8ea0af;font-size:11px;white-space:nowrap}.driver-check input{width:16px;height:16px;margin:0;accent-color:var(--blue)}
+.return-off{color:#607486;font-size:12px;padding:10px 0}
+.mini{padding:7px 9px;font-size:11px}.remove{margin-top:12px}
+.preview{margin-top:24px;background:#071019;border:1px solid #183044;border-radius:14px;padding:18px;overflow:auto}
+.preview-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}.preview-head h2{font-size:18px;margin:0}
+.canvas{background:#061c3d;min-width:720px;padding:34px;color:white;border-radius:8px}
+.canvas-title{text-align:center}.canvas-title h2{font-size:30px;margin:0 0 5px}.canvas-title p{margin:0;color:#d8e5f1;font-weight:600}
+.flow-node{width:190px;margin:20px auto;background:#172633;border-radius:7px;padding:12px;text-align:center;font-weight:700}
+.flow-node.dest{background:#e51414}.flow-arrow{text-align:center;font-size:24px;margin:2px 0}
+.vehicles-preview{display:grid;grid-template-columns:repeat(2,minmax(260px,1fr));gap:18px;margin-top:14px}
+.vp-card{background:#fff;color:#101820;border-radius:9px;padding:15px;border:2px solid #6eb7f0}.vp-card h3{text-align:center;color:#1262a0;font-size:19px;margin:0 0 3px}.vp-route{text-align:center;font-size:11px;color:#64727e;margin-bottom:10px}
+.vp-people{background:#eef6fd;border-radius:7px;padding:12px;text-align:center}.vp-person{font-weight:700;font-size:14px;margin:4px}.vp-person small{display:block;font-weight:600;color:#65727c;font-size:10px}
+.return-title{text-align:center;margin:25px 0 8px;font-weight:700}.return-grid{display:grid;grid-template-columns:1fr;gap:12px}.return-card{background:#eef6fd;color:#101820;border-radius:9px;padding:12px;text-align:center;border:2px solid #6eb7f0}.return-card h4{margin:0 0 6px;color:#1262a0;font:700 15px 'Space Grotesk'}.return-card .names{font-weight:700;font-size:13px}.warning{text-align:center;margin-top:15px;color:#fff;font-weight:700;font-size:12px}
+.empty{text-align:center;color:#71869a;padding:30px;border:1px dashed #24445b;border-radius:10px}
+@media(max-width:800px){.event-grid,.vehicle-head,.people-wrap{grid-template-columns:1fr}.vehicles-preview{grid-template-columns:1fr}.canvas{min-width:0}.toolbar{justify-content:flex-start}}
+</style>
+</head>
+<body>
+<header>
+<div class="header-inner">
+  <div class="brand">
+    <svg class="brand-mark" viewBox="0 0 48 48" fill="none"><path d="M24 3L40 12.5V35.5L24 45L8 35.5V12.5L24 3Z" stroke="currentColor" stroke-width="1.5"/><path d="M24 9L34 15V27L24 33L14 27V15L24 9Z" stroke="currentColor" stroke-width="1.2" opacity=".75"/><path d="M24 16L29 19V25L24 28L19 25V19L24 16Z" fill="currentColor" opacity=".35"/></svg>
+    <div><div class="brand-name">HIVE <span class="pro">PRO</span></div><div class="brand-sub">EVENT PRODUCTION SYSTEM</div></div>
+  </div>
+  <a class="back" href="index.html">← Voltar para áreas</a>
+  <div class="tag">Logística</div>
+  <h1>Fluxo de Veículos</h1>
+  <p>Monte o fluxo de ida e retorno, defina motoristas e passageiros e exporte o organograma em PNG.</p>
+</div>
+</header>
+
+<main>
+  <div class="toolbar">
+    <button class="btn" id="btnAddVehicle">+ Adicionar veículo</button>
+    <button class="btn" id="btnClear">Limpar logística</button>
+    <button class="btn-primary" id="btnExport">Exportar organograma PNG</button>
+  </div>
+
+  <section class="event-strip">
+    <p class="section-title">Dados do fluxo</p>
+    <div class="event-grid">
+      <div><label>Evento</label><input id="eventName" placeholder="Nome do evento"></div>
+      <div><label>Origem</label><input id="origin" placeholder="Ex.: CL"></div>
+      <div><label>Destino</label><input id="destination" placeholder="Ex.: Lilly"></div>
+    </div>
+  </section>
+
+  <p class="section-title">Veículos</p>
+  <div id="vehicleList" class="vehicle-list"></div>
+
+  <section class="preview">
+    <div class="preview-head">
+      <h2>Pré-visualização</h2>
+      <span style="font:10px 'IBM Plex Mono';color:#607486">PNG • HIVE PRO</span>
+    </div>
+    <div id="capture" class="canvas"></div>
+  </section>
+</main>
+
+<script>
+(async()=>{
+  if(!(await MMAuth.init())) return;
+
+  const KEY='hivepro_logistica_veiculos_v1';
+  let state=load()||{
+    event:'',
+    origin:'CL',
+    destination:'',
+    vehicles:[]
+  };
+
+  function load(){
+    try{const r=localStorage.getItem(KEY);return r?JSON.parse(r):null}catch(e){return null}
+  }
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+  function esc(v){return String(v??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
+  function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+  function blankPerson(){return {id:uid(),name:'',driver:false}}
+  function blankVehicle(){
+    return {id:uid(),name:'',model:'',returns:true,ida:[blankPerson()],retorno:[blankPerson()]}
+  }
+  function ensure(){
+    state.vehicles=(state.vehicles||[]).map(v=>({
+      id:v.id||uid(),name:v.name||'',model:v.model||'',returns:v.returns!==false,
+      ida:Array.isArray(v.ida)&&v.ida.length?v.ida:[blankPerson()],
+      retorno:Array.isArray(v.retorno)&&v.retorno.length?v.retorno:[blankPerson()]
+    }));
+  }
+  ensure();
+  document.getElementById('eventName').value=state.event||'';
+  document.getElementById('origin').value=state.origin||'';
+  document.getElementById('destination').value=state.destination||'';
+
+  function render(){
+    ensure();
+    const list=document.getElementById('vehicleList');
+    if(!state.vehicles.length){list.innerHTML='<div class="empty">Nenhum veículo cadastrado. Clique em <b>+ Adicionar veículo</b> para começar.</div>'}
+    else{
+      list.innerHTML=state.vehicles.map((v,i)=>vehicleHtml(v,i)).join('');
+      bindVehicles();
+    }
+    renderPreview();
+    save();
+  }
+
+  function personHtml(p,vid,section){
+    return '<div class="person-row">'+
+      '<input data-person-name data-vid="'+vid+'" data-section="'+section+'" data-pid="'+p.id+'" value="'+esc(p.name)+'" placeholder="Nome da pessoa">'+
+      '<label class="driver-check"><input type="checkbox" data-driver data-vid="'+vid+'" data-section="'+section+'" data-pid="'+p.id+'" '+(p.driver?'checked':'')+'> motorista</label>'+
+    '</div>';
+  }
+
+  function peoplePanel(v,section,title){
+    const arr=v[section];
+    return '<div class="people-panel"><div class="people-title"><strong>'+title+'</strong><button type="button" class="btn mini" data-add-person data-vid="'+v.id+'" data-section="'+section+'">+ Pessoa</button></div>'+
+      '<div class="people-list">'+arr.map(p=>personHtml(p,v.id,section)).join('')+'</div></div>';
+  }
+
+  function vehicleHtml(v,i){
+    return '<article class="vehicle-card">'+
+      '<div class="vehicle-head">'+
+      '<div class="vehicle-num">VEÍCULO '+String(i+1).padStart(2,'0')+'</div>'+
+      '<div><label>Nome / identificação</label><input data-v-field="name" data-vid="'+v.id+'" value="'+esc(v.name)+'" placeholder="Ex.: Veículo 1"></div>'+
+      '<div><label>Modelo / tipo</label><input data-v-field="model" data-vid="'+v.id+'" value="'+esc(v.model)+'" placeholder="Ex.: Iveco, Onix, Sprinter"></div>'+
+      '<button type="button" class="btn btn-danger" data-remove-vehicle="'+v.id+'">Excluir</button>'+
+      '</div>'+
+      '<div class="people-wrap">'+peoplePanel(v,'ida','IDA • '+esc(state.origin||'Origem')+' → '+esc(state.destination||'Destino'))+
+      '<div class="people-panel"><div class="people-title"><strong>RETORNO</strong><label class="driver-check"><input type="checkbox" data-return-toggle="'+v.id+'" '+(v.returns?'checked':'')+'> retorna</label></div>'+
+      (v.returns?'<div class="people-list">'+v.retorno.map(p=>personHtml(p,v.id,'retorno')).join('')+'</div><button type="button" class="btn mini" data-add-person data-vid="'+v.id+'" data-section="retorno">+ Pessoa</button>':'<div class="return-off">Este veículo não retorna ao local de origem.</div>')+
+      '</div></div></article>';
+  }
+
+  function bindVehicles(){
+    document.querySelectorAll('[data-v-field]').forEach(el=>el.addEventListener('input',()=>{
+      const v=state.vehicles.find(x=>x.id===el.dataset.vid); if(v)v[el.dataset.vField]=el.value; save(); renderPreview();
+    }));
+    document.querySelectorAll('[data-person-name]').forEach(el=>el.addEventListener('input',()=>{
+      const v=state.vehicles.find(x=>x.id===el.dataset.vid); const p=v&&v[el.dataset.section].find(x=>x.id===el.dataset.pid); if(p)p.name=el.value; save(); renderPreview();
+    }));
+    document.querySelectorAll('[data-driver]').forEach(el=>el.addEventListener('change',()=>{
+      const v=state.vehicles.find(x=>x.id===el.dataset.vid); const p=v&&v[el.dataset.section].find(x=>x.id===el.dataset.pid); if(p)p.driver=el.checked; save(); renderPreview();
+    }));
+    document.querySelectorAll('[data-return-toggle]').forEach(el=>el.addEventListener('change',()=>{
+      const v=state.vehicles.find(x=>x.id===el.dataset.returnToggle); if(v)v.returns=el.checked; save(); render();
+    }));
+    document.querySelectorAll('[data-add-person]').forEach(el=>el.addEventListener('click',()=>{
+      const v=state.vehicles.find(x=>x.id===el.dataset.vid); if(v)v[el.dataset.section].push(blankPerson()); save(); render();
+    }));
+    document.querySelectorAll('[data-remove-vehicle]').forEach(el=>el.addEventListener('click',()=>{
+      state.vehicles=state.vehicles.filter(v=>v.id!==el.dataset.removeVehicle); save(); render();
+    }));
+  }
+
+  function cleanPeople(arr){
+    return (arr||[]).filter(p=>String(p.name||'').trim()).map(p=>({name:String(p.name).trim(),driver:!!p.driver}));
+  }
+  function renderPreview(){
+    const event=state.event||'SEM EVENTO', origin=state.origin||'ORIGEM', dest=state.destination||'DESTINO';
+    const ida=state.vehicles.map((v,i)=>({v,i,people:cleanPeople(v.ida)})).filter(x=>x.people.length||x.v.name||x.v.model);
+    const returns=state.vehicles.map((v,i)=>({v,i,people:cleanPeople(v.retorno)})).filter(x=>x.v.returns&&(x.people.length||x.v.name||x.v.model));
+    let h='<div class="canvas-title"><h2>FLUXO DE VEÍCULOS</h2><p>'+esc(event)+' • IDA E RETORNO</p></div>';
+    h+='<div class="flow-node">'+esc(origin)+'<br><small>SAÍDA</small></div><div class="flow-arrow">↓</div>';
+    if(!ida.length) h+='<div style="text-align:center;color:#b9c8d4">Adicione veículos e pessoas para visualizar o fluxo.</div>';
+    else h+='<div class="vehicles-preview">'+ida.map(x=>'<div class="vp-card"><h3>VEÍCULO '+(x.i+1)+(x.v.model?' — '+esc(x.v.model):'')+'</h3><div class="vp-route">IDA • '+esc(origin)+' → '+esc(dest)+'</div><div class="vp-people">'+x.people.map(p=>'<div class="vp-person">'+esc(p.name)+(p.driver?'<small>(motorista)</small>':'')+'</div>').join('')+'</div></div>').join('')+'</div>';
+    h+='<div class="flow-arrow" style="margin-top:18px">↓</div><div class="flow-node dest">'+esc(dest)+'<br><small>DESTINO</small></div>';
+    if(returns.length){
+      h+='<div class="return-title">RETORNO • '+esc(dest)+' → '+esc(origin)+'</div><div class="return-grid">'+returns.map(x=>'<div class="return-card"><h4>VEÍCULO '+(x.i+1)+(x.v.model?' — '+esc(x.v.model):'')+'</h4><div class="names">'+x.people.map(p=>esc(p.name)+(p.driver?' <span style="font-size:10px;color:#65727c">(motorista)</span>':'')).join(' • ')+'</div></div>').join('')+'</div>';
+    }
+    const noReturn=state.vehicles.filter(v=>!v.returns&&(v.name||v.model||cleanPeople(v.ida).length));
+    if(noReturn.length) h+='<div class="warning">⚠ '+noReturn.map(v=>'VEÍCULO '+esc(v.model||v.name||'')).join(' • ')+' NÃO RETORNA'+(noReturn.length>1?'M':'')+' — SOMENTE OS VEÍCULOS CONFIGURADOS NO RETORNO VOLTAM PARA '+esc(origin)+'.</div>';
+    document.getElementById('capture').innerHTML=h;
+  }
+
+  document.getElementById('eventName').addEventListener('input',e=>{state.event=e.target.value;save();renderPreview()});
+  document.getElementById('origin').addEventListener('input',e=>{state.origin=e.target.value;save();render()});
+  document.getElementById('destination').addEventListener('input',e=>{state.destination=e.target.value;save();render()});
+  document.getElementById('btnAddVehicle').addEventListener('click',()=>{state.vehicles.push(blankVehicle());save();render()});
+  document.getElementById('btnClear').addEventListener('click',()=>{
+    if(!confirm('Limpar todos os veículos e pessoas desta logística?'))return;
+    state={event:state.event,origin:state.origin,destination:state.destination,vehicles:[]};save();render();
+  });
+  document.getElementById('btnExport').addEventListener('click',async()=>{
+    const target=document.getElementById('capture');
+    const btn=document.getElementById('btnExport');
+    btn.disabled=true;btn.textContent='Gerando PNG...';
+    try{
+      const canvas=await html2canvas(target,{backgroundColor:'#061c3d',scale:2,useCORS:true});
+      const a=document.createElement('a');
+      const safe=(state.event||'Sem Nome').replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim()||'Sem Nome';
+      a.download='Fluxo de Veiculos - '+safe+'.png';
+      a.href=canvas.toDataURL('image/png');
+      a.click();
+    }catch(e){console.error(e);alert('Não foi possível gerar o PNG. Tente novamente.')}
+    finally{btn.disabled=false;btn.textContent='Exportar organograma PNG'}
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
