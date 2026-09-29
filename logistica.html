@@ -270,7 +270,14 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);bo
     finally{btn.disabled=false;btn.textContent='Exportar organograma PNG'}
   });
 
-  render();
+  try{
+    render();
+  }catch(e){
+    console.error('HIVE PRO Logística: erro ao renderizar estado salvo.', e);
+    state={event:state.event||'',origin:state.origin||'CL',destination:state.destination||'',vehicles:[]};
+    save();
+    try{ render(); }catch(e2){ console.error(e2); }
+  }
 })();
 </script>
 </body>
