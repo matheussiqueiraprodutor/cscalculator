@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Freelancers — HIVE PRO</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="db-config.js"></script><script src="auth.js"></script>
+<style>
+:root{--bg:#03070d;--panel:#071019;--line:#183044;--text:#f4f7fa;--muted:#8495a6;--blue:#00a3ff;--ok:#35d99a;--red:#ff6a68}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,sans-serif}header{border-bottom:1px solid rgba(0,163,255,.18);padding:30px max(20px,calc((100% - 1100px)/2));background:#03080f}h1,h2{font-family:'Space Grotesk'}h1{margin:7px 0 0}.tag{color:var(--blue);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}main{max-width:1100px;margin:auto;padding:30px 20px 70px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.back{color:var(--muted);text-decoration:none}.grid{display:grid;grid-template-columns:390px 1fr;gap:20px;margin-top:22px}@media(max-width:850px){.grid{grid-template-columns:1fr}}.card{background:linear-gradient(145deg,#08121d,#050b12);border:1px solid var(--line);border-radius:14px;padding:22px}.field{margin:13px 0}label{display:block;color:var(--muted);font-size:11px;margin-bottom:6px}input,select,textarea{width:100%;background:#050c13;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:11px;font:inherit}textarea{min-height:75px;resize:vertical}button{border:0;border-radius:8px;padding:10px 13px;background:var(--blue);color:#fff;font-weight:700;cursor:pointer}.secondary{background:#152431}.danger{background:#512126}.msg{font-size:12px;min-height:18px;margin-top:10px;color:var(--ok)}.skill{display:grid;grid-template-columns:1fr 88px auto;gap:8px;margin:8px 0}.skill button{padding:8px 10px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.toolbar input,.toolbar select{width:auto;min-width:150px;flex:1}.person{border-top:1px solid var(--line);padding:15px 0}.person:first-child{border-top:0}.person-head{display:flex;justify-content:space-between;gap:10px}.person small{color:var(--muted)}.pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.pill{border:1px solid var(--line);border-radius:99px;padding:4px 8px;font-size:11px}.p1{color:#ffe17a}.actions{display:flex;gap:6px;margin-top:10px}.empty{color:var(--muted);padding:20px 0}
+</style></head>
+<body>
+<header><div class="tag">08 · Equipe</div><h1>Freelancers</h1></header>
+<main>
+<div class="top"><a class="back" href="index.html">← Voltar para áreas</a><button class="secondary" onclick="MMAuth.logout()">Sair</button></div>
+<div class="grid">
+<section class="card">
+<h2 id="formTitle">Cadastrar freelancer</h2>
+<form id="form">
+<input id="editId" type="hidden">
+<div class="field"><label>Nome</label><input id="fullName" required></div>
+<div class="field"><label>WhatsApp</label><input id="whatsapp" inputmode="tel" placeholder="5519999999999" required></div>
+<div class="field"><label>Funções e prioridades</label><div id="skills"></div><button type="button" class="secondary" id="addSkill">+ Adicionar função</button></div>
+<div class="field"><label>Observações</label><textarea id="notes" placeholder="Informações úteis sobre este profissional"></textarea></div>
+<div style="display:flex;gap:8px"><button type="submit">Salvar freelancer</button><button type="button" class="secondary" id="cancelEdit" style="display:none">Cancelar</button></div>
+<div class="msg" id="msg"></div>
+</form>
+</section>
+<section class="card">
+<h2>Profissionais cadastrados</h2>
+<div class="toolbar"><input id="search" placeholder="Buscar por nome"><select id="sectorFilter"><option value="">Todos os setores</option><option value="audio">Áudio</option><option value="luz">Iluminação</option><option value="video">Vídeo</option></select></div>
+<div id="list"></div>
+</section>
+</div></main>
+<script>
+let functions=[], freelancers=[];
+const sectorName={audio:'Áudio',luz:'Iluminação',video:'Vídeo'};
+function esc(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function functionOptions(selected){return functions.filter(f=>f.active).map(f=>'<option value="'+f.id+'" '+(String(f.id)===String(selected)?'selected':'')+'>'+esc(sectorName[f.sector])+' · '+esc(f.name)+'</option>').join('')}
+function addSkillRow(skill){const row=document.createElement('div');row.className='skill';row.innerHTML='<select class="fn" required><option value="">Selecione...</option>'+functionOptions(skill&&skill.function_id)+'</select><select class="priority"><option value="1">Prior. 1</option><option value="2">Prior. 2</option><option value="3">Prior. 3</option><option value="4">Prior. 4</option><option value="5">Prior. 5</option></select><button type="button" class="danger">×</button>';row.querySelector('.priority').value=String(skill&&skill.priority||1);row.querySelector('button').onclick=()=>row.remove();skills.appendChild(row)}
+async function loadFunctions(){const r=await MMAuth.client.from('freelancer_functions').select('*').order('sector').order('sort_order');if(r.error)throw r.error;functions=r.data||[]}
+async function loadFreelancers(){const r=await MMAuth.client.from('freelancers').select('*, freelancer_skills(id,function_id,priority,active, freelancer_functions(id,sector,name))').order('full_name');if(r.error)throw r.error;freelancers=r.data||[];render()}
+function render(){const q=search.value.trim().toLowerCase(),sf=sectorFilter.value;const rows=freelancers.filter(f=>{const sk=(f.freelancer_skills||[]).filter(s=>s.active);return (!q||f.full_name.toLowerCase().includes(q))&&(!sf||sk.some(s=>s.freelancer_functions&&s.freelancer_functions.sector===sf))});list.innerHTML=rows.length?rows.map(f=>{const sk=(f.freelancer_skills||[]).filter(s=>s.active).sort((a,b)=>a.priority-b.priority);return '<div class="person"><div class="person-head"><div><b>'+esc(f.full_name)+'</b><br><small>'+esc(f.whatsapp)+'</small></div><span class="pill">'+(f.active?'ATIVO':'INATIVO')+'</span></div><div class="pills">'+sk.map(s=>'<span class="pill '+(s.priority===1?'p1':'')+'">'+esc(sectorName[s.freelancer_functions.sector])+' · '+esc(s.freelancer_functions.name)+' · P'+s.priority+'</span>').join('')+'</div><div class="actions"><button class="secondary" onclick="editFreelancer(\''+f.id+'\')">Editar</button><button class="secondary" onclick="toggleFreelancer(\''+f.id+'\','+(!f.active)+')">'+(f.active?'Inativar':'Ativar')+'</button></div></div>'}).join(''):'<div class="empty">Nenhum freelancer encontrado.</div>'}
+window.editFreelancer=id=>{const f=freelancers.find(x=>x.id===id);if(!f)return;editId.value=f.id;fullName.value=f.full_name;whatsapp.value=f.whatsapp;notes.value=f.notes||'';skills.innerHTML='';(f.freelancer_skills||[]).filter(s=>s.active).forEach(addSkillRow);if(!skills.children.length)addSkillRow();formTitle.textContent='Editar freelancer';cancelEdit.style.display='inline-block';scrollTo({top:0,behavior:'smooth'})}
+window.toggleFreelancer=async(id,active)=>{const r=await MMAuth.client.from('freelancers').update({active,updated_at:new Date().toISOString()}).eq('id',id);if(r.error)return alert(r.error.message);loadFreelancers()}
+function resetForm(){form.reset();editId.value='';skills.innerHTML='';addSkillRow();formTitle.textContent='Cadastrar freelancer';cancelEdit.style.display='none'}
+addSkill.onclick=()=>addSkillRow();cancelEdit.onclick=resetForm;search.oninput=render;sectorFilter.onchange=render;
+form.onsubmit=async e=>{e.preventDefault();msg.textContent='Salvando...';try{const selected=[...skills.querySelectorAll('.skill')].map(r=>({function_id:Number(r.querySelector('.fn').value),priority:Number(r.querySelector('.priority').value)})).filter(x=>x.function_id);if(!selected.length)throw Error('Adicione pelo menos uma função.');if(new Set(selected.map(x=>x.function_id)).size!==selected.length)throw Error('A mesma função foi adicionada mais de uma vez.');let id=editId.value;const payload={full_name:fullName.value.trim(),whatsapp:whatsapp.value.replace(/\D/g,''),notes:notes.value.trim(),updated_at:new Date().toISOString()};if(id){const u=await MMAuth.client.from('freelancers').update(payload).eq('id',id);if(u.error)throw u.error;const d=await MMAuth.client.from('freelancer_skills').delete().eq('freelancer_id',id);if(d.error)throw d.error}else{payload.created_by=MMAuth.user.id;const i=await MMAuth.client.from('freelancers').insert(payload).select('id').single();if(i.error)throw i.error;id=i.data.id}const ins=await MMAuth.client.from('freelancer_skills').insert(selected.map(x=>({freelancer_id:id,function_id:x.function_id,priority:x.priority})));if(ins.error)throw ins.error;msg.textContent='Freelancer salvo com sucesso.';resetForm();await loadFreelancers()}catch(x){msg.textContent=x.message||'Erro ao salvar.'}}
+(async()=>{if(!(await MMAuth.init({admin:true})))return;try{await loadFunctions();resetForm();await loadFreelancers()}catch(e){msg.textContent=e.message}})();
+</script></body></html>
