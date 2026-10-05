@@ -965,6 +965,15 @@ footer{
     </a>
 
 
+    <!-- SOLICITAR EQUIPE -->
+    <a href="equipe.html" id="adminStaffingCard" class="area-card" style="display:none;--accent:var(--blue);">
+      <div class="card-top"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M2.5 19c.5-4 2.2-6 5.5-6s5 2 5.5 6"/><path d="M13 13c4.8-.4 7.5 1.6 8.5 6"/></svg></div><span class="badge">EQUIPE</span></div>
+      <p class="tag-num">09 · Escala</p><h2>Solicitar Equipe</h2>
+      <p>Informe as funções e quantidades necessárias e monte a ordem de contato por prioridade.</p>
+      <p class="meta">Nenhuma mensagem é enviada sem sua aprovação.</p><span class="go">Montar equipe <span class="arrow">→</span></span>
+    </a>
+
+
     <!-- ADMIN -->
     <a href="admin.html"
        id="adminUsersCard"
@@ -1557,6 +1566,13 @@ window.addEventListener(
       document
         .getElementById(
           'adminFreelancersCard'
+        )
+        .style.display =
+          admin ? 'block' : 'none';
+
+      document
+        .getElementById(
+          'adminStaffingCard'
         )
         .style.display =
           admin ? 'block' : 'none';
