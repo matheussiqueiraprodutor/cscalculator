@@ -18,9 +18,8 @@ function messageFor(n, fn) {
   const start = eventDate.value || '[data de início]';
   const end = eventEndDate.value.trim();
   const when = end && end !== start ? ('do dia ' + start + ' até ' + end) : ('no dia ' + start);
-  return 'Olá, ' + n + '! Temos o evento ' + (eventName.value || '[evento]') +
-    ' ' + when +
-    ', em ' + (eventLocation.value || '[local]') +
+  return 'Olá, ' + n + '! Gostaria de verificar se você tem disponibilidade para trabalhar ' +
+    when +
     '. Precisamos de ' + fn + '. Você tem disponibilidade?';
 }
 
