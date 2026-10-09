@@ -2,8 +2,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="db-config.js"></script><script src="auth.js"></script>
 <style>:root{--bg:#03070d;--panel:#071019;--line:#183044;--text:#f4f7fa;--muted:#8495a6;--blue:#00a3ff;--ok:#35d99a;--warn:#ffe17a}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,sans-serif}header{border-bottom:1px solid rgba(0,163,255,.18);padding:30px max(20px,calc((100% - 1100px)/2))}h1,h2,h3{font-family:'Space Grotesk'}h1{margin:7px 0 0}.tag{color:var(--blue);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}main{max-width:1100px;margin:auto;padding:30px 20px 70px}.top{display:flex;justify-content:space-between;align-items:center}.back{color:var(--muted);text-decoration:none}.grid{display:grid;grid-template-columns:390px 1fr;gap:20px;margin-top:22px}@media(max-width:850px){.grid{grid-template-columns:1fr}}.card{background:linear-gradient(145deg,#08121d,#050b12);border:1px solid var(--line);border-radius:14px;padding:22px}.field{margin:13px 0}label{display:block;color:var(--muted);font-size:11px;margin-bottom:6px}input,select{width:100%;background:#050c13;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:11px;font:inherit}button{border:0;border-radius:8px;padding:10px 13px;background:var(--blue);color:white;font-weight:700;cursor:pointer}.secondary{background:#152431}.need{display:grid;grid-template-columns:1fr 72px auto;gap:8px;margin:8px 0}.result{border-top:1px solid var(--line);padding:16px 0}.result:first-child{border-top:0}.candidate{display:flex;justify-content:space-between;gap:10px;padding:9px 10px;margin:6px 0;background:#050c13;border:1px solid var(--line);border-radius:8px}.p1{color:var(--warn)}.muted{color:var(--muted);font-size:12px}.msg{color:var(--ok);font-size:12px;margin-top:10px;min-height:18px}.review{margin-top:8px}.review textarea{width:100%;min-height:90px;background:#050c13;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px}.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.actions button{font-size:11px;padding:7px}.status{font-size:10px;margin-left:8px}.candidate{flex-wrap:wrap}.review{flex-basis:100%}.queue-note{flex-basis:100%;padding-top:6px}.fill-progress{font-size:12px;color:var(--muted);margin:-8px 0 10px}.fill-progress.complete{color:var(--ok);font-weight:700}.candidate.queued{opacity:.58}.candidate.available{border-color:rgba(53,217,154,.55)}.candidate.unavailable{opacity:.5}.candidate.waiting{border-color:rgba(255,225,122,.35)}.bulkbar{display:none;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 6px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#06111b}.bulkbar.show{display:flex}.bulkbar .muted{max-width:430px}@media(max-width:700px){.bulkbar{align-items:stretch;flex-direction:column}}</style></head><body>
 <header><div class="tag">09 · Equipe</div><h1>Solicitar Equipe</h1></header><main><div class="top"><a class="back" href="index.html">← Voltar para áreas</a><button class="secondary" onclick="MMAuth.logout()">Sair</button></div>
-<div class="grid"><section class="card"><h2>Necessidade do evento</h2><div class="field"><label>Evento</label><input id="eventName"></div><div class="field"><label>Data de início</label><input id="eventDate" placeholder="dd/mm/aaaa"></div><div class="field"><label>Data de fim</label><input id="eventEndDate" placeholder="dd/mm/aaaa"></div><div class="field"><label>Local</label><input id="eventLocation"></div><div class="field"><label>Funções necessárias</label><div id="needs"></div><button class="secondary" type="button" id="addNeed">+ Adicionar função</button></div><button id="build" type="button">Montar ordem de contato</button><div id="msg" class="msg"></div></section>
-<section class="card"><h2>Ordem sugerida</h2><p class="muted">O Hive Pro lista profissionais ativos pela prioridade cadastrada. Nenhuma mensagem é enviada nesta etapa.</p><div id="bulkBar" class="bulkbar"><div class="muted">Revise as mensagens abaixo. Quando estiver tudo certo, aprove todas de uma vez.</div><button id="approveAll" type="button">Aprovar e enviar todas</button></div><div id="results"><div class="muted">Informe a equipe necessária para gerar a ordem.</div></div></section></div></main>
+<div class="grid"><section class="card"><h2>Necessidade do evento</h2><div class="field"><label>Evento</label><input id="eventName"></div><div class="field"><label>Data de início</label><input id="eventDate" placeholder="dd/mm/aaaa"></div><div class="field"><label>Data de fim</label><input id="eventEndDate" placeholder="dd/mm/aaaa"></div><div class="field"><label>Local</label><input id="eventLocation"></div><div class="field"><label>Preferência de localização da equipe (opcional)</label><input id="locationPreference" list="cityOptions" placeholder="Ex.: Campinas ou São Paulo"><datalist id="cityOptions"></datalist><div class="muted" style="margin-top:6px">A avaliação continua sendo o critério principal. A localização só desempata candidatos com a mesma nota.</div></div><div class="field"><label>Funções necessárias</label><div id="needs"></div><button class="secondary" type="button" id="addNeed">+ Adicionar função</button></div><button id="build" type="button">Montar ordem de contato</button><div id="msg" class="msg"></div></section>
+<section class="card"><h2>Ordem sugerida</h2><p class="muted">O Hive Pro usa a base da planilha da empresa em modo somente leitura. A avaliação é o critério principal; a localização, quando informada, só desempata notas iguais. Nenhuma mensagem é enviada nesta etapa.</p><div id="bulkBar" class="bulkbar"><div class="muted">Revise as mensagens abaixo. Quando estiver tudo certo, aprove todas de uma vez.</div><button id="approveAll" type="button">Aprovar e enviar todas</button></div><div id="results"><div class="muted">Informe a equipe necessária para gerar a ordem.</div></div></section></div></main>
 <script>
 let functions=[],freelancers=[];
 const sectorName={audio:'Áudio',luz:'Iluminação',video:'Vídeo'};
@@ -43,18 +43,70 @@ async function initData(){
   let r=await MMAuth.client.from('freelancer_functions').select('*').order('sector').order('sort_order');
   if(r.error)throw r.error;
   functions=r.data||[];
-  r=await MMAuth.client.from('freelancers')
-    .select('id,full_name,whatsapp,active,freelancer_skills(function_id,priority,active)')
-    .eq('active',true).order('full_name');
+  r=await MMAuth.client.from('company_freelancers_cache')
+    .select('source_key,full_name,whatsapp,city,state,audio,lighting,resolume,vmix,sound_design,camera,powerpoint,rating')
+    .order('full_name');
   if(r.error)throw r.error;
   freelancers=r.data||[];
+  const cities=[...new Set(freelancers.map(f=>String(f.city||'').trim()).filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  cityOptions.innerHTML=cities.map(x=>'<option value="'+esc(x)+'"></option>').join('');
+}
+
+function normalizeText(v){
+  return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+}
+
+const locationGroups={
+  campinas:['campinas','jaguariuna','hortolandia','cosmopolis','pedreira','mogi mirim','mogi guacu','paulinia','valinhos','vinhedo','sumare','americana','nova odessa','indaiatuba','monte mor','artur nogueira','holambra'],
+  sao_paulo:['sao paulo','osasco','guarulhos','barueri','carapicuiba','santo andre','sao bernardo do campo','sao caetano do sul','taboao da serra','embu das artes','cotia']
+};
+
+function locationScore(city){
+  const pref=normalizeText(locationPreference.value);
+  const c=normalizeText(city);
+  if(!pref||!c)return 0;
+  if(c===pref||c.includes(pref)||pref.includes(c))return 2;
+  const group=Object.values(locationGroups).find(g=>g.some(x=>pref===x||pref.includes(x)));
+  return group&&group.includes(c)?1:0;
+}
+
+function ratingPriority(rating){
+  const r=Number(rating);
+  if(!Number.isFinite(r))return 9;
+  if(r>=4.5)return 1;
+  if(r>=4.0)return 2;
+  if(r>=3.0)return 3;
+  if(r>=2.0)return 4;
+  return 5;
+}
+
+function eligibleForFunction(f,fn){
+  if(!fn)return false;
+  if(fn.sector==='audio')return !!f.audio;
+  if(fn.sector==='luz')return !!f.lighting;
+  if(fn.name==='Operador de PPT')return !!f.powerpoint;
+  if(fn.name==='Técnico de Vídeo')return !!(f.resolume||f.vmix||f.camera);
+  if(fn.name==='Auxiliar de Vídeo')return !!(f.resolume||f.vmix||f.camera||f.powerpoint);
+  return false;
 }
 
 function candidates(functionId){
-  return freelancers.map(f=>{
-    const s=(f.freelancer_skills||[]).find(x=>x.active&&Number(x.function_id)===Number(functionId));
-    return s?{id:f.id,name:f.full_name,whatsapp:f.whatsapp,priority:s.priority}:null;
-  }).filter(Boolean).sort((a,b)=>a.priority-b.priority||a.name.localeCompare(b.name));
+  const fn=functions.find(x=>Number(x.id)===Number(functionId));
+  return freelancers.filter(f=>eligibleForFunction(f,fn)).map(f=>({
+    id:f.source_key,
+    name:f.full_name,
+    whatsapp:f.whatsapp,
+    city:f.city||'',
+    state:f.state||'',
+    rating:f.rating==null?null:Number(f.rating),
+    priority:ratingPriority(f.rating),
+    location_score:locationScore(f.city)
+  })).sort((a,b)=>{
+    const ar=a.rating==null?-1:a.rating;
+    const br=b.rating==null?-1:b.rating;
+    return br-ar||b.location_score-a.location_score||a.name.localeCompare(b.name,'pt-BR');
+  });
 }
 
 function messageFor(n,fn){
@@ -239,9 +291,9 @@ build.onclick=async()=>{
       '<h3>'+esc(sectorName[fn.sector])+' · '+esc(fn.name)+' <span class="muted">('+n.quantity+' vaga'+(n.quantity>1?'s':'')+')</span></h3>'+
       '<div class="fill-progress">0/'+n.quantity+' preenchida'+(n.quantity>1?'s':'')+'</div>'+
       (cs.length?cs.map((cand,i)=>
-        '<div class="candidate" data-freelancer-id="'+cand.id+'">'+
-          '<div><b>'+esc(cand.name)+'</b><br><span class="muted">'+esc(cand.whatsapp)+'</span></div>'+
-          '<div class="'+(cand.priority===1?'p1':'')+'">P'+cand.priority+' · #'+(i+1)+'</div>'+
+        '<div class="candidate" data-freelancer-id="'+esc(cand.id)+'">'+
+          '<div><b>'+esc(cand.name)+'</b><br><span class="muted">'+esc(cand.whatsapp)+(cand.city?' · '+esc(cand.city):'')+'</span></div>'+
+          '<div class="'+(cand.priority===1?'p1':'')+'">'+(cand.rating==null?'Sem nota':String(cand.rating).replace('.',',')+' ★')+' · P'+cand.priority+' · #'+(i+1)+'</div>'+
           '<div class="queue-note muted"></div>'+
         '</div>'
       ).join(''):'<div class="muted">Nenhum profissional ativo cadastrado para esta função.</div>')+
@@ -255,6 +307,7 @@ build.onclick=async()=>{
       event_date:eventDate.value.trim(),
       event_end_date:eventEndDate.value.trim(),
       event_location:eventLocation.value.trim(),
+      location_preference:locationPreference.value.trim(),
       status:'ready',
       created_by:MMAuth.user.id
     }).select('id').single();
@@ -278,18 +331,25 @@ build.onclick=async()=>{
       const cr=await MMAuth.client.from('staffing_candidates').insert(
         cs.map((x,i)=>({
           request_item_id:item.id,
-          freelancer_id:x.id,
+          freelancer_id:null,
+          external_source:'company_sheet',
+          external_key:x.id,
+          candidate_name:x.name,
+          candidate_whatsapp:x.whatsapp,
+          candidate_city:x.city,
+          candidate_state:x.state,
+          rating:x.rating,
           priority:x.priority,
           contact_order:i+1,
           status:'pending',
           message_text:messageFor(x.name,fn.name)
         }))
-      ).select('id,freelancer_id,priority,contact_order,status,message_text');
+      ).select('id,external_key,priority,contact_order,status,message_text,rating');
       if(cr.error)throw cr.error;
 
       cr.data.forEach(saved=>{
-        const cand=cs.find(x=>x.id===saved.freelancer_id);
-        const card=block.querySelector('.candidate[data-freelancer-id="'+saved.freelancer_id+'"]');
+        const cand=cs.find(x=>x.id===saved.external_key);
+        const card=block.querySelector('.candidate[data-freelancer-id="'+saved.external_key+'"]');
         if(!card)return;
         card.dataset.candidateId=saved.id;
         card.dataset.order=saved.contact_order;
