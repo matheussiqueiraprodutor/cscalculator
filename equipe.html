@@ -72,6 +72,7 @@ function locationScore(city){
 }
 
 function ratingPriority(rating){
+  if(rating==null||rating==='')return 9;
   const r=Number(rating);
   if(!Number.isFinite(r))return 9;
   if(r>=4.5)return 1;
