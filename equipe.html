@@ -5,7 +5,7 @@
 <div class="grid"><section class="card"><h2>Necessidade do evento</h2><div class="field"><label>Evento</label><input id="eventName"></div><div class="field"><label>Data de início</label><input id="eventDate" placeholder="dd/mm/aaaa"></div><div class="field"><label>Data de fim</label><input id="eventEndDate" placeholder="dd/mm/aaaa"></div><div class="field"><label>Local</label><input id="eventLocation"></div><div class="field"><label>Preferência de localização da equipe (opcional)</label><input id="locationPreference" list="cityOptions" placeholder="Ex.: Campinas ou São Paulo"><datalist id="cityOptions"></datalist><div class="muted" style="margin-top:6px">A avaliação continua sendo o critério principal. A localização só desempata candidatos com a mesma nota.</div></div><div class="field"><label>Funções necessárias</label><div id="needs"></div><button class="secondary" type="button" id="addNeed">+ Adicionar função</button></div><button id="build" type="button">Montar ordem de contato</button><div id="msg" class="msg"></div></section>
 <section class="card"><h2>Ordem sugerida</h2><p class="muted">O Hive Pro usa a base da planilha da empresa em modo somente leitura. A avaliação é o critério principal; a localização, quando informada, só desempata notas iguais. Nenhuma mensagem é enviada nesta etapa.</p><div id="dbSync" class="muted" style="margin-top:-6px;margin-bottom:6px;opacity:.78">Base atualizada: carregando...</div><div id="realtimeState" class="muted" style="margin-bottom:10px;opacity:.78">Atualização em tempo real: conectando...</div><div id="bulkBar" class="bulkbar"><div class="muted">Revise as mensagens abaixo. Quando estiver tudo certo, aprove todas de uma vez.</div><button id="approveAll" type="button">Aprovar e enviar todas</button></div><div id="results"><div class="muted">Informe a equipe necessária para gerar a ordem.</div></div></section></div></main>
 <script>
-let functions=[],freelancers=[],staffingRealtimeChannel=null;
+let functions=[],freelancers=[],staffingRealtimeChannel=null,activeExternalKeys=new Set();
 const sectorName={audio:'Áudio',luz:'Iluminação',video:'Vídeo'};
 
 function esc(v){
@@ -48,6 +48,12 @@ async function initData(){
     .order('full_name');
   if(r.error)throw r.error;
   freelancers=r.data||[];
+
+  r=await MMAuth.client.from('staffing_candidates')
+    .select('external_key,status')
+    .in('status',['waiting','available','confirmed']);
+  if(r.error)throw r.error;
+  activeExternalKeys=new Set((r.data||[]).map(x=>x.external_key).filter(Boolean));
   const lastSync=freelancers.map(f=>f.synced_at).filter(Boolean).sort().pop();
   dbSync.textContent=lastSync
     ? 'Base atualizada: '+new Date(lastSync).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})
@@ -98,7 +104,7 @@ function eligibleForFunction(f,fn){
 
 function candidates(functionId){
   const fn=functions.find(x=>Number(x.id)===Number(functionId));
-  return freelancers.filter(f=>eligibleForFunction(f,fn)).map(f=>({
+  return freelancers.filter(f=>eligibleForFunction(f,fn)&&!activeExternalKeys.has(f.source_key)).map(f=>({
     id:f.source_key,
     name:f.full_name,
     whatsapp:f.whatsapp,
@@ -292,6 +298,11 @@ function startStaffingRealtime(){
       table:'staffing_candidates'
     },payload=>{
       const row=payload.new||{};
+      if(row.external_key){
+        if(['waiting','available','confirmed'].includes(row.status)) activeExternalKeys.add(row.external_key);
+        else activeExternalKeys.delete(row.external_key);
+      }
+
       const card=results.querySelector('.candidate[data-candidate-id="'+row.id+'"]');
       if(!card)return;
 
@@ -338,6 +349,21 @@ function refreshBulkButton(){
     : 'Nenhuma mensagem liberada';
 }
 
+async function ensureCandidateNotActiveElsewhere(card,id){
+  const externalKey=card.dataset.freelancerId||'';
+  if(!externalKey)return;
+  const r=await MMAuth.client.from('staffing_candidates')
+    .select('id,candidate_name,status')
+    .eq('external_key',externalKey)
+    .in('status',['waiting','available','confirmed'])
+    .neq('id',Number(id))
+    .limit(1);
+  if(r.error)throw r.error;
+  if((r.data||[]).length){
+    throw new Error('Este profissional já está ativo em outra solicitação de equipe.');
+  }
+}
+
 async function candidateStatus(id,status,el){
   const card=el.closest('.candidate');
   const payload={status};
@@ -380,6 +406,7 @@ async function saveReview(id,el){
   const wasWaiting=card.dataset.status==='waiting';
   try{
     if(!wasWaiting){
+      await ensureCandidateNotActiveElsewhere(card,id);
       const r=await MMAuth.client.from('staffing_candidates').update({
         message_text:ta.value,
         status:'waiting',
@@ -387,6 +414,7 @@ async function saveReview(id,el){
       }).eq('id',id);
       if(r.error)throw r.error;
       card.dataset.status='waiting';
+      activeExternalKeys.add(card.dataset.freelancerId);
       card.dataset.whatsappStatus='not_sent';
       card.dataset.messageText=ta.value;
       card.dataset.contactedAt=new Date().toISOString();
@@ -421,11 +449,19 @@ async function approveAllMessages(){
     for(const card of cards){
       const id=Number(card.dataset.candidateId);
       const ta=card.querySelector('textarea');
+      try{
+        await ensureCandidateNotActiveElsewhere(card,id);
+      }catch(e){
+        failed++;
+        errors.push((card.querySelector('b')?.textContent||'Profissional')+': '+(e.message||String(e)));
+        continue;
+      }
       const r=await MMAuth.client.from('staffing_candidates').update({
         message_text:ta.value,status:'waiting',contacted_at:now
       }).eq('id',id);
       if(r.error)throw r.error;
       card.dataset.status='waiting';
+      activeExternalKeys.add(card.dataset.freelancerId);
       card.dataset.whatsappStatus='not_sent';
       card.dataset.messageText=ta.value;
       card.dataset.contactedAt=now;
