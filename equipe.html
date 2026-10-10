@@ -132,9 +132,10 @@ async function refreshActiveAssignments(){
   if(!requestIds.length){activeAssignments=[];return;}
 
   const rr=await MMAuth.client.from('staffing_requests')
-    .select('id,event_name,event_date,event_end_date,status')
+    .select('id,event_name,event_date,event_end_date,status,is_test')
     .in('id',requestIds)
-    .eq('status','ready');
+    .eq('status','ready')
+    .eq('is_test',false);
   if(rr.error)throw rr.error;
   const requestMap=new Map((rr.data||[]).map(x=>[x.id,x]));
 
