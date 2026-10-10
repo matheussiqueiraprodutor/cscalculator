@@ -163,9 +163,14 @@ function refreshBlock(block){
     if(st==='waiting'){
       card.classList.add('waiting');
       if(review) review.style.display='block';
-      if(approve) approve.style.display='none';
-      if(available) available.style.display='';
-      if(unavailable) unavailable.style.display='';
+      const sendFailed=card.dataset.whatsappStatus==='failed';
+      if(approve){
+        approve.style.display=sendFailed?'':'none';
+        approve.textContent=sendFailed?'Tentar envio novamente':'Aprovar e enviar';
+      }
+      if(available) available.style.display=sendFailed?'none':'';
+      if(unavailable) unavailable.style.display=sendFailed?'none':'';
+      if(note&&sendFailed) note.textContent='Falha no envio pelo WhatsApp. Revise a integração e tente novamente.';
       return;
     }
 
@@ -181,7 +186,7 @@ function refreshBlock(block){
       capacity--;
       card.dataset.queueState='eligible';
       if(review) review.style.display='block';
-      if(approve) approve.style.display='';
+      if(approve){ approve.style.display=''; approve.textContent='Aprovar e enviar'; }
       if(available) available.style.display='none';
       if(unavailable) unavailable.style.display='none';
       if(badge) badge.textContent='LIBERADO';
@@ -235,18 +240,55 @@ async function candidateStatus(id,status,el){
     : 'Indisponibilidade registrada. O próximo profissional da fila foi liberado, se ainda houver vaga.';
 }
 
+async function sendWhatsAppCandidate(id,card){
+  const button=card.querySelector('.approve-one');
+  if(button){button.disabled=true;button.textContent='Enviando...';}
+  try{
+    const {data,error}=await MMAuth.client.functions.invoke('whatsapp-send-staffing',{
+      body:{candidate_id:Number(id)}
+    });
+    if(error)throw error;
+    if(!data||data.success!==true)throw new Error(data?.error||'Não foi possível enviar a mensagem pelo WhatsApp.');
+    card.dataset.whatsappStatus='sent';
+    return data;
+  }catch(e){
+    card.dataset.whatsappStatus='failed';
+    refreshBlock(card.closest('.result'));
+    throw e;
+  }finally{
+    if(button)button.disabled=false;
+  }
+}
+
 async function saveReview(id,el){
   const card=el.closest('.candidate');
   const ta=card.querySelector('textarea');
-  const r=await MMAuth.client.from('staffing_candidates').update({
-    message_text:ta.value,
-    status:'waiting',
-    contacted_at:new Date().toISOString()
-  }).eq('id',id);
-  if(r.error){msg.textContent=r.error.message;return;}
-  card.dataset.status='waiting';
-  refreshBlock(card.closest('.result'));
-  msg.textContent='Mensagem aprovada. O candidato agora está aguardando resposta.';
+  el.disabled=true;
+  const wasWaiting=card.dataset.status==='waiting';
+  try{
+    if(!wasWaiting){
+      const r=await MMAuth.client.from('staffing_candidates').update({
+        message_text:ta.value,
+        status:'waiting',
+        contacted_at:new Date().toISOString()
+      }).eq('id',id);
+      if(r.error)throw r.error;
+      card.dataset.status='waiting';
+      card.dataset.whatsappStatus='not_sent';
+      refreshBlock(card.closest('.result'));
+    }else{
+      const r=await MMAuth.client.from('staffing_candidates').update({message_text:ta.value}).eq('id',id);
+      if(r.error)throw r.error;
+    }
+
+    await sendWhatsAppCandidate(id,card);
+    refreshBlock(card.closest('.result'));
+    msg.textContent='Mensagem enviada pelo WhatsApp. O candidato está aguardando resposta.';
+  }catch(e){
+    msg.textContent='Não foi possível enviar pelo WhatsApp: '+(e.message||String(e));
+  }finally{
+    el.disabled=false;
+  }
 }
 
 async function approveAllMessages(){
@@ -257,6 +299,8 @@ async function approveAllMessages(){
   approveAll.textContent='Aprovando...';
   try{
     const now=new Date().toISOString();
+    let sent=0,failed=0;
+    const errors=[];
     for(const card of cards){
       const id=Number(card.dataset.candidateId);
       const ta=card.querySelector('textarea');
@@ -265,9 +309,21 @@ async function approveAllMessages(){
       }).eq('id',id);
       if(r.error)throw r.error;
       card.dataset.status='waiting';
+      card.dataset.whatsappStatus='not_sent';
+      refreshBlock(card.closest('.result'));
+      try{
+        await sendWhatsAppCandidate(id,card);
+        sent++;
+      }catch(e){
+        failed++;
+        errors.push(e.message||String(e));
+      }
     }
     refreshAllBlocks();
-    msg.textContent=cards.length+' mensagem(ns) aprovada(s). As próximas ficam bloqueadas até uma resposta ou até as vagas serem preenchidas.';
+    msg.textContent=failed
+      ? sent+' enviada(s) pelo WhatsApp e '+failed+' com falha. Use "Tentar envio novamente" nos candidatos que falharam.'
+      : sent+' mensagem(ns) enviada(s) pelo WhatsApp. As próximas ficam bloqueadas até uma resposta ou até as vagas serem preenchidas.';
+    if(failed&&errors.length) console.warn('Falhas de envio WhatsApp:',errors);
   }catch(e){
     msg.textContent=e.message;
     refreshBulkButton();
@@ -349,7 +405,7 @@ build.onclick=async()=>{
           status:'pending',
           message_text:messageFor(x.name,fn.name)
         }))
-      ).select('id,external_key,priority,contact_order,status,message_text,rating');
+      ).select('id,external_key,priority,contact_order,status,message_text,rating,whatsapp_status');
       if(cr.error)throw cr.error;
 
       cr.data.forEach(saved=>{
@@ -359,6 +415,7 @@ build.onclick=async()=>{
         card.dataset.candidateId=saved.id;
         card.dataset.order=saved.contact_order;
         card.dataset.status=saved.status;
+        card.dataset.whatsappStatus=saved.whatsapp_status||'not_sent';
         card.dataset.priority=saved.priority;
         card.querySelector('div:nth-child(2)').insertAdjacentHTML('beforeend',' <span class="status">PENDENTE</span>');
         card.insertAdjacentHTML('beforeend',
