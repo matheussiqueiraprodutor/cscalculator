@@ -1,11 +1,11 @@
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Solicitar Equipe — HIVE PRO</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="db-config.js"></script><script src="auth.js"></script>
-<style>:root{--bg:#03070d;--panel:#071019;--line:#183044;--text:#f4f7fa;--muted:#8495a6;--blue:#00a3ff;--ok:#35d99a;--warn:#ffe17a}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,sans-serif}header{border-bottom:1px solid rgba(0,163,255,.18);padding:30px max(20px,calc((100% - 1100px)/2))}h1,h2,h3{font-family:'Space Grotesk'}h1{margin:7px 0 0}.tag{color:var(--blue);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}main{max-width:1100px;margin:auto;padding:30px 20px 70px}.top{display:flex;justify-content:space-between;align-items:center}.back{color:var(--muted);text-decoration:none}.grid{display:grid;grid-template-columns:390px 1fr;gap:20px;margin-top:22px}@media(max-width:850px){.grid{grid-template-columns:1fr}}.card{background:linear-gradient(145deg,#08121d,#050b12);border:1px solid var(--line);border-radius:14px;padding:22px}.field{margin:13px 0}label{display:block;color:var(--muted);font-size:11px;margin-bottom:6px}input,select{width:100%;background:#050c13;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:11px;font:inherit}button{border:0;border-radius:8px;padding:10px 13px;background:var(--blue);color:white;font-weight:700;cursor:pointer}.secondary{background:#152431}.need{display:grid;grid-template-columns:1fr 72px auto;gap:8px;margin:8px 0}.result{border-top:1px solid var(--line);padding:16px 0}.result:first-child{border-top:0}.candidate{display:flex;justify-content:space-between;gap:10px;padding:9px 10px;margin:6px 0;background:#050c13;border:1px solid var(--line);border-radius:8px}.p1{color:var(--warn)}.muted{color:var(--muted);font-size:12px}.msg{color:var(--ok);font-size:12px;margin-top:10px;min-height:18px}.review{margin-top:8px}.review textarea{width:100%;min-height:90px;background:#050c13;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px}.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.actions button{font-size:11px;padding:7px}.status{font-size:10px;margin-left:8px}.wa-status{display:inline-flex;align-items:center;gap:5px;margin-left:8px;padding:3px 7px;border:1px solid var(--line);border-radius:999px;font-size:10px;font-weight:700;white-space:nowrap}.wa-status.not_sent{color:var(--muted)}.wa-status.sent{color:#7ab8ff;border-color:rgba(122,184,255,.35)}.wa-status.delivered{color:#84d7ff;border-color:rgba(132,215,255,.35)}.wa-status.read{color:var(--ok);border-color:rgba(53,217,154,.4)}.wa-status.failed{color:#ff8f8f;border-color:rgba(255,143,143,.4)}.history{flex-basis:100%;margin-top:8px;border-top:1px solid rgba(132,149,166,.14);padding-top:8px}.history-toggle{background:transparent;color:var(--muted);padding:5px 0;font-size:11px}.history-body{display:none;margin-top:6px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#040a10}.history.open .history-body{display:block}.history-grid{display:grid;grid-template-columns:120px 1fr;gap:6px 10px;font-size:11px}.history-grid .label{color:var(--muted)}.history-grid .value{color:var(--text);white-space:pre-wrap;overflow-wrap:anywhere}@media(max-width:560px){.history-grid{grid-template-columns:1fr}.history-grid .label{margin-top:6px}}.candidate{flex-wrap:wrap}.review{flex-basis:100%}.queue-note{flex-basis:100%;padding-top:6px}.fill-progress{font-size:12px;color:var(--muted);margin:-8px 0 10px}.fill-progress.complete{color:var(--ok);font-weight:700}.candidate.queued{opacity:.58}.candidate.available{border-color:rgba(53,217,154,.55)}.candidate.unavailable{opacity:.5}.candidate.waiting{border-color:rgba(255,225,122,.35)}.bulkbar{display:none;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 6px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#06111b}.bulkbar.show{display:flex}.bulkbar .muted{max-width:430px}@media(max-width:700px){.bulkbar{align-items:stretch;flex-direction:column}}</style></head><body>
-<header><div class="tag">09 · Equipe</div><h1>Solicitar Equipe</h1></header><main><div class="top"><a class="back" href="index.html">← Voltar para áreas</a><button class="secondary" onclick="MMAuth.logout()">Sair</button></div>
-<div class="grid"><section class="card"><h2>Necessidade do evento</h2><div class="field"><label>Evento</label><input id="eventName"></div><div class="field"><label>Data de início</label><input id="eventDate" placeholder="dd/mm/aaaa"></div><div class="field"><label>Data de fim</label><input id="eventEndDate" placeholder="dd/mm/aaaa"></div><div class="field"><label>Local</label><input id="eventLocation"></div><div class="field"><label>Preferência de localização da equipe (opcional)</label><input id="locationPreference" list="cityOptions" placeholder="Ex.: Campinas ou São Paulo"><datalist id="cityOptions"></datalist><div class="muted" style="margin-top:6px">A avaliação continua sendo o critério principal. A localização só desempata candidatos com a mesma nota.</div></div><div class="field"><label>Funções necessárias</label><div id="needs"></div><button class="secondary" type="button" id="addNeed">+ Adicionar função</button></div><button id="build" type="button">Montar ordem de contato</button><div id="msg" class="msg"></div></section>
+<style>:root{--bg:#03070d;--panel:#071019;--line:#183044;--text:#f4f7fa;--muted:#8495a6;--blue:#00a3ff;--ok:#35d99a;--warn:#ffe17a}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,sans-serif}header{border-bottom:1px solid rgba(0,163,255,.18);padding:30px max(20px,calc((100% - 1100px)/2))}h1,h2,h3{font-family:'Space Grotesk'}h1{margin:7px 0 0}.tag{color:var(--blue);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}main{max-width:1100px;margin:auto;padding:30px 20px 70px}.top{display:flex;justify-content:space-between;align-items:center}.back{color:var(--muted);text-decoration:none}.grid{display:grid;grid-template-columns:390px 1fr;gap:20px;margin-top:22px}@media(max-width:850px){.grid{grid-template-columns:1fr}}.card{background:linear-gradient(145deg,#08121d,#050b12);border:1px solid var(--line);border-radius:14px;padding:22px}.field{margin:13px 0}label{display:block;color:var(--muted);font-size:11px;margin-bottom:6px}input,select{width:100%;background:#050c13;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:11px;font:inherit}button{border:0;border-radius:8px;padding:10px 13px;background:var(--blue);color:white;font-weight:700;cursor:pointer}.secondary{background:#152431}.need{display:grid;grid-template-columns:1fr 72px auto;gap:8px;margin:8px 0}.result{border-top:1px solid var(--line);padding:16px 0}.result:first-child{border-top:0}.candidate{display:flex;justify-content:space-between;gap:10px;padding:9px 10px;margin:6px 0;background:#050c13;border:1px solid var(--line);border-radius:8px}.p1{color:var(--warn)}.muted{color:var(--muted);font-size:12px}.msg{color:var(--ok);font-size:12px;margin-top:10px;min-height:18px}.review{margin-top:8px}.review textarea{width:100%;min-height:90px;background:#050c13;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px}.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.actions button{font-size:11px;padding:7px}.status{font-size:10px;margin-left:8px}.wa-status{display:inline-flex;align-items:center;gap:5px;margin-left:8px;padding:3px 7px;border:1px solid var(--line);border-radius:999px;font-size:10px;font-weight:700;white-space:nowrap}.wa-status.not_sent{color:var(--muted)}.wa-status.sent{color:#7ab8ff;border-color:rgba(122,184,255,.35)}.wa-status.delivered{color:#84d7ff;border-color:rgba(132,215,255,.35)}.wa-status.read{color:var(--ok);border-color:rgba(53,217,154,.4)}.wa-status.failed{color:#ff8f8f;border-color:rgba(255,143,143,.4)}.history{flex-basis:100%;margin-top:8px;border-top:1px solid rgba(132,149,166,.14);padding-top:8px}.history-toggle{background:transparent;color:var(--muted);padding:5px 0;font-size:11px}.history-body{display:none;margin-top:6px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#040a10}.history.open .history-body{display:block}.history-grid{display:grid;grid-template-columns:120px 1fr;gap:6px 10px;font-size:11px}.history-grid .label{color:var(--muted)}.history-grid .value{color:var(--text);white-space:pre-wrap;overflow-wrap:anywhere}@media(max-width:560px){.history-grid{grid-template-columns:1fr}.history-grid .label{margin-top:6px}}.candidate{flex-wrap:wrap}.review{flex-basis:100%}.queue-note{flex-basis:100%;padding-top:6px}.fill-progress{font-size:12px;color:var(--muted);margin:-8px 0 10px}.fill-progress.complete{color:var(--ok);font-weight:700}.candidate.queued{opacity:.58}.candidate.available{border-color:rgba(53,217,154,.55)}.candidate.unavailable{opacity:.5}.candidate.waiting{border-color:rgba(255,225,122,.35)}.bulkbar{display:none;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 6px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#06111b}.bulkbar.show{display:flex}.bulkbar .muted{max-width:430px}.testmode{display:flex;gap:8px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:8px;background:#050c13;margin:12px 0}.testmode input{width:auto;margin-top:2px}.test-controls{display:none;flex-basis:100%;gap:6px;flex-wrap:wrap;margin-top:7px;padding-top:8px;border-top:1px dashed rgba(132,149,166,.2)}.test-controls.show{display:flex}.test-controls button{font-size:10px;padding:6px 8px;background:#1a2b39}.top-actions{display:flex;gap:8px;align-items:center}.top-actions a{display:inline-block;padding:9px 12px;border-radius:8px;background:#152431;color:var(--text);text-decoration:none;font-size:12px;font-weight:700}@media(max-width:700px){.bulkbar{align-items:stretch;flex-direction:column}}</style></head><body>
+<header><div class="tag">09 · Equipe</div><h1>Solicitar Equipe</h1></header><main><div class="top"><a class="back" href="index.html">← Voltar para áreas</a><div class="top-actions"><a href="solicitacoes-equipe.html">Solicitações de equipe</a><button class="secondary" onclick="MMAuth.logout()">Sair</button></div></div>
+<div class="grid"><section class="card"><h2>Necessidade do evento</h2><div class="field"><label>Evento</label><input id="eventName"></div><div class="field"><label>Data de início</label><input id="eventDate" placeholder="dd/mm/aaaa"></div><div class="field"><label>Data de fim</label><input id="eventEndDate" placeholder="dd/mm/aaaa"></div><div class="field"><label>Local</label><input id="eventLocation"></div><div class="field"><label>Preferência de localização da equipe (opcional)</label><input id="locationPreference" list="cityOptions" placeholder="Ex.: Campinas ou São Paulo"><datalist id="cityOptions"></datalist><div class="muted" style="margin-top:6px">A avaliação continua sendo o critério principal. A localização só desempata candidatos com a mesma nota.</div></div><div class="field"><label>Funções necessárias</label><div id="needs"></div><button class="secondary" type="button" id="addNeed">+ Adicionar função</button></div><label class="testmode"><input id="internalTestMode" type="checkbox"><span><b>Modo de teste interno</b><br><span class="muted">Não envia nada para a Meta. Permite simular envio, entrega, leitura e respostas dentro do Hive Pro.</span></span></label><button id="build" type="button">Montar ordem de contato</button><div id="msg" class="msg"></div></section>
 <section class="card"><h2>Ordem sugerida</h2><p class="muted">O Hive Pro usa a base da planilha da empresa em modo somente leitura. A avaliação é o critério principal; a localização, quando informada, só desempata notas iguais. Nenhuma mensagem é enviada nesta etapa.</p><div id="dbSync" class="muted" style="margin-top:-6px;margin-bottom:6px;opacity:.78">Base atualizada: carregando...</div><div id="realtimeState" class="muted" style="margin-bottom:10px;opacity:.78">Atualização em tempo real: conectando...</div><div id="bulkBar" class="bulkbar"><div class="muted">Revise as mensagens abaixo. Quando estiver tudo certo, aprove todas de uma vez.</div><button id="approveAll" type="button">Aprovar e enviar todas</button></div><div id="results"><div class="muted">Informe a equipe necessária para gerar a ordem.</div></div></section></div></main>
 <script>
-let functions=[],freelancers=[],staffingRealtimeChannel=null,activeExternalKeys=new Set();
+let functions=[],freelancers=[],staffingRealtimeChannel=null,activeAssignments=[],currentRequestIsTest=false;
 const sectorName={audio:'Áudio',luz:'Iluminação',video:'Vídeo'};
 
 function esc(v){
@@ -49,11 +49,7 @@ async function initData(){
   if(r.error)throw r.error;
   freelancers=r.data||[];
 
-  r=await MMAuth.client.from('staffing_candidates')
-    .select('external_key,status')
-    .in('status',['waiting','available','confirmed']);
-  if(r.error)throw r.error;
-  activeExternalKeys=new Set((r.data||[]).map(x=>x.external_key).filter(Boolean));
+  await refreshActiveAssignments();
   const lastSync=freelancers.map(f=>f.synced_at).filter(Boolean).sort().pop();
   dbSync.textContent=lastSync
     ? 'Base atualizada: '+new Date(lastSync).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})
@@ -102,9 +98,69 @@ function eligibleForFunction(f,fn){
   return false;
 }
 
+function parseEventDate(v){
+  const s=String(v||'').trim();
+  let m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if(m)return new Date(Number(m[3]),Number(m[2])-1,Number(m[1]));
+  m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(m)return new Date(Number(m[1]),Number(m[2])-1,Number(m[3]));
+  return null;
+}
+
+function rangesOverlap(aStart,aEnd,bStart,bEnd){
+  if(!aStart||!bStart)return false;
+  aEnd=aEnd||aStart;
+  bEnd=bEnd||bStart;
+  return aStart<=bEnd&&bStart<=aEnd;
+}
+
+async function refreshActiveAssignments(){
+  const cr=await MMAuth.client.from('staffing_candidates')
+    .select('id,external_key,request_item_id,status')
+    .in('status',['waiting','available','confirmed']);
+  if(cr.error)throw cr.error;
+  const candidatesRows=cr.data||[];
+  const itemIds=[...new Set(candidatesRows.map(x=>x.request_item_id).filter(Boolean))];
+  if(!itemIds.length){activeAssignments=[];return;}
+
+  const ir=await MMAuth.client.from('staffing_request_items')
+    .select('id,request_id')
+    .in('id',itemIds);
+  if(ir.error)throw ir.error;
+  const itemMap=new Map((ir.data||[]).map(x=>[Number(x.id),x.request_id]));
+  const requestIds=[...new Set((ir.data||[]).map(x=>x.request_id).filter(Boolean))];
+  if(!requestIds.length){activeAssignments=[];return;}
+
+  const rr=await MMAuth.client.from('staffing_requests')
+    .select('id,event_name,event_date,event_end_date,status')
+    .in('id',requestIds)
+    .eq('status','ready');
+  if(rr.error)throw rr.error;
+  const requestMap=new Map((rr.data||[]).map(x=>[x.id,x]));
+
+  activeAssignments=candidatesRows.map(x=>{
+    const req=requestMap.get(itemMap.get(Number(x.request_item_id)));
+    return req?{
+      candidate_id:x.id,
+      external_key:x.external_key,
+      request_id:req.id,
+      event_name:req.event_name,
+      start:parseEventDate(req.event_date),
+      end:parseEventDate(req.event_end_date)||parseEventDate(req.event_date)
+    }:null;
+  }).filter(Boolean);
+}
+
+function hasDateConflict(externalKey){
+  const start=parseEventDate(eventDate.value);
+  const end=parseEventDate(eventEndDate.value)||start;
+  if(!externalKey||!start)return false;
+  return activeAssignments.some(a=>a.external_key===externalKey&&rangesOverlap(start,end,a.start,a.end));
+}
+
 function candidates(functionId){
   const fn=functions.find(x=>Number(x.id)===Number(functionId));
-  return freelancers.filter(f=>eligibleForFunction(f,fn)&&!activeExternalKeys.has(f.source_key)).map(f=>({
+  return freelancers.filter(f=>eligibleForFunction(f,fn)&&!hasDateConflict(f.source_key)).map(f=>({
     id:f.source_key,
     name:f.full_name,
     whatsapp:f.whatsapp,
@@ -298,10 +354,7 @@ function startStaffingRealtime(){
       table:'staffing_candidates'
     },payload=>{
       const row=payload.new||{};
-      if(row.external_key){
-        if(['waiting','available','confirmed'].includes(row.status)) activeExternalKeys.add(row.external_key);
-        else activeExternalKeys.delete(row.external_key);
-      }
+      refreshActiveAssignments().catch(()=>{});
 
       const card=results.querySelector('.candidate[data-candidate-id="'+row.id+'"]');
       if(!card)return;
@@ -350,17 +403,16 @@ function refreshBulkButton(){
 }
 
 async function ensureCandidateNotActiveElsewhere(card,id){
+  await refreshActiveAssignments();
   const externalKey=card.dataset.freelancerId||'';
-  if(!externalKey)return;
-  const r=await MMAuth.client.from('staffing_candidates')
-    .select('id,candidate_name,status')
-    .eq('external_key',externalKey)
-    .in('status',['waiting','available','confirmed'])
-    .neq('id',Number(id))
-    .limit(1);
-  if(r.error)throw r.error;
-  if((r.data||[]).length){
-    throw new Error('Este profissional já está ativo em outra solicitação de equipe.');
+  const conflict=activeAssignments.find(a=>a.external_key===externalKey&&Number(a.candidate_id)!==Number(id)&&rangesOverlap(
+    parseEventDate(eventDate.value),
+    parseEventDate(eventEndDate.value)||parseEventDate(eventDate.value),
+    a.start,
+    a.end
+  ));
+  if(conflict){
+    throw new Error('Este profissional já está ativo em outra solicitação com conflito de datas'+(conflict.event_name?' ('+conflict.event_name+')':'')+'.');
   }
 }
 
@@ -379,8 +431,24 @@ async function candidateStatus(id,status,el){
 
 async function sendWhatsAppCandidate(id,card){
   const button=card.querySelector('.approve-one');
-  if(button){button.disabled=true;button.textContent='Enviando...';}
+  if(button){button.disabled=true;button.textContent=currentRequestIsTest?'Simulando...':'Enviando...';}
   try{
+    if(currentRequestIsTest){
+      const now=new Date().toISOString();
+      const r=await MMAuth.client.from('staffing_candidates').update({
+        whatsapp_status:'sent',
+        whatsapp_sent_at:now,
+        contacted_at:now,
+        whatsapp_error:null,
+        whatsapp_failed_at:null
+      }).eq('id',Number(id));
+      if(r.error)throw r.error;
+      card.dataset.whatsappStatus='sent';
+      card.dataset.whatsappSentAt=now;
+      updateCommunicationHistory(card);
+      return {success:true,test:true};
+    }
+
     const {data,error}=await MMAuth.client.functions.invoke('whatsapp-send-staffing',{
       body:{candidate_id:Number(id)}
     });
@@ -399,6 +467,39 @@ async function sendWhatsAppCandidate(id,card){
   }
 }
 
+async function simulateWhatsApp(id,kind,el){
+  if(!currentRequestIsTest)return;
+  const card=el.closest('.candidate');
+  const now=new Date().toISOString();
+  let payload={};
+
+  if(['sent','delivered','read'].includes(kind)){
+    payload.whatsapp_status=kind;
+    if(kind==='sent')payload.whatsapp_sent_at=now;
+    if(kind==='delivered')payload.whatsapp_delivered_at=now;
+    if(kind==='read')payload.whatsapp_read_at=now;
+  }else{
+    const isAvailable=kind==='available';
+    const isUnavailable=kind==='unavailable';
+    const text=isAvailable?'sim':isUnavailable?'não':'talvez';
+    const classification=isAvailable?'available':isUnavailable?'unavailable':'unknown';
+    payload={
+      whatsapp_last_inbound_text:text,
+      whatsapp_last_inbound_at:now,
+      whatsapp_last_inbound_message_id:'test-'+Date.now()+'-'+id,
+      whatsapp_response_classification:classification
+    };
+    if(isAvailable||isUnavailable){
+      payload.status=classification;
+      payload.responded_at=now;
+    }
+  }
+
+  const r=await MMAuth.client.from('staffing_candidates').update(payload).eq('id',Number(id));
+  if(r.error){msg.textContent=r.error.message;return;}
+  msg.textContent='Simulação aplicada no modo de teste interno.';
+}
+
 async function saveReview(id,el){
   const card=el.closest('.candidate');
   const ta=card.querySelector('textarea');
@@ -414,7 +515,6 @@ async function saveReview(id,el){
       }).eq('id',id);
       if(r.error)throw r.error;
       card.dataset.status='waiting';
-      activeExternalKeys.add(card.dataset.freelancerId);
       card.dataset.whatsappStatus='not_sent';
       card.dataset.messageText=ta.value;
       card.dataset.contactedAt=new Date().toISOString();
@@ -461,7 +561,6 @@ async function approveAllMessages(){
       }).eq('id',id);
       if(r.error)throw r.error;
       card.dataset.status='waiting';
-      activeExternalKeys.add(card.dataset.freelancerId);
       card.dataset.whatsappStatus='not_sent';
       card.dataset.messageText=ta.value;
       card.dataset.contactedAt=now;
@@ -490,11 +589,17 @@ approveAll.onclick=approveAllMessages;
 build.onclick=async()=>{
   msg.textContent='';
   bulkBar.classList.remove('show');
+  try{await refreshActiveAssignments();}catch(e){msg.textContent=e.message;return;}
+  currentRequestIsTest=!!internalTestMode.checked;
   const selected=[...document.querySelectorAll('.need')].map(r=>({
     function_id:Number(r.querySelector('.fn').value),
     quantity:Number(r.querySelector('.qty').value)
   })).filter(x=>x.function_id&&x.quantity>0);
 
+  const startDateParsed=parseEventDate(eventDate.value);
+  const endDateParsed=parseEventDate(eventEndDate.value)||startDateParsed;
+  if(!startDateParsed){msg.textContent='Informe uma data de início válida.';return;}
+  if(endDateParsed&&endDateParsed<startDateParsed){msg.textContent='A data final não pode ser anterior à data inicial.';return;}
   if(!selected.length){msg.textContent='Adicione pelo menos uma função.';return;}
   if(new Set(selected.map(x=>x.function_id)).size!==selected.length){
     msg.textContent='A mesma função foi adicionada mais de uma vez.';return;
@@ -524,10 +629,12 @@ build.onclick=async()=>{
       event_end_date:eventEndDate.value.trim(),
       event_location:eventLocation.value.trim(),
       location_preference:locationPreference.value.trim(),
+      is_test:currentRequestIsTest,
       status:'ready',
       created_by:MMAuth.user.id
-    }).select('id').single();
+    }).select('id,is_test').single();
     if(req.error)throw req.error;
+    currentRequestIsTest=!!req.data.is_test;
 
     const ins=await MMAuth.client.from('staffing_request_items').insert(
       selected.map(x=>({request_id:req.data.id,function_id:x.function_id,quantity:x.quantity}))
@@ -597,6 +704,14 @@ build.onclick=async()=>{
               '<div class="label">Horário da resposta</div><div class="value" data-history="response_at">—</div>'+
               '<div class="label">Classificação</div><div class="value" data-history="classification">—</div>'+
             '</div></div>'+
+          '</div>'+
+          '<div class="test-controls '+(currentRequestIsTest?'show':'')+'">'+
+            '<button type="button" onclick="simulateWhatsApp('+saved.id+',\'sent\',this)">Simular enviado</button>'+
+            '<button type="button" onclick="simulateWhatsApp('+saved.id+',\'delivered\',this)">Simular entregue</button>'+
+            '<button type="button" onclick="simulateWhatsApp('+saved.id+',\'read\',this)">Simular lido</button>'+
+            '<button type="button" onclick="simulateWhatsApp('+saved.id+',\'available\',this)">Simular SIM</button>'+
+            '<button type="button" onclick="simulateWhatsApp('+saved.id+',\'unavailable\',this)">Simular NÃO</button>'+
+            '<button type="button" onclick="simulateWhatsApp('+saved.id+',\'unknown\',this)">Simular TALVEZ</button>'+
           '</div>'
         );
         updateCommunicationHistory(card);
@@ -605,7 +720,9 @@ build.onclick=async()=>{
 
     bulkBar.classList.add('show');
     refreshAllBlocks();
-    msg.textContent='Solicitação salva. O Hive Pro liberou apenas os profissionais necessários para preencher as vagas atuais.';
+    msg.textContent=currentRequestIsTest
+      ? 'Solicitação de TESTE salva. Nenhuma mensagem será enviada para a Meta; use os controles de simulação.'
+      : 'Solicitação salva. O Hive Pro liberou apenas os profissionais necessários para preencher as vagas atuais.';
   }catch(e){
     msg.textContent=e.message;
   }
