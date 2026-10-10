@@ -37,7 +37,8 @@ Deno.serve(async (req) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
   const accessToken = Deno.env.get("WHATSAPP_ACCESS_TOKEN") || "";
   const phoneNumberId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID") || "";
-  const templateName = Deno.env.get("WHATSAPP_TEMPLATE_MULTIDAY") || "";
+  const templateMultiDay = Deno.env.get("WHATSAPP_TEMPLATE_MULTIDAY") || "";
+  const templateSingleDay = Deno.env.get("WHATSAPP_TEMPLATE_SINGLEDAY") || "";
   const templateLang = Deno.env.get("WHATSAPP_TEMPLATE_LANG") || "pt_BR";
   const graphVersion = Deno.env.get("META_GRAPH_VERSION") || "";
   const graphBase = Deno.env.get("META_GRAPH_BASE_URL") || "https://graph.facebook.com";
@@ -72,13 +73,12 @@ Deno.serve(async (req) => {
       return json({ error: "candidate_id inválido" }, 400);
     }
 
-    if (!accessToken || !phoneNumberId || !templateName || !graphVersion) {
+    if (!accessToken || !phoneNumberId || !graphVersion) {
       return json({
         error: "Integração WhatsApp ainda não configurada",
         missing: [
           !accessToken && "WHATSAPP_ACCESS_TOKEN",
           !phoneNumberId && "WHATSAPP_PHONE_NUMBER_ID",
-          !templateName && "WHATSAPP_TEMPLATE_MULTIDAY",
           !graphVersion && "META_GRAPH_VERSION",
         ].filter(Boolean),
       }, 503);
@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
       await Promise.all([
         admin
           .from("staffing_requests")
-          .select("id, event_date, event_end_date")
+          .select("id, event_date, event_end_date, is_test")
           .eq("id", item.request_id)
           .single(),
         admin
@@ -128,11 +128,26 @@ Deno.serve(async (req) => {
 
     const startDate = String(staffingRequest.event_date || "").trim();
     const endDate = String(staffingRequest.event_end_date || "").trim();
+    const singleDay = !endDate || endDate === startDate;
 
-    if (!startDate || !endDate || startDate === endDate) {
+    if (staffingRequest.is_test) {
+      return json({ error: "Solicitações em modo de teste interno não enviam mensagens reais." }, 409);
+    }
+
+    if (!startDate) {
+      return json({ error: "Data do evento não informada." }, 409);
+    }
+
+    const templateName = singleDay ? templateSingleDay : templateMultiDay;
+    const requiredSecret = singleDay ? "WHATSAPP_TEMPLATE_SINGLEDAY" : "WHATSAPP_TEMPLATE_MULTIDAY";
+
+    if (!templateName) {
       return json({
-        error: "Este endpoint está preparado para o template de vários dias. O template de um dia ainda não foi configurado.",
-      }, 409);
+        error: singleDay
+          ? "O template de evento de um dia ainda não foi configurado."
+          : "O template de vários dias ainda não foi configurado.",
+        missing: [requiredSecret],
+      }, 503);
     }
 
     const to = normalizeBrazilPhone(candidate.candidate_whatsapp);
@@ -153,12 +168,18 @@ Deno.serve(async (req) => {
         components: [
           {
             type: "body",
-            parameters: [
-              { type: "text", parameter_name: "nome", text: candidateName },
-              { type: "text", parameter_name: "data_inicio", text: formatDateBR(startDate) },
-              { type: "text", parameter_name: "data_fim", text: formatDateBR(endDate) },
-              { type: "text", parameter_name: "funcao", text: roleName },
-            ],
+            parameters: singleDay
+              ? [
+                  { type: "text", parameter_name: "nome", text: candidateName },
+                  { type: "text", parameter_name: "data", text: formatDateBR(startDate) },
+                  { type: "text", parameter_name: "funcao", text: roleName },
+                ]
+              : [
+                  { type: "text", parameter_name: "nome", text: candidateName },
+                  { type: "text", parameter_name: "data_inicio", text: formatDateBR(startDate) },
+                  { type: "text", parameter_name: "data_fim", text: formatDateBR(endDate) },
+                  { type: "text", parameter_name: "funcao", text: roleName },
+                ],
           },
         ],
       },
