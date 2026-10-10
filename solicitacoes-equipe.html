@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Solicitações de Equipe — HIVE PRO</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="db-config.js"></script>
+<script src="auth.js"></script>
+<style>
+:root{--bg:#03070d;--panel:#071019;--line:#183044;--text:#f4f7fa;--muted:#8495a6;--blue:#00a3ff;--ok:#35d99a;--warn:#ffe17a;--bad:#ff8f8f}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,sans-serif}
+header{border-bottom:1px solid rgba(0,163,255,.18);padding:30px max(20px,calc((100% - 1100px)/2))}
+h1,h2,h3{font-family:'Space Grotesk'}h1{margin:7px 0 0}.tag{color:var(--blue);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+main{max-width:1100px;margin:auto;padding:30px 20px 70px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.back{color:var(--muted);text-decoration:none}
+.actions{display:flex;gap:8px;flex-wrap:wrap}button,.btn{border:0;border-radius:8px;padding:9px 12px;background:var(--blue);color:white;font-weight:700;cursor:pointer;text-decoration:none;font-size:12px}.secondary{background:#152431}.danger{background:#542329}.success{background:#174a39}
+.card{background:linear-gradient(145deg,#08121d,#050b12);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:14px}.request-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.muted{color:var(--muted);font-size:12px}.badge{display:inline-flex;padding:4px 8px;border:1px solid var(--line);border-radius:999px;font-size:10px;font-weight:700;margin-left:6px}.badge.ready{color:var(--warn)}.badge.finalized{color:var(--ok)}.badge.cancelled{color:var(--bad)}.badge.test{color:#caa7ff}
+.details{display:none;border-top:1px solid var(--line);margin-top:14px;padding-top:14px}.details.open{display:block}.item{padding:10px 0;border-top:1px solid rgba(132,149,166,.12)}.item:first-child{border-top:0}.candidate{display:flex;justify-content:space-between;gap:12px;padding:7px 9px;margin-top:6px;background:#050c13;border:1px solid var(--line);border-radius:8px;font-size:12px}.status{font-size:10px;font-weight:700}.empty{padding:28px 0;text-align:center;color:var(--muted)}
+@media(max-width:700px){.request-head,.top,.candidate{flex-direction:column}.request-head{align-items:stretch}}
+</style>
+</head>
+<body>
+<header><div class="tag">09 · Equipe</div><h1>Solicitações de equipe</h1></header>
+<main>
+  <div class="top">
+    <a class="back" href="equipe.html">← Nova solicitação</a>
+    <div class="actions"><button class="secondary" onclick="loadRequests()">Atualizar</button><button class="secondary" onclick="MMAuth.logout()">Sair</button></div>
+  </div>
+  <div id="msg" class="muted" style="margin-top:14px"></div>
+  <div id="list"><div class="empty">Carregando solicitações...</div></div>
+</main>
+<script>
+let functionsMap=new Map();
+
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function statusLabel(s){return s==='ready'?'ABERTA':s==='finalized'?'FINALIZADA':s==='cancelled'?'CANCELADA':String(s||'').toUpperCase();}
+function candidateLabel(s){return s==='available'?'DISPONÍVEL':s==='unavailable'?'INDISPONÍVEL':s==='waiting'?'AGUARDANDO':s==='confirmed'?'CONFIRMADO':s==='skipped'?'ENCERRADO':'PENDENTE';}
+function dateRange(r){return r.event_end_date&&r.event_end_date!==r.event_date?r.event_date+' → '+r.event_end_date:r.event_date||'Sem data';}
+
+async function loadRequests(){
+  msg.textContent='Atualizando...';
+  const fr=await MMAuth.client.from('freelancer_functions').select('id,name,sector');
+  if(fr.error){msg.textContent=fr.error.message;return;}
+  functionsMap=new Map((fr.data||[]).map(x=>[Number(x.id),x]));
+
+  const r=await MMAuth.client.from('staffing_requests')
+    .select('id,event_name,event_date,event_end_date,event_location,location_preference,status,is_test,created_at,updated_at')
+    .order('created_at',{ascending:false});
+  if(r.error){msg.textContent=r.error.message;return;}
+  const rows=r.data||[];
+  if(!rows.length){list.innerHTML='<div class="empty">Nenhuma solicitação criada.</div>';msg.textContent='';return;}
+
+  list.innerHTML=rows.map(r=>'<div class="card" data-request-id="'+r.id+'">'+
+    '<div class="request-head"><div><h3 style="margin:0 0 7px">'+esc(r.event_name||'Evento sem nome')+
+    '<span class="badge '+esc(r.status)+'">'+statusLabel(r.status)+'</span>'+
+    (r.is_test?'<span class="badge test">TESTE</span>':'')+'</h3>'+
+    '<div class="muted">'+esc(dateRange(r))+(r.event_location?' · '+esc(r.event_location):'')+'</div></div>'+
+    '<div class="actions"><button class="secondary" onclick="toggleRequest(\''+r.id+'\',this)">Abrir</button>'+
+    (r.status==='ready'?'<button class="success" onclick="closeRequest(\''+r.id+'\',\'finalized\')">Finalizar</button><button class="danger" onclick="closeRequest(\''+r.id+'\',\'cancelled\')">Cancelar</button>':'')+
+    '</div></div><div class="details"><div class="muted">Carregando detalhes...</div></div></div>').join('');
+  msg.textContent=rows.length+' solicitação(ões) encontrada(s).';
+}
+
+async function toggleRequest(id,button){
+  const card=button.closest('.card');
+  const details=card.querySelector('.details');
+  const opening=!details.classList.contains('open');
+  details.classList.toggle('open');
+  button.textContent=opening?'Fechar':'Abrir';
+  if(!opening||details.dataset.loaded==='1')return;
+
+  const ir=await MMAuth.client.from('staffing_request_items').select('id,function_id,quantity').eq('request_id',id).order('id');
+  if(ir.error){details.innerHTML='<div class="muted">'+esc(ir.error.message)+'</div>';return;}
+  const items=ir.data||[];
+  const ids=items.map(x=>x.id);
+  let candidates=[];
+  if(ids.length){
+    const cr=await MMAuth.client.from('staffing_candidates')
+      .select('id,request_item_id,candidate_name,candidate_city,rating,contact_order,status,whatsapp_status,whatsapp_last_inbound_text')
+      .in('request_item_id',ids)
+      .order('contact_order');
+    if(cr.error){details.innerHTML='<div class="muted">'+esc(cr.error.message)+'</div>';return;}
+    candidates=cr.data||[];
+  }
+
+  details.innerHTML=items.map(item=>{
+    const fn=functionsMap.get(Number(item.function_id));
+    const cs=candidates.filter(c=>Number(c.request_item_id)===Number(item.id));
+    return '<div class="item"><b>'+esc(fn?fn.name:'Função')+' · '+item.quantity+' vaga'+(item.quantity>1?'s':'')+'</b>'+
+      (cs.length?cs.map(c=>'<div class="candidate"><span>'+esc(c.candidate_name||'Profissional')+(c.candidate_city?' · '+esc(c.candidate_city):'')+'</span><span class="status">'+candidateLabel(c.status)+' · '+esc((c.whatsapp_status||'not_sent').toUpperCase())+'</span></div>').join(''):'<div class="muted" style="margin-top:6px">Sem candidatos.</div>')+
+      '</div>';
+  }).join('')||'<div class="muted">Sem funções registradas.</div>';
+  details.dataset.loaded='1';
+}
+
+async function closeRequest(id,status){
+  const verb=status==='finalized'?'finalizar':'cancelar';
+  if(!confirm('Deseja '+verb+' esta solicitação? Os profissionais deixam de bloquear novas solicitações imediatamente.'))return;
+  const r=await MMAuth.client.from('staffing_requests').update({status,updated_at:new Date().toISOString()}).eq('id',id);
+  if(r.error){msg.textContent=r.error.message;return;}
+  msg.textContent=status==='finalized'?'Solicitação finalizada. Profissionais liberados para novas datas.':'Solicitação cancelada. Profissionais liberados.';
+  await loadRequests();
+}
+
+(async()=>{
+  if(!(await MMAuth.init({admin:true})))return;
+  await loadRequests();
+})();
+</script>
+</body>
+</html>
