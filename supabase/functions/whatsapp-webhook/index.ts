@@ -18,6 +18,22 @@ function classifyReply(value: string): "available" | "unavailable" | "unknown" {
   const t = normalizeText(value);
   if (!t) return "unknown";
 
+  const ambiguousPatterns = [
+    /^talvez$/,
+    /\bme chama depois\b/,
+    /\bme chame depois\b/,
+    /\bfala comigo depois\b/,
+    /\bqual horario\b/,
+    /\bque horario\b/,
+    /\bqual o horario\b/,
+    /\bdepende\b/,
+    /\bnao sei\b/,
+    /\bpreciso confirmar\b/,
+    /\bte aviso\b/,
+  ];
+
+  if (ambiguousPatterns.some((re) => re.test(t))) return "unknown";
+
   const negativePatterns = [
     /^nao$/,
     /\bnao posso\b/,
