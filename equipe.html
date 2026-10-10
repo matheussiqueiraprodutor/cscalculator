@@ -266,6 +266,8 @@ function refreshBlock(block){
     const available=card.querySelector('.mark-available');
     const unavailable=card.querySelector('.mark-unavailable');
     const badge=card.querySelector('.status');
+    const testControls=card.querySelector('.test-controls');
+    if(testControls)testControls.classList.toggle('show',currentRequestIsTest&&st!=='pending');
     if(badge) badge.textContent=statusLabel(st);
     updateWhatsAppBadge(card);
     updateCommunicationHistory(card);
@@ -706,7 +708,7 @@ build.onclick=async()=>{
               '<div class="label">Classificação</div><div class="value" data-history="classification">—</div>'+
             '</div></div>'+
           '</div>'+
-          '<div class="test-controls '+(currentRequestIsTest?'show':'')+'">'+
+          '<div class="test-controls">'+
             '<button type="button" onclick="simulateWhatsApp('+saved.id+',\'sent\',this)">Simular enviado</button>'+
             '<button type="button" onclick="simulateWhatsApp('+saved.id+',\'delivered\',this)">Simular entregue</button>'+
             '<button type="button" onclick="simulateWhatsApp('+saved.id+',\'read\',this)">Simular lido</button>'+
