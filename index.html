@@ -509,6 +509,299 @@ footer{
   position:relative;
   z-index:1;
 }
+
+/* =========================
+   VISUAL 2026 · NEON MINIMAL
+   ========================= */
+:root{
+  --bg:#02070d;
+  --bg-2:#06101b;
+  --panel:#06111c;
+  --panel-2:#081522;
+  --line:#17324a;
+  --text:#f5f8fb;
+  --muted:#8b9caf;
+  --blue:#19aaff;
+  --blue-soft:#6ec8ff;
+  --catalogo:#74c8ff;
+  --som:#55baff;
+  --luz:#73c6ff;
+  --video:#63c2ff;
+}
+
+body{
+  background:
+    radial-gradient(circle at 50% -18%,rgba(0,136,255,.16),transparent 36%),
+    linear-gradient(180deg,#030912 0%,#02070d 48%,#02070d 100%);
+}
+
+body::before{
+  opacity:.22;
+  background-image:
+    linear-gradient(30deg,rgba(33,117,181,.10) 12%,transparent 12.5%,transparent 87%,rgba(33,117,181,.10) 87.5%),
+    linear-gradient(150deg,rgba(33,117,181,.10) 12%,transparent 12.5%,transparent 87%,rgba(33,117,181,.10) 87.5%),
+    linear-gradient(30deg,rgba(33,117,181,.08) 12%,transparent 12.5%,transparent 87%,rgba(33,117,181,.08) 87.5%),
+    linear-gradient(150deg,rgba(33,117,181,.08) 12%,transparent 12.5%,transparent 87%,rgba(33,117,181,.08) 87.5%),
+    linear-gradient(60deg,rgba(22,94,147,.07) 25%,transparent 25.5%,transparent 75%,rgba(22,94,147,.07) 75%);
+  background-position:0 0,0 0,44px 77px,44px 77px,0 0;
+  background-size:88px 154px;
+}
+
+header{
+  position:sticky;
+  top:0;
+  z-index:20;
+  backdrop-filter:blur(16px);
+  background:linear-gradient(180deg,rgba(2,8,15,.96),rgba(2,8,15,.90));
+  border-bottom:1px solid rgba(59,156,224,.22);
+  box-shadow:0 8px 28px rgba(0,0,0,.22);
+}
+
+header .header-inner{
+  max-width:1180px;
+  min-height:72px;
+  padding:14px 20px;
+  display:flex;
+  align-items:center;
+  gap:20px;
+}
+
+.brand{
+  margin:0;
+  gap:11px;
+}
+
+.brand-mark{
+  width:34px;
+  height:34px;
+  filter:drop-shadow(0 0 8px rgba(25,170,255,.35));
+}
+
+.brand-name{
+  font-size:21px;
+  letter-spacing:.01em;
+}
+
+.brand-name .pro{
+  color:#cfe9fb;
+}
+
+.brand-sub,
+header .tag,
+header h1,
+header p.sub{
+  display:none;
+}
+
+.header-divider{
+  width:1px;
+  height:30px;
+  background:linear-gradient(180deg,transparent,#52748d,transparent);
+}
+
+.header-section-name{
+  color:#a9bbca;
+  font-size:14px;
+  letter-spacing:.02em;
+}
+
+main{
+  max-width:1180px;
+  padding:28px 20px 72px;
+}
+
+.event-card{
+  background:linear-gradient(145deg,rgba(6,17,29,.93),rgba(3,10,17,.95));
+  border:1px solid rgba(73,150,207,.32);
+  border-radius:16px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.018),
+    0 18px 55px rgba(0,0,0,.26),
+    0 0 26px rgba(0,128,220,.035);
+}
+
+.btn-new-project{
+  background:rgba(4,14,24,.86);
+  border:1px solid rgba(77,137,178,.38);
+  color:#adbfcd;
+}
+
+.cab-field input{
+  background:rgba(3,11,18,.88);
+  border-color:rgba(55,112,153,.38);
+}
+
+.area-grid{
+  gap:22px;
+}
+
+.area-card{
+  --accent:#58baff !important;
+  min-height:292px;
+  padding:24px 24px 22px;
+  border:1px solid rgba(66,162,230,.68);
+  border-top:1px solid rgba(117,199,255,.86);
+  border-radius:16px;
+  background:
+    radial-gradient(circle at 92% 10%,rgba(0,151,255,.055),transparent 30%),
+    linear-gradient(145deg,rgba(5,17,29,.98),rgba(3,11,19,.985));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.025),
+    0 0 0 1px rgba(0,119,204,.035),
+    0 14px 38px rgba(0,0,0,.24),
+    0 0 24px rgba(0,141,234,.045);
+}
+
+.area-card::before{
+  content:'';
+  position:absolute;
+  right:18px;
+  top:82px;
+  width:112px;
+  height:62px;
+  opacity:.18;
+  pointer-events:none;
+  background-image:radial-gradient(circle,rgba(86,189,255,.8) 1px,transparent 1px);
+  background-size:8px 8px;
+  mask-image:linear-gradient(90deg,transparent,#000 35%,#000);
+}
+
+.area-card::after{
+  width:165px;
+  height:165px;
+  left:auto;
+  right:-50px;
+  top:-60px;
+  opacity:.055;
+  filter:blur(38px);
+}
+
+.area-card:hover{
+  transform:translateY(-4px);
+  border-color:#6cc7ff;
+  background:
+    radial-gradient(circle at 92% 10%,rgba(0,161,255,.085),transparent 32%),
+    linear-gradient(145deg,#071827,#04111c);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.035),
+    0 18px 46px rgba(0,0,0,.33),
+    0 0 28px rgba(0,157,255,.10);
+}
+
+.area-card .card-top{
+  margin-bottom:22px;
+}
+
+.area-card .icon{
+  width:54px;
+  height:54px;
+  border-radius:12px;
+  color:#67c5ff;
+  background:linear-gradient(145deg,rgba(10,29,45,.96),rgba(3,12,20,.98));
+  border:1px solid rgba(98,194,255,.78);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.025),
+    0 0 14px rgba(0,163,255,.16),
+    0 0 28px rgba(0,116,214,.08);
+}
+
+.area-card .icon svg{
+  width:27px;
+  height:27px;
+  stroke-width:1.65;
+}
+
+.area-card .tag-num{
+  color:#92a8ba;
+  font-size:10px;
+  letter-spacing:.16em;
+  margin-bottom:9px;
+}
+
+.area-card h2{
+  font-size:24px;
+  margin-bottom:9px;
+}
+
+.area-card p{
+  color:#9aabb9;
+  font-size:13px;
+  line-height:1.62;
+}
+
+.area-card .meta{
+  color:#698296;
+  font-size:10px;
+}
+
+.area-card .go{
+  color:#21b8ff;
+  font-size:13px;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  min-height:27px;
+  padding:5px 11px;
+  background:rgba(4,16,27,.78);
+  border:1px solid rgba(64,122,163,.38);
+  color:#aabcc9;
+  box-shadow:inset 0 0 14px rgba(0,88,148,.06);
+}
+
+.badge::before{
+  content:'';
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#7294b2;
+  box-shadow:0 0 9px rgba(114,148,178,.22);
+}
+
+.badge-ok{
+  background:rgba(0,153,255,.055);
+  color:#63caff;
+  border-color:rgba(66,171,239,.48);
+}
+
+.badge-ok::before{
+  background:#28b8ff;
+  box-shadow:0 0 10px rgba(40,184,255,.6);
+}
+
+.badge-warn::before{
+  background:#ff8585;
+}
+
+.badge-neutral::before{
+  background:#6886a4;
+}
+
+#adminUsersCard{
+  --accent:#6a9bc5 !important;
+}
+
+#adminUsersCard .icon{
+  color:#a986ff;
+  border-color:rgba(88,139,181,.5);
+  box-shadow:0 0 20px rgba(82,124,173,.10);
+}
+
+footer{
+  max-width:1180px;
+  border-top:1px solid rgba(53,130,185,.12);
+  color:#52697c;
+}
+
+@media(max-width:860px){
+  header .header-inner{min-height:64px}
+  .header-section-name{display:none}
+  .header-divider{display:none}
+  .area-card{min-height:265px}
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -560,6 +853,9 @@ footer{
       </div>
 
     </div>
+
+    <div class="header-divider"></div>
+    <div class="header-section-name">Áreas</div>
 
     <p class="tag">Pré-produção de eventos</p>
 
@@ -971,7 +1267,11 @@ footer{
       <div class="card-top">
 
         <div class="icon">
-          👤
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="10" cy="8" r="3"/>
+            <path d="M4 19c.6-3.8 2.5-5.8 6-5.8 1.2 0 2.3.2 3.2.7"/>
+            <path d="M17 14.5v5M14.5 17h5"/>
+          </svg>
         </div>
 
         <span class="badge">
