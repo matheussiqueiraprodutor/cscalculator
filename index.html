@@ -833,14 +833,18 @@ header .header-inner{
 .brand-mark{
   width:38px;
   height:38px;
-  filter:drop-shadow(0 0 10px rgba(0,170,255,.20));
+  color:#0aa7ff;
+  filter:
+    drop-shadow(0 0 5px rgba(0,170,255,.34))
+    drop-shadow(0 0 12px rgba(0,119,255,.14));
 }
 
 .brand-name{
   font-size:20px;
   font-weight:800;
-  letter-spacing:.02em;
+  letter-spacing:.025em;
   color:#f4f7fb;
+  text-shadow:0 0 12px rgba(255,255,255,.025);
 }
 
 .brand-name .pro{
@@ -899,24 +903,22 @@ header p.sub{
 
     <div class="brand">
 
-      <svg class="brand-mark" viewBox="0 0 48 48" fill="none">
-        <path d="M24 3L40 12.5V35.5L24 45L8 35.5V12.5L24 3Z"
-              stroke="currentColor"
-              stroke-width="1.5"/>
-
-        <path d="M24 9L34 15V27L24 33L14 27V15L24 9Z"
-              stroke="currentColor"
-              stroke-width="1.2"
-              opacity=".75"/>
-
-        <path d="M24 16L29 19V25L24 28L19 25V19L24 16Z"
-              fill="currentColor"
-              opacity=".35"/>
-
-        <path d="M24 3V9M8 12.5L14 15M40 12.5L34 15M8 35.5L14 32M40 35.5L34 32"
-              stroke="currentColor"
-              stroke-width="1"
-              opacity=".7"/>
+      <svg class="brand-mark" viewBox="0 0 48 48" fill="none" aria-label="Hive Pro">
+        <path
+          d="M24 4.5 39.6 13.5v21L24 43.5 8.4 34.5v-21L24 4.5Z"
+          stroke="currentColor"
+          stroke-width="3.2"
+          stroke-linejoin="round"/>
+        <path
+          d="M24 12.2 33 17.4v13.2L24 35.8 15 30.6V17.4L24 12.2Z"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linejoin="round"
+          opacity=".72"/>
+        <path
+          d="M24 17.8 29 20.7v6.6L24 30.2 19 27.3v-6.6L24 17.8Z"
+          fill="currentColor"
+          opacity=".20"/>
       </svg>
 
       <div>
