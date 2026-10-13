@@ -802,6 +802,81 @@ footer{
   .area-card{min-height:265px}
 }
 
+/* ===== HEADER REFINADO · MODELO APROVADO ===== */
+header{
+  position:sticky;
+  top:0;
+  z-index:20;
+  backdrop-filter:blur(16px);
+  background:linear-gradient(180deg,rgba(3,9,16,.98),rgba(3,9,16,.90));
+  border-bottom:1px solid rgba(60,132,185,.14);
+  box-shadow:0 6px 18px rgba(0,0,0,.16);
+}
+
+header .header-inner{
+  max-width:1180px;
+  min-height:82px;
+  padding:16px 22px;
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin:0;
+}
+
+.brand-mark{
+  width:38px;
+  height:38px;
+  filter:drop-shadow(0 0 10px rgba(0,170,255,.20));
+}
+
+.brand-name{
+  font-size:20px;
+  font-weight:800;
+  letter-spacing:.02em;
+  color:#f4f7fb;
+}
+
+.brand-name .pro{
+  color:#dbe8f3;
+}
+
+.header-divider{
+  width:1px;
+  height:34px;
+  margin-left:6px;
+  margin-right:2px;
+  background:linear-gradient(180deg,transparent,rgba(143,161,178,.55),transparent);
+  opacity:.9;
+}
+
+.header-section-name{
+  font-size:15px;
+  font-weight:500;
+  color:#aeb9c5;
+  letter-spacing:.01em;
+  line-height:1;
+  margin-top:1px;
+}
+
+.brand-sub,
+header .tag,
+header h1,
+header p.sub{
+  display:none !important;
+}
+
+@media(max-width:860px){
+  header .header-inner{min-height:68px;padding:14px 18px}
+  .brand-mark{width:34px;height:34px}
+  .brand-name{font-size:19px}
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
