@@ -15,7 +15,7 @@ header{border-bottom:1px solid rgba(0,163,255,.18);padding:30px max(20px,calc((1
 h1,h2,h3{font-family:'Space Grotesk'}h1{margin:7px 0 0}.tag{color:var(--blue);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
 main{max-width:1100px;margin:auto;padding:30px 20px 70px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.back{color:var(--muted);text-decoration:none}
 .actions{display:flex;gap:8px;flex-wrap:wrap}button,.btn{border:0;border-radius:8px;padding:9px 12px;background:var(--blue);color:white;font-weight:700;cursor:pointer;text-decoration:none;font-size:12px}.secondary{background:#152431}.danger{background:#542329}.success{background:#174a39}
-.card{background:linear-gradient(145deg,#08121d,#050b12);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:14px}.request-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.muted{color:var(--muted);font-size:12px}.badge{display:inline-flex;padding:4px 8px;border:1px solid var(--line);border-radius:999px;font-size:10px;font-weight:700;margin-left:6px}.badge.ready{color:var(--warn)}.badge.complete{color:var(--ok);border-color:rgba(53,217,154,.35);background:rgba(53,217,154,.08)}.badge.waiting{color:#8fd3ff;border-color:rgba(0,163,255,.32);background:rgba(0,163,255,.07)}.badge.finalized{color:var(--ok)}.badge.cancelled{color:var(--bad)}.badge.test{color:#caa7ff}
+.card{background:linear-gradient(145deg,#08121d,#050b12);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:14px}.request-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.muted{color:var(--muted);font-size:12px}.badge{display:inline-flex;padding:4px 8px;border:1px solid var(--line);border-radius:999px;font-size:10px;font-weight:700;margin-left:6px}.badge.ready{color:var(--warn)}.badge.complete{color:var(--ok);border-color:rgba(53,217,154,.35);background:rgba(53,217,154,.08)}.badge.waiting{color:#8fd3ff;border-color:rgba(0,163,255,.32);background:rgba(0,163,255,.07)}.badge.completed{color:var(--ok)}.badge.cancelled{color:var(--bad)}.badge.test{color:#caa7ff}
 .details{display:none;border-top:1px solid var(--line);margin-top:14px;padding-top:14px}.details.open{display:block}.item{padding:10px 0;border-top:1px solid rgba(132,149,166,.12)}.item:first-child{border-top:0}.candidate{display:flex;justify-content:space-between;gap:12px;padding:7px 9px;margin-top:6px;background:#050c13;border:1px solid var(--line);border-radius:8px;font-size:12px}.status{font-size:10px;font-weight:700}.empty{padding:28px 0;text-align:center;color:var(--muted)}
 @media(max-width:700px){.request-head,.top,.candidate{flex-direction:column}.request-head{align-items:stretch}}
 </style>
@@ -34,7 +34,7 @@ main{max-width:1100px;margin:auto;padding:30px 20px 70px}.top{display:flex;justi
 let functionsMap=new Map();
 
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function statusLabel(s){return s==='ready'?'ABERTA':s==='finalized'?'FINALIZADA':s==='cancelled'?'CANCELADA':String(s||'').toUpperCase();}
+function statusLabel(s){return s==='ready'?'ABERTA':s==='completed'?'FINALIZADA':s==='cancelled'?'CANCELADA':String(s||'').toUpperCase();}
 function candidateLabel(c){
   if(c.whatsapp_status==='failed')return 'FALHA NO ENVIO';
   if(c.status==='available'||c.status==='confirmed')return 'VAGA PREENCHIDA';
@@ -105,7 +105,7 @@ async function loadRequests(){
       '<div class="muted">'+esc(dateRange(r))+(r.event_location?' · '+esc(r.event_location):'')+
       (progressText?' · '+esc(progressText):'')+'</div></div>'+
       '<div class="actions"><button class="secondary" onclick="toggleRequest(\''+r.id+'\',this)">Abrir</button>'+
-      (r.status==='ready'?'<button class="success" onclick="closeRequest(\''+r.id+'\',\'finalized\')">Finalizar</button><button class="danger" onclick="closeRequest(\''+r.id+'\',\'cancelled\')">Cancelar</button>':'')+
+      (r.status==='ready'?'<button class="success" onclick="closeRequest(\''+r.id+'\',\'completed\')">Finalizar</button><button class="danger" onclick="closeRequest(\''+r.id+'\',\'cancelled\')">Cancelar</button>':'')+
       '</div></div><div class="details"><div class="muted">Carregando detalhes...</div></div></div>';
   }).join('');
   msg.textContent=rows.length+' solicitação(ões) encontrada(s).';
@@ -150,11 +150,11 @@ async function toggleRequest(id,button){
 }
 
 async function closeRequest(id,status){
-  const verb=status==='finalized'?'finalizar':'cancelar';
+  const verb=status==='completed'?'finalizar':'cancelar';
   if(!confirm('Deseja '+verb+' esta solicitação? Os profissionais deixam de bloquear novas solicitações imediatamente.'))return;
   const r=await MMAuth.client.from('staffing_requests').update({status,updated_at:new Date().toISOString()}).eq('id',id);
   if(r.error){msg.textContent=r.error.message;return;}
-  msg.textContent=status==='finalized'?'Solicitação finalizada. Profissionais liberados para novas datas.':'Solicitação cancelada. Profissionais liberados.';
+  msg.textContent=status==='completed'?'Solicitação finalizada. Profissionais liberados para novas datas.':'Solicitação cancelada. Profissionais liberados.';
   await loadRequests();
 }
 
