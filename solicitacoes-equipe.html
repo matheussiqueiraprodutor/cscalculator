@@ -15,7 +15,7 @@ header{border-bottom:1px solid rgba(0,163,255,.18);padding:30px max(20px,calc((1
 h1,h2,h3{font-family:'Space Grotesk'}h1{margin:7px 0 0}.tag{color:var(--blue);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
 main{max-width:1100px;margin:auto;padding:30px 20px 70px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.back{color:var(--muted);text-decoration:none}
 .actions{display:flex;gap:8px;flex-wrap:wrap}button,.btn{border:0;border-radius:8px;padding:9px 12px;background:var(--blue);color:white;font-weight:700;cursor:pointer;text-decoration:none;font-size:12px}.secondary{background:#152431}.danger{background:#542329}.success{background:#174a39}
-.card{background:linear-gradient(145deg,#08121d,#050b12);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:14px}.request-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.muted{color:var(--muted);font-size:12px}.badge{display:inline-flex;padding:4px 8px;border:1px solid var(--line);border-radius:999px;font-size:10px;font-weight:700;margin-left:6px}.badge.ready{color:var(--warn)}.badge.finalized{color:var(--ok)}.badge.cancelled{color:var(--bad)}.badge.test{color:#caa7ff}
+.card{background:linear-gradient(145deg,#08121d,#050b12);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:14px}.request-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.muted{color:var(--muted);font-size:12px}.badge{display:inline-flex;padding:4px 8px;border:1px solid var(--line);border-radius:999px;font-size:10px;font-weight:700;margin-left:6px}.badge.ready{color:var(--warn)}.badge.complete{color:var(--ok);border-color:rgba(53,217,154,.35);background:rgba(53,217,154,.08)}.badge.waiting{color:#8fd3ff;border-color:rgba(0,163,255,.32);background:rgba(0,163,255,.07)}.badge.finalized{color:var(--ok)}.badge.cancelled{color:var(--bad)}.badge.test{color:#caa7ff}
 .details{display:none;border-top:1px solid var(--line);margin-top:14px;padding-top:14px}.details.open{display:block}.item{padding:10px 0;border-top:1px solid rgba(132,149,166,.12)}.item:first-child{border-top:0}.candidate{display:flex;justify-content:space-between;gap:12px;padding:7px 9px;margin-top:6px;background:#050c13;border:1px solid var(--line);border-radius:8px;font-size:12px}.status{font-size:10px;font-weight:700}.empty{padding:28px 0;text-align:center;color:var(--muted)}
 @media(max-width:700px){.request-head,.top,.candidate{flex-direction:column}.request-head{align-items:stretch}}
 </style>
@@ -35,7 +35,27 @@ let functionsMap=new Map();
 
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function statusLabel(s){return s==='ready'?'ABERTA':s==='finalized'?'FINALIZADA':s==='cancelled'?'CANCELADA':String(s||'').toUpperCase();}
-function candidateLabel(s){return s==='available'?'DISPONÍVEL':s==='unavailable'?'INDISPONÍVEL':s==='waiting'?'AGUARDANDO':s==='confirmed'?'CONFIRMADO':s==='skipped'?'ENCERRADO':'PENDENTE';}
+function candidateLabel(c){
+  if(c.whatsapp_status==='failed')return 'FALHA NO ENVIO';
+  if(c.status==='available'||c.status==='confirmed')return 'VAGA PREENCHIDA';
+  if(c.status==='unavailable')return 'RECUSOU';
+  if(c.status==='waiting')return 'AGUARDANDO RESPOSTA';
+  return 'PENDENTE';
+}
+function wasContacted(c){
+  const ws=String(c.whatsapp_status||'not_sent');
+  return ['waiting','available','unavailable','confirmed'].includes(c.status) || ['sent','delivered','read','failed'].includes(ws);
+}
+function requestProgress(items,candidates){
+  const total=items.reduce((s,i)=>s+Number(i.quantity||0),0);
+  let filled=0,waiting=0;
+  items.forEach(item=>{
+    const cs=candidates.filter(c=>Number(c.request_item_id)===Number(item.id));
+    filled+=Math.min(Number(item.quantity||0),cs.filter(c=>c.status==='available'||c.status==='confirmed').length);
+    waiting+=cs.filter(c=>c.status==='waiting'&&c.whatsapp_status!=='failed').length;
+  });
+  return {total,filled,waiting,complete:total>0&&filled>=total};
+}
 function dateRange(r){return r.event_end_date&&r.event_end_date!==r.event_date?r.event_date+' → '+r.event_end_date:r.event_date||'Sem data';}
 
 async function loadRequests(){
@@ -51,14 +71,43 @@ async function loadRequests(){
   const rows=r.data||[];
   if(!rows.length){list.innerHTML='<div class="empty">Nenhuma solicitação criada.</div>';msg.textContent='';return;}
 
-  list.innerHTML=rows.map(r=>'<div class="card" data-request-id="'+r.id+'">'+
-    '<div class="request-head"><div><h3 style="margin:0 0 7px">'+esc(r.event_name||'Evento sem nome')+
-    '<span class="badge '+esc(r.status)+'">'+statusLabel(r.status)+'</span>'+
-    (r.is_test?'<span class="badge test">TESTE</span>':'')+'</h3>'+
-    '<div class="muted">'+esc(dateRange(r))+(r.event_location?' · '+esc(r.event_location):'')+'</div></div>'+
-    '<div class="actions"><button class="secondary" onclick="toggleRequest(\''+r.id+'\',this)">Abrir</button>'+
-    (r.status==='ready'?'<button class="success" onclick="closeRequest(\''+r.id+'\',\'finalized\')">Finalizar</button><button class="danger" onclick="closeRequest(\''+r.id+'\',\'cancelled\')">Cancelar</button>':'')+
-    '</div></div><div class="details"><div class="muted">Carregando detalhes...</div></div></div>').join('');
+  const requestIds=rows.map(x=>x.id);
+  const ir=await MMAuth.client.from('staffing_request_items')
+    .select('id,request_id,function_id,quantity')
+    .in('request_id',requestIds);
+  if(ir.error){msg.textContent=ir.error.message;return;}
+  const allItems=ir.data||[];
+  const itemIds=allItems.map(x=>x.id);
+  let allCandidates=[];
+  if(itemIds.length){
+    const cr=await MMAuth.client.from('staffing_candidates')
+      .select('id,request_item_id,status,whatsapp_status')
+      .in('request_item_id',itemIds);
+    if(cr.error){msg.textContent=cr.error.message;return;}
+    allCandidates=cr.data||[];
+  }
+
+  list.innerHTML=rows.map(r=>{
+    const items=allItems.filter(i=>i.request_id===r.id);
+    const itemSet=new Set(items.map(i=>Number(i.id)));
+    const candidates=allCandidates.filter(c=>itemSet.has(Number(c.request_item_id)));
+    const progress=requestProgress(items,candidates);
+    let operationalClass=r.status;
+    let operationalLabel=statusLabel(r.status);
+    if(r.status==='ready'&&progress.complete){operationalClass='complete';operationalLabel='EQUIPE COMPLETA';}
+    else if(r.status==='ready'&&progress.waiting>0){operationalClass='waiting';operationalLabel='AGUARDANDO RESPOSTA';}
+    const progressText=progress.total?progress.filled+' de '+progress.total+' vaga'+(progress.total>1?'s':'')+' preenchida'+(progress.total>1?'s':''):'';
+
+    return '<div class="card" data-request-id="'+r.id+'">'+
+      '<div class="request-head"><div><h3 style="margin:0 0 7px">'+esc(r.event_name||'Evento sem nome')+
+      '<span class="badge '+esc(operationalClass)+'">'+esc(operationalLabel)+'</span>'+
+      (r.is_test?'<span class="badge test">TESTE</span>':'')+'</h3>'+
+      '<div class="muted">'+esc(dateRange(r))+(r.event_location?' · '+esc(r.event_location):'')+
+      (progressText?' · '+esc(progressText):'')+'</div></div>'+
+      '<div class="actions"><button class="secondary" onclick="toggleRequest(\''+r.id+'\',this)">Abrir</button>'+
+      (r.status==='ready'?'<button class="success" onclick="closeRequest(\''+r.id+'\',\'finalized\')">Finalizar</button><button class="danger" onclick="closeRequest(\''+r.id+'\',\'cancelled\')">Cancelar</button>':'')+
+      '</div></div><div class="details"><div class="muted">Carregando detalhes...</div></div></div>';
+  }).join('');
   msg.textContent=rows.length+' solicitação(ões) encontrada(s).';
 }
 
@@ -86,9 +135,15 @@ async function toggleRequest(id,button){
 
   details.innerHTML=items.map(item=>{
     const fn=functionsMap.get(Number(item.function_id));
-    const cs=candidates.filter(c=>Number(c.request_item_id)===Number(item.id));
+    const all= candidates.filter(c=>Number(c.request_item_id)===Number(item.id));
+    const contacted=all.filter(wasContacted);
+    const filled=all.filter(c=>c.status==='available'||c.status==='confirmed').length;
+    const itemSummary=Math.min(Number(item.quantity||0),filled)+'/'+Number(item.quantity||0)+' preenchida'+(Number(item.quantity||0)>1?'s':'');
     return '<div class="item"><b>'+esc(fn?fn.name:'Função')+' · '+item.quantity+' vaga'+(item.quantity>1?'s':'')+'</b>'+
-      (cs.length?cs.map(c=>'<div class="candidate"><span>'+esc(c.candidate_name||'Profissional')+(c.candidate_city?' · '+esc(c.candidate_city):'')+'</span><span class="status">'+candidateLabel(c.status)+' · '+esc((c.whatsapp_status||'not_sent').toUpperCase())+'</span></div>').join(''):'<div class="muted" style="margin-top:6px">Sem candidatos.</div>')+
+      '<div class="muted" style="margin-top:4px">'+esc(itemSummary)+'</div>'+
+      (contacted.length?contacted.map(c=>'<div class="candidate"><span>'+esc(c.candidate_name||'Profissional')+(c.candidate_city?' · '+esc(c.candidate_city):'')+
+        (c.whatsapp_last_inbound_text?' · resposta: “'+esc(c.whatsapp_last_inbound_text)+'”':'')+
+        '</span><span class="status">'+candidateLabel(c)+' · WHATSAPP: '+esc((c.whatsapp_status||'not_sent').toUpperCase())+'</span></div>').join(''):'<div class="muted" style="margin-top:8px">Nenhum profissional foi contatado nesta solicitação.</div>')+
       '</div>';
   }).join('')||'<div class="muted">Sem funções registradas.</div>';
   details.dataset.loaded='1';
