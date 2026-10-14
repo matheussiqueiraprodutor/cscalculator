@@ -648,9 +648,11 @@ build.onclick=async()=>{
     msg.textContent='A mesma função foi adicionada mais de uma vez.';return;
   }
 
+  const uniqueCandidateQueues=buildUniqueCandidateQueues(selected);
+
   const blocks=selected.map(n=>{
     const fn=functions.find(f=>Number(f.id)===n.function_id);
-    const cs=candidates(n.function_id);
+    const cs=uniqueCandidateQueues.get(n.function_id)||[];
     return '<div class="result" data-function-id="'+n.function_id+'">'+
       '<h3>'+esc(sectorName[fn.sector])+' · '+esc(fn.name)+' <span class="muted">('+n.quantity+' vaga'+(n.quantity>1?'s':'')+')</span></h3>'+
       '<div class="fill-progress">0/'+n.quantity+' preenchida'+(n.quantity>1?'s':'')+'</div>'+
@@ -690,7 +692,7 @@ build.onclick=async()=>{
 
     for(const item of ins.data){
       const fn=functions.find(f=>Number(f.id)===Number(item.function_id));
-      const cs=candidates(item.function_id);
+      const cs=uniqueCandidateQueues.get(Number(item.function_id))||[];
       const block=results.querySelector('.result[data-function-id="'+item.function_id+'"]');
       if(block){
         block.dataset.itemId=item.id;
