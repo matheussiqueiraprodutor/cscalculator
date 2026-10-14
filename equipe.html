@@ -180,12 +180,95 @@ function candidates(functionId){
 function buildUniqueCandidateQueues(selected){
   const pools=new Map(selected.map(x=>[x.function_id,candidates(x.function_id)]));
   const queues=new Map(selected.map(x=>[x.function_id,[]]));
+
+  // Cada vaga vira um slot. Primeiro fazemos um matching entre slots e profissionais
+  // para maximizar a quantidade de cargos que recebem uma primeira opção única.
+  const slots=[];
+  selected.forEach((item,selectedIndex)=>{
+    for(let slotIndex=0;slotIndex<item.quantity;slotIndex++){
+      slots.push({
+        key:item.function_id+':'+slotIndex,
+        function_id:item.function_id,
+        slotIndex,
+        selectedIndex,
+        poolSize:(pools.get(item.function_id)||[]).length
+      });
+    }
+  });
+
+  const slotsByKey=new Map(slots.map(s=>[s.key,s]));
+  const candidateToSlot=new Map();
+  const slotToCandidate=new Map();
+
+  function assignSlot(slot,seenCandidates,seenSlots){
+    if(seenSlots.has(slot.key))return false;
+    seenSlots.add(slot.key);
+
+    const pool=pools.get(slot.function_id)||[];
+    for(const cand of pool){
+      if(seenCandidates.has(cand.id))continue;
+      seenCandidates.add(cand.id);
+
+      const occupiedSlotKey=candidateToSlot.get(cand.id);
+      if(!occupiedSlotKey){
+        candidateToSlot.set(cand.id,slot.key);
+        slotToCandidate.set(slot.key,cand);
+        return true;
+      }
+
+      const occupiedSlot=slotsByKey.get(occupiedSlotKey);
+      if(occupiedSlot&&assignSlot(occupiedSlot,seenCandidates,seenSlots)){
+        candidateToSlot.set(cand.id,slot.key);
+        slotToCandidate.set(slot.key,cand);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Funções com menos candidatos são resolvidas primeiro para não perder
+  // profissionais especializados para funções com muitas alternativas.
+  [...slots]
+    .sort((a,b)=>a.poolSize-b.poolSize||a.selectedIndex-b.selectedIndex||a.slotIndex-b.slotIndex)
+    .forEach(slot=>assignSlot(slot,new Set(),new Set()));
+
   const used=new Set();
-  const take=id=>{const n=(pools.get(id)||[]).find(x=>!used.has(x.id));if(!n)return false;used.add(n.id);queues.get(id).push(n);return true;};
-  const rounds=Math.max(...selected.map(x=>x.quantity),0);
-  for(let r=0;r<rounds;r++)selected.forEach(x=>{if(r<x.quantity)take(x.function_id);});
+  selected.forEach(item=>{
+    const ownSlots=slots
+      .filter(s=>s.function_id===item.function_id)
+      .sort((a,b)=>a.slotIndex-b.slotIndex);
+    ownSlots.forEach(slot=>{
+      const cand=slotToCandidate.get(slot.key);
+      if(cand){
+        queues.get(item.function_id).push(cand);
+        used.add(cand.id);
+      }
+    });
+  });
+
+  // Os profissionais restantes são distribuídos uma única vez entre as filas.
+  // Assim ninguém aparece nem como primeira opção nem na espera de outro cargo.
+  const cursors=new Map(selected.map(x=>[x.function_id,0]));
+  function takeNext(functionId){
+    const pool=pools.get(functionId)||[];
+    let cursor=cursors.get(functionId)||0;
+    while(cursor<pool.length&&used.has(pool[cursor].id))cursor++;
+    cursors.set(functionId,cursor+1);
+    if(cursor>=pool.length)return false;
+    const cand=pool[cursor];
+    used.add(cand.id);
+    queues.get(functionId).push(cand);
+    return true;
+  }
+
   let moved=true;
-  while(moved){moved=false;selected.forEach(x=>{if(take(x.function_id))moved=true;});}
+  while(moved){
+    moved=false;
+    selected.forEach(item=>{
+      if(takeNext(item.function_id))moved=true;
+    });
+  }
+
   return queues;
 }
 
