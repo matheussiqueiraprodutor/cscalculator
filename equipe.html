@@ -177,6 +177,18 @@ function candidates(functionId){
   });
 }
 
+function buildUniqueCandidateQueues(selected){
+  const pools=new Map(selected.map(x=>[x.function_id,candidates(x.function_id)]));
+  const queues=new Map(selected.map(x=>[x.function_id,[]]));
+  const used=new Set();
+  const take=id=>{const n=(pools.get(id)||[]).find(x=>!used.has(x.id));if(!n)return false;used.add(n.id);queues.get(id).push(n);return true;};
+  const rounds=Math.max(...selected.map(x=>x.quantity),0);
+  for(let r=0;r<rounds;r++)selected.forEach(x=>{if(r<x.quantity)take(x.function_id);});
+  let moved=true;
+  while(moved){moved=false;selected.forEach(x=>{if(take(x.function_id))moved=true;});}
+  return queues;
+}
+
 function messageFor(n,fn){
   const start=eventDate.value||'[data de início]';
   const end=eventEndDate.value.trim();
