@@ -214,8 +214,6 @@ function buildUniqueCandidateQueues(selected){
   const pools=new Map(selected.map(x=>[x.function_id,candidates(x.function_id)]));
   const queues=new Map(selected.map(x=>[x.function_id,[]]));
 
-  // Cada vaga vira um slot. Primeiro fazemos um matching entre slots e profissionais
-  // para maximizar a quantidade de cargos que recebem uma primeira opção única.
   const slots=[];
   selected.forEach((item,selectedIndex)=>{
     for(let slotIndex=0;slotIndex<item.quantity;slotIndex++){
@@ -223,35 +221,62 @@ function buildUniqueCandidateQueues(selected){
         key:item.function_id+':'+slotIndex,
         function_id:item.function_id,
         slotIndex,
-        selectedIndex,
-        poolSize:(pools.get(item.function_id)||[]).length
+        selectedIndex
       });
     }
   });
 
   const slotsByKey=new Map(slots.map(s=>[s.key,s]));
-  const candidateToSlot=new Map();
   const slotToCandidate=new Map();
+  const lockedCandidateIds=new Set();
 
-  function assignSlot(slot,seenCandidates,seenSlots){
+  // 1) Reserva primeiro as melhores pessoas cuja função preferencial é exatamente
+  // a vaga solicitada. Essas reservas não podem ser deslocadas pelo encaixe global.
+  selected.forEach(item=>{
+    const ownSlots=slots
+      .filter(s=>s.function_id===item.function_id)
+      .sort((a,b)=>a.slotIndex-b.slotIndex);
+    const preferred=(pools.get(item.function_id)||[])
+      .filter(c=>c.preference_match&&!lockedCandidateIds.has(c.id));
+
+    let pi=0;
+    for(const slot of ownSlots){
+      if(pi>=preferred.length)break;
+      const cand=preferred[pi++];
+      slotToCandidate.set(slot.key,cand);
+      lockedCandidateIds.add(cand.id);
+    }
+  });
+
+  // 2) Só depois preenche as vagas que sobraram. O matching pode reorganizar
+  // apenas candidatos não reservados, maximizando o número de vagas preenchidas
+  // sem tirar ninguém de sua função preferencial já conquistada.
+  const flexibleCandidateToSlot=new Map();
+
+  function availablePoolSize(slot){
+    return (pools.get(slot.function_id)||[])
+      .filter(c=>!lockedCandidateIds.has(c.id)).length;
+  }
+
+  function assignFlexible(slot,seenCandidates,seenSlots){
     if(seenSlots.has(slot.key))return false;
     seenSlots.add(slot.key);
 
     const pool=pools.get(slot.function_id)||[];
     for(const cand of pool){
-      if(seenCandidates.has(cand.id))continue;
+      if(lockedCandidateIds.has(cand.id)||seenCandidates.has(cand.id))continue;
       seenCandidates.add(cand.id);
 
-      const occupiedSlotKey=candidateToSlot.get(cand.id);
+      const occupiedSlotKey=flexibleCandidateToSlot.get(cand.id);
       if(!occupiedSlotKey){
-        candidateToSlot.set(cand.id,slot.key);
+        flexibleCandidateToSlot.set(cand.id,slot.key);
         slotToCandidate.set(slot.key,cand);
         return true;
       }
 
       const occupiedSlot=slotsByKey.get(occupiedSlotKey);
-      if(occupiedSlot&&assignSlot(occupiedSlot,seenCandidates,seenSlots)){
-        candidateToSlot.set(cand.id,slot.key);
+      if(occupiedSlot&&assignFlexible(occupiedSlot,seenCandidates,seenSlots)){
+        flexibleCandidateToSlot.set(cand.id,slot.key);
         slotToCandidate.set(slot.key,cand);
         return true;
       }
@@ -259,35 +284,42 @@ function buildUniqueCandidateQueues(selected){
     return false;
   }
 
-  // Funções com menos candidatos são resolvidas primeiro para não perder
-  // profissionais especializados para funções com muitas alternativas.
-  [...slots]
-    .sort((a,b)=>a.poolSize-b.poolSize||a.selectedIndex-b.selectedIndex||a.slotIndex-b.slotIndex)
-    .forEach(slot=>assignSlot(slot,new Set(),new Set()));
+  slots
+    .filter(slot=>!slotToCandidate.has(slot.key))
+    .sort((a,b)=>availablePoolSize(a)-availablePoolSize(b)||
+      a.selectedIndex-b.selectedIndex||
+      a.slotIndex-b.slotIndex)
+    .forEach(slot=>assignFlexible(slot,new Set(),new Set()));
 
+  // 3) As primeiras posições de cada fila são exatamente as pessoas alocadas
+  // nas vagas. A partir daqui ninguém pode aparecer em outra função da solicitação.
   const used=new Set();
   selected.forEach(item=>{
     const ownSlots=slots
       .filter(s=>s.function_id===item.function_id)
       .sort((a,b)=>a.slotIndex-b.slotIndex);
+
     ownSlots.forEach(slot=>{
       const cand=slotToCandidate.get(slot.key);
-      if(cand){
+      if(cand&&!used.has(cand.id)){
         queues.get(item.function_id).push(cand);
         used.add(cand.id);
       }
     });
   });
 
-  // Os profissionais restantes são distribuídos uma única vez entre as filas.
-  // Assim ninguém aparece nem como primeira opção nem na espera de outro cargo.
+  // 4) Distribui o restante das pessoas uma única vez entre as filas de espera.
+  // Preferências continuam respeitadas no ranking de cada pool, mas jamais
+  // duplicamos um profissional entre cargos.
   const cursors=new Map(selected.map(x=>[x.function_id,0]));
+
   function takeNext(functionId){
     const pool=pools.get(functionId)||[];
     let cursor=cursors.get(functionId)||0;
     while(cursor<pool.length&&used.has(pool[cursor].id))cursor++;
     cursors.set(functionId,cursor+1);
     if(cursor>=pool.length)return false;
+
     const cand=pool[cursor];
     used.add(cand.id);
     queues.get(functionId).push(cand);
@@ -304,7 +336,6 @@ function buildUniqueCandidateQueues(selected){
 
   return queues;
 }
-
 function messageFor(n,fn){
   const start=eventDate.value||'[data de início]';
   const end=eventEndDate.value.trim();
