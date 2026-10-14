@@ -212,6 +212,20 @@ Deno.serve(async (req) => {
           .from("staffing_candidates")
           .update(reservationUpdate)
           .eq("reservation_message_id", messageId);
+
+        const clarificationUpdate: Record<string, unknown> = { clarification_status: statusName };
+        if (statusName === "sent") clarificationUpdate.clarification_sent_at = eventTs;
+        if (statusName === "delivered") clarificationUpdate.clarification_delivered_at = eventTs;
+        if (statusName === "read") clarificationUpdate.clarification_read_at = eventTs;
+        if (statusName === "failed") {
+          clarificationUpdate.clarification_failed_at = eventTs;
+          clarificationUpdate.clarification_error = JSON.stringify(status?.errors || []).slice(0, 1800);
+        }
+
+        await admin
+          .from("staffing_candidates")
+          .update(clarificationUpdate)
+          .eq("clarification_message_id", messageId);
       }
 
       for (const message of value?.messages || []) {
@@ -234,7 +248,7 @@ Deno.serve(async (req) => {
 
         const { data: waitingCandidates } = await admin
           .from("staffing_candidates")
-          .select("id,request_item_id,candidate_name,candidate_whatsapp,status,contacted_at,reservation_message_id,reservation_status")
+          .select("id,request_item_id,candidate_name,candidate_whatsapp,status,contacted_at,reservation_message_id,reservation_status,clarification_message_id,clarification_status,clarification_attempted_at")
           .eq("status", "waiting")
           .order("contacted_at", { ascending: false })
           .limit(200);
@@ -283,6 +297,107 @@ Deno.serve(async (req) => {
         if (candidateUpdateError) {
           console.error("Erro ao atualizar resposta do freelancer:", candidateUpdateError);
           continue;
+        }
+
+        if (classification === "unknown" && !candidate.clarification_attempted_at) {
+          const clarificationText = "Por favor, responda apenas com SIM ou NÃO para continuarmos o processo.";
+          const clarificationNow = new Date().toISOString();
+
+          try {
+            if (!accessToken || !phoneNumberId || !graphVersion) {
+              throw new Error("Integração WhatsApp incompleta para envio do pedido de resposta SIM ou NÃO.");
+            }
+
+            const { data: item, error: itemError } = await admin
+              .from("staffing_request_items")
+              .select("request_id")
+              .eq("id", candidate.request_item_id)
+              .single();
+
+            if (itemError || !item) throw new Error("Item da solicitação não encontrado.");
+
+            const { data: staffingRequest, error: requestError } = await admin
+              .from("staffing_requests")
+              .select("is_test")
+              .eq("id", item.request_id)
+              .single();
+
+            if (requestError || !staffingRequest) throw new Error("Solicitação não encontrada.");
+            if (staffingRequest.is_test) continue;
+
+            const { data: markedAttempt, error: markAttemptError } = await admin
+              .from("staffing_candidates")
+              .update({
+                clarification_message_text: clarificationText,
+                clarification_status: "sending",
+                clarification_attempted_at: clarificationNow,
+                clarification_failed_at: null,
+                clarification_error: null,
+              })
+              .eq("id", candidate.id)
+              .is("clarification_attempted_at", null)
+              .select("id")
+              .maybeSingle();
+
+            if (markAttemptError) throw markAttemptError;
+            if (!markedAttempt) continue;
+
+            const metaResponse = await fetch(
+              `${graphBase.replace(/\/$/, "")}/${graphVersion}/${phoneNumberId}/messages`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  messaging_product: "whatsapp",
+                  recipient_type: "individual",
+                  to: from,
+                  type: "text",
+                  text: {
+                    preview_url: false,
+                    body: clarificationText,
+                  },
+                }),
+              },
+            );
+
+            const metaData = await metaResponse.json().catch(() => ({}));
+
+            if (!metaResponse.ok) {
+              throw new Error(
+                `Meta recusou pedido de resposta SIM ou NÃO (${metaResponse.status}): ${JSON.stringify(metaData).slice(0, 1200)}`,
+              );
+            }
+
+            const clarificationMessageId = metaData?.messages?.[0]?.id || null;
+
+            await admin
+              .from("staffing_candidates")
+              .update({
+                clarification_message_id: clarificationMessageId,
+                clarification_status: "sent",
+                clarification_sent_at: clarificationNow,
+                clarification_failed_at: null,
+                clarification_error: null,
+              })
+              .eq("id", candidate.id);
+          } catch (clarificationError) {
+            console.error("Falha no pedido automático de resposta SIM ou NÃO:", clarificationError);
+
+            await admin
+              .from("staffing_candidates")
+              .update({
+                clarification_status: "failed",
+                clarification_failed_at: clarificationNow,
+                clarification_error:
+                  clarificationError instanceof Error
+                    ? clarificationError.message.slice(0, 1800)
+                    : String(clarificationError).slice(0, 1800),
+              })
+              .eq("id", candidate.id);
+          }
         }
 
         if (
