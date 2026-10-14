@@ -401,8 +401,10 @@ function refreshBlock(block){
       return;
     }
     if(st==='unavailable'){
-      card.classList.add('unavailable');
+      card.classList.add('unavailable','queued');
+      card.dataset.queueState='queued';
       if(review) review.style.display='none';
+      if(note) note.textContent='Indisponível — histórico da fila.';
       return;
     }
     if(st==='waiting'){
