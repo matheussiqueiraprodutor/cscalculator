@@ -46,7 +46,6 @@
         hexIndex++;
       }
     }
-    });
   }
 
   function addBrand(slide){
