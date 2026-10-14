@@ -201,15 +201,13 @@ h3.blk-title{font-size:12.5px;margin:14px 0 8px;text-transform:uppercase;letter-
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs/dist/pptxgen.bundle.js"></script>
-<script src="ppt-export.js"></script>
 <script src="db-config.js"></script>
 <script src="auth.js"></script>
 </head>
 <body>
 <script>(async()=>{ await MMAuth.init({admin:false}); await MMAuth.refreshCatalog(); })();</script>
 <header><div class="header-inner"><a class="back-link" href="index.html">← Voltar para áreas</a><p class="tag">HIVE PRO · EVENT PRODUCTION SYSTEM</p><h1>Descritivo Geral</h1><p>Reúne os descritivos gerados nas calculadoras de som, luz e vídeo em um único documento para conferência e exportação em PDF. Evento, local, datas, sala e hotel agora são preenchidos na <a href="index.html" style="color:var(--text);text-decoration:underline;">Home</a>.</p></div></header>
-<div class="export-bar"><button class="btn" id="btnAtualizar">Atualizar descritivos</button><button class="btn" id="btnPDF">Exportar PDF</button><button class="btn" id="btnPowerPoint">Exportar PowerPoint</button><button class="btn" id="btnArtAereo">Exportar Memorial Aéreo (Excel)</button><button class="btn" id="btnArtSolo">Exportar Memorial Solo (Excel)</button><button class="btn" id="btnOrdemServico">Exportar Ordem de Serviço (Excel)</button></div>
+<div class="export-bar"><button class="btn" id="btnAtualizar">Atualizar descritivos</button><button class="btn" id="btnPDF">Exportar PDF</button><button class="btn" id="btnArtAereo">Exportar Memorial Aéreo (Excel)</button><button class="btn" id="btnArtSolo">Exportar Memorial Solo (Excel)</button><button class="btn" id="btnOrdemServico">Exportar Ordem de Serviço (Excel)</button></div>
 <main>
 <p class="status" id="status"></p>
 <div class="stale-banner" id="staleBanner"></div>
@@ -1374,22 +1372,6 @@ async function gerarOrdemServicoExcel(){
   XLSX.writeFile(wb,'Ordem de Servico - '+safe+'.xlsx',{cellStyles:true});
 }
 
-document.getElementById('btnPowerPoint').onclick = async () => {
-  const btn=document.getElementById('btnPowerPoint');
-  const original=btn.textContent;
-  btn.disabled=true;
-  btn.textContent='Gerando PowerPoint...';
-  try{
-    if(!window.HivePptExport||typeof window.HivePptExport.generate!=='function') throw new Error('Módulo de PowerPoint não carregado.');
-    await window.HivePptExport.generate();
-  }catch(e){
-    console.error(e);
-    alert('Não foi possível gerar o PowerPoint: '+(e&&e.message?e.message:e));
-  }finally{
-    btn.disabled=false;
-    btn.textContent=original;
-  }
-};
 document.getElementById('btnArtAereo').onclick = () => { gerarArtAereo().catch(e=>{ console.error(e); alert('Não foi possível gerar o Memorial Aéreo: '+e.message); }); };
 document.getElementById('btnOrdemServico').onclick = () => { gerarOrdemServicoExcel().catch(e=>{ console.error(e); alert('Não foi possível gerar a Ordem de Serviço: '+e.message); }); };
 document.getElementById('btnArtSolo').onclick = () => { gerarArtSolo().catch(e=>{ console.error(e); alert('Não foi possível gerar o Memorial Solo: '+e.message); }); };
