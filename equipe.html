@@ -455,7 +455,7 @@ function refreshBlock(block){
     const unavailable=card.querySelector('.mark-unavailable');
     const badge=card.querySelector('.status');
     const testControls=card.querySelector('.test-controls');
-    if(testControls)testControls.classList.toggle('show',currentRequestIsTest&&st!=='pending');
+    if(testControls)testControls.classList.toggle('show',currentRequestIsTest&&st!=='pending'&&st!=='skipped');
     if(badge) badge.textContent=statusLabel(st);
     updateWhatsAppBadge(card);
     updateCommunicationHistory(card);
