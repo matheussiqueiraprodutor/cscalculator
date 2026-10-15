@@ -347,6 +347,7 @@ function messageFor(n,fn){
 function statusLabel(status){
   return status==='available'?'DISPONÍVEL':
     status==='unavailable'?'INDISPONÍVEL':
+    status==='skipped'?'PULADO':
     status==='waiting'?'AGUARDANDO RESPOSTA':'PENDENTE';
 }
 
@@ -449,6 +450,7 @@ function refreshBlock(block){
     const review=card.querySelector('.review');
     const note=card.querySelector('.queue-note');
     const approve=card.querySelector('.approve-one');
+    const skip=card.querySelector('.skip-one');
     const available=card.querySelector('.mark-available');
     const unavailable=card.querySelector('.mark-unavailable');
     const badge=card.querySelector('.status');
@@ -462,18 +464,23 @@ function refreshBlock(block){
     if(st==='available'||st==='confirmed'){
       card.classList.add('available');
       if(review) review.style.display='none';
+      if(skip) skip.style.display='none';
       return;
     }
-    if(st==='unavailable'){
+    if(st==='unavailable'||st==='skipped'){
       card.classList.add('unavailable','queued');
       card.dataset.queueState='queued';
       if(review) review.style.display='none';
-      if(note) note.textContent='Indisponível — histórico da fila.';
+      if(skip) skip.style.display='none';
+      if(note) note.textContent=st==='skipped'
+        ? 'Pulado manualmente — o próximo da fila foi liberado.'
+        : 'Indisponível — histórico da fila.';
       return;
     }
     if(st==='waiting'){
       card.classList.add('waiting');
       if(review) review.style.display='block';
+      if(skip) skip.style.display='none';
       const sendFailed=card.dataset.whatsappStatus==='failed';
       if(approve){
         approve.style.display=sendFailed?'':'none';
@@ -489,6 +496,7 @@ function refreshBlock(block){
       card.classList.add('queued');
       card.dataset.queueState='queued';
       if(review) review.style.display='none';
+      if(skip) skip.style.display='none';
       if(note) note.textContent='Vaga já preenchida.';
       return;
     }
@@ -498,6 +506,7 @@ function refreshBlock(block){
       card.dataset.queueState='eligible';
       if(review) review.style.display='block';
       if(approve){ approve.style.display=''; approve.textContent='Aprovar e enviar'; }
+      if(skip) skip.style.display='';
       if(available) available.style.display='none';
       if(unavailable) unavailable.style.display='none';
       if(badge) badge.textContent='LIBERADO';
@@ -505,6 +514,7 @@ function refreshBlock(block){
       card.classList.add('queued');
       card.dataset.queueState='queued';
       if(review) review.style.display='none';
+      if(skip) skip.style.display='none';
       if(note) note.textContent='Aguardando liberação — próximo da fila.';
     }
   });
@@ -623,6 +633,40 @@ async function candidateStatus(id,status,el){
   msg.textContent=status==='available'
     ? 'Disponibilidade confirmada. O Hive Pro recalculou as vagas restantes.'
     : 'Indisponibilidade registrada. O próximo profissional da fila foi liberado, se ainda houver vaga.';
+}
+
+async function skipCandidate(id,el){
+  const card=el.closest('.candidate');
+  if(!card)return;
+  if(card.dataset.status!=='pending'||card.dataset.queueState!=='eligible'){
+    msg.textContent='Este candidato não está liberado para ser pulado neste momento.';
+    return;
+  }
+
+  const name=(card.querySelector('b')?.textContent||'este candidato').trim();
+  if(!confirm('Pular '+name+' e liberar o próximo profissional da fila?'))return;
+
+  el.disabled=true;
+  try{
+    const r=await MMAuth.client
+      .from('staffing_candidates')
+      .update({status:'skipped'})
+      .eq('id',Number(id))
+      .eq('status','pending')
+      .select('id,status')
+      .maybeSingle();
+
+    if(r.error)throw r.error;
+    if(!r.data)throw new Error('O status deste candidato mudou antes da ação. Atualize a fila e tente novamente.');
+
+    card.dataset.status='skipped';
+    refreshBlock(card.closest('.result'));
+    msg.textContent=name+' foi pulado manualmente. O próximo profissional da fila foi liberado.';
+  }catch(e){
+    msg.textContent='Não foi possível pular o candidato: '+(e.message||String(e));
+  }finally{
+    el.disabled=false;
+  }
 }
 
 async function sendWhatsAppCandidate(id,card){
@@ -932,6 +976,7 @@ build.onclick=async()=>{
             '<textarea>'+esc(saved.message_text)+'</textarea>'+
             '<div class="actions">'+
               '<button class="approve-one" onclick="saveReview('+saved.id+',this)">Aprovar e enviar</button>'+
+              '<button class="secondary skip-one" onclick="skipCandidate('+saved.id+',this)">Pular para o próximo</button>'+
               '<button class="secondary mark-available" onclick="candidateStatus('+saved.id+',\'available\',this)">Disponível</button>'+
               '<button class="secondary mark-unavailable" onclick="candidateStatus('+saved.id+',\'unavailable\',this)">Indisponível</button>'+
             '</div>'+
