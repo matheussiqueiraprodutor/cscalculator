@@ -113,16 +113,15 @@ function preferredForFunction(f,fn){
 function eligibleForFunction(f,fn){
   if(!fn)return false;
 
-  // A função preferencial informada na planilha é uma indicação explícita de aptidão.
-  if(preferredForFunction(f,fn))return true;
-
+  // A função preferencial serve para ordenar candidatos, mas nunca substitui
+  // a qualificação técnica informada nas colunas da planilha.
   if(fn.name==='Auxiliar Geral')return true;
   if(fn.name==='Técnico de Streaming')return !!f.vmix;
-  if(fn.sector==='audio')return !!f.audio;
-  if(fn.sector==='luz')return !!f.lighting;
   if(fn.name==='Operador de PPT')return !!f.powerpoint;
   if(fn.name==='Técnico de Vídeo')return !!(f.resolume||f.vmix||f.camera);
   if(fn.name==='Auxiliar de Vídeo')return !!(f.resolume||f.vmix||f.camera||f.powerpoint);
+  if(fn.sector==='audio')return !!f.audio;
+  if(fn.sector==='luz')return !!f.lighting;
   return false;
 }
 
