@@ -13,10 +13,26 @@ function esc(v){
 }
 
 function options(sel){
-  return functions.filter(f=>f.active).map(f =>
-    '<option value="'+f.id+'" '+(String(sel)===String(f.id)?'selected':'')+'>'+
-    sectorName[f.sector]+' · '+esc(f.name)+'</option>'
-  ).join('');
+  const visualOrder=name=>{
+    if(/^Técnico de /i.test(name))return 1;
+    if(name==='Operador de PPT')return 2;
+    if(/^Auxiliar de /i.test(name)||name==='Auxiliar Geral')return 3;
+    return 2;
+  };
+
+  return functions
+    .filter(f=>f.active)
+    .slice()
+    .sort((a,b)=>
+      visualOrder(a.name)-visualOrder(b.name)||
+      String(a.sector).localeCompare(String(b.sector),'pt-BR')||
+      Number(a.sort_order||0)-Number(b.sort_order||0)||
+      String(a.name).localeCompare(String(b.name),'pt-BR')
+    )
+    .map(f =>
+      '<option value="'+f.id+'" '+(String(sel)===String(f.id)?'selected':'')+'>'+
+      sectorName[f.sector]+' · '+esc(f.name)+'</option>'
+    ).join('');
 }
 
 function addNeedRow(){
