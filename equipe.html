@@ -196,7 +196,9 @@ function candidates(functionId){
     state:f.state||'',
     rating:f.rating==null?null:Number(f.rating),
     priority:ratingPriority(f.rating),
-    preference_match:preferredForFunction(f,fn),
+    // Sem avaliação, o candidato nunca recebe vantagem de preferência.
+    // A preferência só vale depois que existe uma nota/prioridade real.
+    preference_match:f.rating!=null&&f.rating!==''&&preferredForFunction(f,fn),
     preferred_function:canonicalFunctionName(f.preferred_function),
     location_score:locationScore(f.city)
   })).sort((a,b)=>{
