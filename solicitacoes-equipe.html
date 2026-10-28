@@ -35,9 +35,10 @@ let functionsMap=new Map();
 
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function statusLabel(s){return s==='ready'?'ABERTA':s==='completed'?'FINALIZADA':s==='cancelled'?'CANCELADA':String(s||'').toUpperCase();}
-function candidateLabel(c){
+function candidateLabel(c,reservationMode){
   if(c.whatsapp_status==='failed')return 'FALHA NO ENVIO';
-  if(c.status==='available'||c.status==='confirmed')return 'VAGA PREENCHIDA';
+  if(c.status==='confirmed')return reservationMode==='pre_reserve'?'RESERVA CONFIRMADA':'VAGA PREENCHIDA';
+  if(c.status==='available')return reservationMode==='pre_reserve'?'PRÉ-RESERVADO':'VAGA PREENCHIDA';
   if(c.status==='unavailable')return 'RECUSOU';
   if(c.status==='waiting')return 'AGUARDANDO RESPOSTA';
   return 'PENDENTE';
@@ -65,7 +66,7 @@ async function loadRequests(){
   functionsMap=new Map((fr.data||[]).map(x=>[Number(x.id),x]));
 
   const r=await MMAuth.client.from('staffing_requests')
-    .select('id,event_name,event_date,event_end_date,event_location,location_preference,status,is_test,created_at,updated_at')
+    .select('id,event_name,event_date,event_end_date,event_location,location_preference,status,is_test,reservation_mode,created_at,updated_at')
     .order('created_at',{ascending:false});
   if(r.error){msg.textContent=r.error.message;return;}
   const rows=r.data||[];
@@ -94,13 +95,17 @@ async function loadRequests(){
     const progress=requestProgress(items,candidates);
     let operationalClass=r.status;
     let operationalLabel=statusLabel(r.status);
-    if(r.status==='ready'&&progress.complete){operationalClass='complete';operationalLabel='EQUIPE COMPLETA';}
+    if(r.status==='ready'&&progress.complete){
+      operationalClass='complete';
+      operationalLabel=r.reservation_mode==='pre_reserve'?'PRÉ-RESERVA COMPLETA':'EQUIPE COMPLETA';
+    }
     else if(r.status==='ready'&&progress.waiting>0){operationalClass='waiting';operationalLabel='AGUARDANDO RESPOSTA';}
     const progressText=progress.total?progress.filled+' de '+progress.total+' vaga'+(progress.total>1?'s':'')+' preenchida'+(progress.total>1?'s':''):'';
 
-    return '<div class="card" data-request-id="'+r.id+'">'+
+    return '<div class="card" data-request-id="'+r.id+'" data-reservation-mode="'+esc(r.reservation_mode||'normal')+'">'+
       '<div class="request-head"><div><h3 style="margin:0 0 7px">'+esc(r.event_name||'Evento sem nome')+
       '<span class="badge '+esc(operationalClass)+'">'+esc(operationalLabel)+'</span>'+
+      (r.reservation_mode==='pre_reserve'?'<span class="badge waiting">PRÉ-RESERVA</span>':'')+
       (r.is_test?'<span class="badge test">TESTE</span>':'')+'</h3>'+
       '<div class="muted">'+esc(dateRange(r))+(r.event_location?' · '+esc(r.event_location):'')+
       (progressText?' · '+esc(progressText):'')+'</div></div>'+
@@ -113,6 +118,7 @@ async function loadRequests(){
 
 async function toggleRequest(id,button){
   const card=button.closest('.card');
+  const reservationMode=card.dataset.reservationMode||'normal';
   const details=card.querySelector('.details');
   const opening=!details.classList.contains('open');
   details.classList.toggle('open');
@@ -126,7 +132,7 @@ async function toggleRequest(id,button){
   let candidates=[];
   if(ids.length){
     const cr=await MMAuth.client.from('staffing_candidates')
-      .select('id,request_item_id,candidate_name,candidate_city,rating,contact_order,status,whatsapp_status,whatsapp_last_inbound_text')
+      .select('id,request_item_id,candidate_name,candidate_city,rating,contact_order,status,whatsapp_status,whatsapp_last_inbound_text,confirmation_status,confirmation_error')
       .in('request_item_id',ids)
       .order('contact_order');
     if(cr.error){details.innerHTML='<div class="muted">'+esc(cr.error.message)+'</div>';return;}
@@ -143,10 +149,39 @@ async function toggleRequest(id,button){
       '<div class="muted" style="margin-top:4px">'+esc(itemSummary)+'</div>'+
       (contacted.length?contacted.map(c=>'<div class="candidate"><span>'+esc(c.candidate_name||'Profissional')+(c.candidate_city?' · '+esc(c.candidate_city):'')+
         (c.whatsapp_last_inbound_text?' · resposta: “'+esc(c.whatsapp_last_inbound_text)+'”':'')+
-        '</span><span class="status">'+candidateLabel(c)+' · WHATSAPP: '+esc((c.whatsapp_status||'not_sent').toUpperCase())+'</span></div>').join(''):'<div class="muted" style="margin-top:8px">Nenhum profissional foi contatado nesta solicitação.</div>')+
+        '</span><span class="status">'+candidateLabel(c,reservationMode)+' · WHATSAPP: '+esc((c.whatsapp_status||'not_sent').toUpperCase())+'</span>'+
+        (reservationMode==='pre_reserve'&&c.status==='available'
+          ? '<button class="success" type="button" onclick="confirmPreReservation('+c.id+',this)">Confirmar reserva</button>'
+          : '')+
+        (reservationMode==='pre_reserve'&&c.confirmation_status==='failed'
+          ? '<span class="muted">Falha na confirmação definitiva — tente novamente.</span>'
+          : '')+
+        '</div>').join(''):'<div class="muted" style="margin-top:8px">Nenhum profissional foi contatado nesta solicitação.</div>')+
       '</div>';
   }).join('')||'<div class="muted">Sem funções registradas.</div>';
   details.dataset.loaded='1';
+}
+
+async function confirmPreReservation(candidateId,button){
+  if(!confirm('Confirmar definitivamente esta pré-reserva e enviar a confirmação ao profissional?'))return;
+  const original=button.textContent;
+  button.disabled=true;
+  button.textContent='Confirmando...';
+  try{
+    const {data,error}=await MMAuth.client.functions.invoke('whatsapp-confirm-prereservation',{
+      body:{candidate_id:Number(candidateId)}
+    });
+    if(error)throw error;
+    if(!data||data.success!==true)throw new Error(data?.error||'Não foi possível confirmar a pré-reserva.');
+    msg.textContent=data.test
+      ? 'Pré-reserva confirmada no modo de teste interno.'
+      : 'Reserva confirmada e mensagem de confirmação enviada ao profissional.';
+    await loadRequests();
+  }catch(e){
+    msg.textContent='Não foi possível confirmar a pré-reserva: '+(e.message||String(e));
+    button.disabled=false;
+    button.textContent=original;
+  }
 }
 
 async function closeRequest(id,status){
