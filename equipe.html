@@ -227,132 +227,40 @@ function candidates(functionId){
   });
 }
 
-function buildUniqueCandidateQueues(selected){
-  const pools=new Map(selected.map(x=>[x.function_id,candidates(x.function_id)]));
-  const queues=new Map(selected.map(x=>[x.function_id,[]]));
-
-  const slots=[];
-  selected.forEach((item,selectedIndex)=>{
-    for(let slotIndex=0;slotIndex<item.quantity;slotIndex++){
-      slots.push({
-        key:item.function_id+':'+slotIndex,
-        function_id:item.function_id,
-        slotIndex,
-        selectedIndex
-      });
-    }
-  });
-
-  const slotsByKey=new Map(slots.map(s=>[s.key,s]));
-  const slotToCandidate=new Map();
-  const lockedCandidateIds=new Set();
-
-  // 1) Reserva primeiro as melhores pessoas cuja função preferencial é exatamente
-  // a vaga solicitada. Essas reservas não podem ser deslocadas pelo encaixe global.
-  selected.forEach(item=>{
-    const ownSlots=slots
-      .filter(s=>s.function_id===item.function_id)
-      .sort((a,b)=>a.slotIndex-b.slotIndex);
-    const preferred=(pools.get(item.function_id)||[])
-      .filter(c=>c.preference_match&&!lockedCandidateIds.has(c.id));
-
-    let pi=0;
-    for(const slot of ownSlots){
-      if(pi>=preferred.length)break;
-      const cand=preferred[pi++];
-      slotToCandidate.set(slot.key,cand);
-      lockedCandidateIds.add(cand.id);
-    }
-  });
-
-  // 2) Só depois preenche as vagas que sobraram. O matching pode reorganizar
-  // apenas candidatos não reservados, maximizando o número de vagas preenchidas
-  // sem tirar ninguém de sua função preferencial já conquistada.
-  const flexibleCandidateToSlot=new Map();
-
-  function availablePoolSize(slot){
-    return (pools.get(slot.function_id)||[])
-      .filter(c=>!lockedCandidateIds.has(c.id)).length;
-  }
-
-  function assignFlexible(slot,seenCandidates,seenSlots){
-    if(seenSlots.has(slot.key))return false;
-    seenSlots.add(slot.key);
-
-    const pool=pools.get(slot.function_id)||[];
-    for(const cand of pool){
-      if(lockedCandidateIds.has(cand.id)||seenCandidates.has(cand.id))continue;
-      seenCandidates.add(cand.id);
-
-      const occupiedSlotKey=flexibleCandidateToSlot.get(cand.id);
-      if(!occupiedSlotKey){
-        flexibleCandidateToSlot.set(cand.id,slot.key);
-        slotToCandidate.set(slot.key,cand);
-        return true;
-      }
-
-      const occupiedSlot=slotsByKey.get(occupiedSlotKey);
-      if(occupiedSlot&&assignFlexible(occupiedSlot,seenCandidates,seenSlots)){
-        flexibleCandidateToSlot.set(cand.id,slot.key);
-        slotToCandidate.set(slot.key,cand);
-        return true;
-      }
-    }
-    return false;
-  }
-
-  slots
-    .filter(slot=>!slotToCandidate.has(slot.key))
-    .sort((a,b)=>availablePoolSize(a)-availablePoolSize(b)||
-      a.selectedIndex-b.selectedIndex||
-      a.slotIndex-b.slotIndex)
-    .forEach(slot=>assignFlexible(slot,new Set(),new Set()));
-
-  // 3) As primeiras posições de cada fila são exatamente as pessoas alocadas
-  // nas vagas. A partir daqui ninguém pode aparecer em outra função da solicitação.
-  const used=new Set();
-  selected.forEach(item=>{
-    const ownSlots=slots
-      .filter(s=>s.function_id===item.function_id)
-      .sort((a,b)=>a.slotIndex-b.slotIndex);
-
-    ownSlots.forEach(slot=>{
-      const cand=slotToCandidate.get(slot.key);
-      if(cand&&!used.has(cand.id)){
-        queues.get(item.function_id).push(cand);
-        used.add(cand.id);
-      }
-    });
-  });
-
-  // 4) Distribui o restante das pessoas uma única vez entre as filas de espera.
-  // Preferências continuam respeitadas no ranking de cada pool, mas jamais
-  // duplicamos um profissional entre cargos.
-  const cursors=new Map(selected.map(x=>[x.function_id,0]));
-
-  function takeNext(functionId){
-    const pool=pools.get(functionId)||[];
-    let cursor=cursors.get(functionId)||0;
-    while(cursor<pool.length&&used.has(pool[cursor].id))cursor++;
-    cursors.set(functionId,cursor+1);
-    if(cursor>=pool.length)return false;
-
-    const cand=pool[cursor];
-    used.add(cand.id);
-    queues.get(functionId).push(cand);
-    return true;
-  }
-
-  let moved=true;
-  while(moved){
-    moved=false;
-    selected.forEach(item=>{
-      if(takeNext(item.function_id))moved=true;
-    });
-  }
-
-  return queues;
+function buildCandidateQueues(selected){
+  // Cada função recebe sua própria fila completa de candidatos elegíveis.
+  // O mesmo freelancer pode aparecer em várias funções enquanto ainda não foi acionado.
+  // Assim que for selecionado em uma delas, as demais aparições ficam bloqueadas
+  // pela proteção de duplicidade da própria solicitação.
+  return new Map(selected.map(item=>[
+    item.function_id,
+    candidates(item.function_id)
+  ]));
 }
+
+function selectedElsewhereExternalKeys(){
+  const selected=new Set();
+  [...results.querySelectorAll('.candidate[data-candidate-id]')].forEach(card=>{
+    const st=card.dataset.status;
+    if(['waiting','available','confirmed'].includes(st)){
+      const key=card.dataset.freelancerId||'';
+      if(key)selected.add(key);
+    }
+  });
+  return selected;
+}
+
+function isSelectedInAnotherFunction(card){
+  const key=card.dataset.freelancerId||'';
+  if(!key)return false;
+  return [...results.querySelectorAll('.candidate[data-freelancer-id="'+CSS.escape(key)+'"]')]
+    .some(other=>other!==card&&['waiting','available','confirmed'].includes(other.dataset.status));
+}
+
+function refreshDuplicateSelections(){
+  [...results.querySelectorAll('.result[data-item-id]')].forEach(refreshBlock);
+}
+
 function messageFor(n,fn){
   const start=eventDate.value||'[data de início]';
   const end=eventEndDate.value.trim();
@@ -495,6 +403,18 @@ function refreshBlock(block){
       if(skip) skip.style.display='none';
       return;
     }
+    if(st==='pending'&&isSelectedInAnotherFunction(card)){
+      card.classList.add('queued');
+      card.dataset.queueState='blocked';
+      if(review) review.style.display='none';
+      if(skip) skip.style.display='none';
+      if(available) available.style.display='none';
+      if(unavailable) unavailable.style.display='none';
+      if(badge) badge.textContent='BLOQUEADO';
+      if(note) note.textContent='Selecionado em outra função desta solicitação.';
+      return;
+    }
+
     if(st==='unavailable'||st==='skipped'){
       card.classList.add('unavailable','queued');
       card.dataset.queueState='queued';
@@ -599,8 +519,7 @@ function startStaffingRealtime(){
       if(row.whatsapp_last_inbound_at) card.dataset.inboundAt=row.whatsapp_last_inbound_at;
       if(row.whatsapp_response_classification!=null) card.dataset.responseClassification=row.whatsapp_response_classification;
 
-      const block=card.closest('.result');
-      refreshBlock(block);
+      refreshAllBlocks();
 
       if(row.status==='available'&&previousStatus!=='available'){
         msg.textContent=(row.candidate_name||'O profissional')+' confirmou disponibilidade pelo WhatsApp. A fila foi atualizada automaticamente.';
@@ -657,7 +576,7 @@ async function candidateStatus(id,status,el){
   const r=await MMAuth.client.from('staffing_candidates').update(payload).eq('id',id);
   if(r.error){msg.textContent=r.error.message;return;}
   card.dataset.status=status;
-  refreshBlock(card.closest('.result'));
+  refreshAllBlocks();
   msg.textContent=status==='available'
     ? 'Disponibilidade confirmada. O Hive Pro recalculou as vagas restantes.'
     : 'Indisponibilidade registrada. O próximo profissional da fila foi liberado, se ainda houver vaga.';
@@ -688,7 +607,7 @@ async function skipCandidate(id,el){
     if(!r.data)throw new Error('O status deste candidato mudou antes da ação. Atualize a fila e tente novamente.');
 
     card.dataset.status='skipped';
-    refreshBlock(card.closest('.result'));
+    refreshAllBlocks();
     msg.textContent=name+' foi pulado manualmente. O próximo profissional da fila foi liberado.';
   }catch(e){
     msg.textContent='Não foi possível pular o candidato: '+(e.message||String(e));
@@ -791,7 +710,7 @@ async function saveReview(id,el){
       card.dataset.whatsappStatus='not_sent';
       card.dataset.messageText=ta.value;
       card.dataset.contactedAt=new Date().toISOString();
-      refreshBlock(card.closest('.result'));
+      refreshAllBlocks();
     }else{
       const r=await MMAuth.client.from('staffing_candidates').update({message_text:ta.value}).eq('id',id);
       if(r.error)throw r.error;
@@ -800,7 +719,7 @@ async function saveReview(id,el){
     }
 
     await sendWhatsAppCandidate(id,card);
-    refreshBlock(card.closest('.result'));
+    refreshAllBlocks();
     msg.textContent='Mensagem enviada pelo WhatsApp. O candidato está aguardando resposta.';
   }catch(e){
     msg.textContent='Não foi possível enviar pelo WhatsApp: '+(e.message||String(e));
@@ -829,8 +748,15 @@ async function approveAllMessages(){
     const errors=[];
     const now=new Date().toISOString();
 
+    const selectedKeysInBatch=new Set();
+
     for(const card of cards){
       const id=Number(card.dataset.candidateId);
+      const externalKey=card.dataset.freelancerId||'';
+      if(externalKey&&selectedKeysInBatch.has(externalKey)){
+        continue;
+      }
+      if(externalKey)selectedKeysInBatch.add(externalKey);
       const conflict=activeConflictForCard(card,id);
       if(conflict){
         errors.push((card.querySelector('b')?.textContent||'Profissional')+
@@ -916,11 +842,11 @@ build.onclick=async()=>{
     msg.textContent='A mesma função foi adicionada mais de uma vez.';return;
   }
 
-  const uniqueCandidateQueues=buildUniqueCandidateQueues(selected);
+  const candidateQueues=buildCandidateQueues(selected);
 
   const blocks=selected.map(n=>{
     const fn=functions.find(f=>Number(f.id)===n.function_id);
-    const cs=uniqueCandidateQueues.get(n.function_id)||[];
+    const cs=candidateQueues.get(n.function_id)||[];
     return '<div class="result" data-function-id="'+n.function_id+'">'+
       '<h3>'+esc(sectorName[fn.sector])+' · '+esc(fn.name)+' <span class="muted">('+n.quantity+' vaga'+(n.quantity>1?'s':'')+')</span></h3>'+
       '<div class="fill-progress">0/'+n.quantity+' preenchida'+(n.quantity>1?'s':'')+'</div>'+
@@ -963,7 +889,7 @@ build.onclick=async()=>{
 
     for(const item of ins.data){
       const fn=functions.find(f=>Number(f.id)===Number(item.function_id));
-      const cs=uniqueCandidateQueues.get(Number(item.function_id))||[];
+      const cs=candidateQueues.get(Number(item.function_id))||[];
       const block=results.querySelector('.result[data-function-id="'+item.function_id+'"]');
       if(block){
         block.dataset.itemId=item.id;
