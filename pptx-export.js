@@ -179,7 +179,7 @@
     one(d,'spTree').append(d.importNode(fragment.documentElement,true));zip.file(path,serialize(d));zip.file(relPath,serialize(rels));
   }
   async function memorial(kind){
-    const solo=kind==='solo',structures=solo?buildSoloEstruturas():buildAereoEstruturas();
+    const solo=kind==='solo',structures=(solo?buildSoloEstruturas():buildAereoEstruturas()).filter(est=>est.rows.some(row=>Number(row.qty)>0));
     if(!structures.length)return null;
     if(structures.length>(solo?6:8))throw Error('O memorial '+kind+' excede a quantidade de estruturas suportada pelo modelo Excel.');
     const zip=await JSZip.loadAsync(artB64ToUint8(solo?ART_SOLO_B64:ART_AEREO_B64));let sheet=await zip.file('xl/worksheets/sheet1.xml').async('string');const cab=cabRead();
@@ -192,7 +192,11 @@
       est.rows.forEach((r,j)=>{const line=slot.eqStart+j;sheet=artSetString(sheet,slot.nameCol+line,r.nome);sheet=artSetNumber(sheet,slot.qtyCol+line,r.qty);sheet=artSetNumber(sheet,slot.unitCol+line,Number((r.pesoUnit||0).toFixed(3)));});
     });
     zip.file('xl/worksheets/sheet1.xml',sheet);
-    return HiveSheetImage.render(zip);
+    const regions=structures.map((_,i)=>{
+      const base=(solo?6:7)+Math.floor(i/2)*(solo?21:17),right=i%2===1;
+      return (right?'G':'B')+base+':'+(right?(solo?'J':'K'):'E')+(base+(solo?19:15));
+    });
+    return HiveSheetImage.render(zip,{regions});
   }
   async function logistics(){
     const state=JSON.parse(localStorage.getItem('hivepro_logistica_veiculos_v1')||'null');

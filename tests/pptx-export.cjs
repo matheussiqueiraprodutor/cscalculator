@@ -44,20 +44,33 @@ const assert=require('node:assert/strict');
   return [f('SUM(A1:A2)*20%',read),f('IFERROR(A1/A3,"")',read),f('IF(B1="","",IF(A1<=500,"ESTÁ CONFORME","NÃO CONFORME"))',read),f('IFERROR(A1/A2,"")',read)];
  });assert.deepEqual(formulas,[6,'','',0.5]);
  const output=await page.evaluate(async()=>{
-  const solo=await HivePptx.memorial('solo'),aereo=await HivePptx.memorial('aereo'),logistica=await HivePptx.logistics();
+  const selections=[],render=HiveSheetImage.render;
+  HiveSheetImage.render=async(zip,options)=>{selections.push(options.regions);return render(zip,options);};
+  let solo,aereo,soloTwo,aereoTwo;const saved=localStorage.getItem('descritivo_dados_luz');
+  try{
+    solo=await HivePptx.memorial('solo');aereo=await HivePptx.memorial('aereo');
+    const light=JSON.parse(saved);light.gruposResultados.push({nome:'Luz solo',aparelhos:2,suspenso:false,equipamentos:[{label:'Refletor solo',qty:2,peso:10}]});
+    localStorage.setItem('descritivo_dados_luz',JSON.stringify(light));soloTwo=await HivePptx.memorial('solo');
+    light.gruposResultados.push({nome:'Luz aérea 2',aparelhos:1,suspenso:true,qtdPontos:1,equipamentos:[{label:'Refletor suspenso',qty:1,peso:5}]});
+    localStorage.setItem('descritivo_dados_luz',JSON.stringify(light));aereoTwo=await HivePptx.memorial('aereo');
+  }finally{HiveSheetImage.render=render;localStorage.setItem('descritivo_dados_luz',saved);}
+  const dimensions=[];for(const png of [solo,aereo,soloTwo,aereoTwo]){const im=new Image();im.src=png;await im.decode();dimensions.push([im.width,im.height]);}
+  const logistica=await HivePptx.logistics();
   // Expose the filled images for visual QA, not product data.
   const values={evento:'lilly cardiometabolismo',data:'03/11/2026',local:'Centro de Eventos',salas:'Principal',endereço:'Rua de Teste, 123','data montagem':'12/11/2026','tec de vídeo':'Maria Silva','tec de som':'João Santos','tec de iluminação':'Ana Souza','técnico de vídeo e auxiliar de vídeo':'Maria Silva e Pedro Lima','técnico de luz e auxiliares de luz':'Ana Souza e Carlos Silva','técnico de som e auxiliar de som':'João Santos e José Lima'};
   window.confirm=()=>true;window.artDownloadBlob=()=>{};
   const blob=await HivePptx.generate(values);const data=Array.from(new Uint8Array(await blob.arrayBuffer()));
-  return {data,solo,aereo,logistica};
+  return {data,solo,aereo,soloTwo,aereoTwo,logistica,selections,dimensions};
  });
+ assert.deepEqual(output.selections,[['B6:E25'],['B7:E22'],['B6:E25','G6:J25'],['B7:E22','G7:K22']]);
+ assert.deepEqual(output.dimensions,[[3200,1800],[3200,1800],[3200,1800],[3200,1800]]);
  fs.mkdirSync('.qa',{recursive:true});fs.writeFileSync('.qa/export-test.pptx',Buffer.from(output.data));
  const JSZip=require('jszip');const original=await JSZip.loadAsync(fs.readFileSync('assets/hive-template.pptx'));const exported=await JSZip.loadAsync(Buffer.from(output.data));
  const wrappedHex=await exported.file('ppt/slides/slide3.xml').async('string');
  assert(wrappedHex.includes('cardiometabolismo'));
  assert(wrappedHex.includes('wrap="none"'));
  for(const index of [1,5,6,7,10,11])assert.deepEqual(await exported.file(`ppt/slides/slide${index}.xml`).async('nodebuffer'),await original.file(`ppt/slides/slide${index}.xml`).async('nodebuffer'));
- for(const kind of ['solo','aereo','logistica'])fs.writeFileSync('.qa/'+kind+'.png',Buffer.from(output[kind].split(',')[1],'base64'));
+ for(const kind of ['solo','aereo','soloTwo','aereoTwo','logistica'])fs.writeFileSync('.qa/'+kind+'.png',Buffer.from(output[kind].split(',')[1],'base64'));
  // Broken runs, escaping, and overlong text must be handled without modifying fixed labels.
  const checks=await page.evaluate(async()=>{
   const d=new DOMParser().parseFromString('<a:p xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:r><a:t>Label {{ even</a:t></a:r><a:r><a:t>to }} final</a:t></a:r></a:p>','application/xml');
