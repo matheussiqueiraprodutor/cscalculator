@@ -21,6 +21,10 @@ Calibri, Arial, and Times New Roman must be installed on the exporting computer;
 the exporter checks availability instead of silently substituting fonts.
 The memorial image renderer implements the formulas, styles, merged cells, print areas,
 number formats, and conditional rule found in the two bundled Excel templates.
+PowerPoint memorials crop only structure blocks with equipment and compose them on a transparent
+3200x1800 (16:9) canvas. Unused structure blocks and blank signature sections are excluded;
+each included table retains all its original equipment slots and total rows. Tests cover
+one and two filled tables in both solo and aerial workbooks.
 It rejects unsupported formulas and excess equipment/structures instead of omitting data.
 Any future change to these Excel templates needs corresponding rendering verification.
 

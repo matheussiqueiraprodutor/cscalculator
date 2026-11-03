@@ -32,7 +32,7 @@
     function compare(){let a=sum();if(['=','<>','<','>','<=','>='].includes(tokens[i])){const op=tokens[i++],l=a,r=sum();a=()=>{const x=l(),y=r();switch(op){case '=':return x===y;case '<>':return x!==y;case '<':return x<y;case '>':return x>y;case '<=':return x<=y;case '>=':return x>=y;}};}return a;}
     const result=compare();if(i!==tokens.length)throw Error('Fórmula não suportada: '+source);return result();
   }
-  async function render(zip){
+  async function render(zip,options={}){
     const load=async p=>xml(await zip.file(p).async('string'));
     const [sheet,styles,shared,book,theme]=await Promise.all(['xl/worksheets/sheet1.xml','xl/styles.xml','xl/sharedStrings.xml','xl/workbook.xml','xl/theme/theme1.xml'].map(load));
     const strings=all(shared,'si').map(s=>all(s,'t').map(t=>t.textContent).join(''));
@@ -83,7 +83,30 @@
       const lineHeight=size*1.12,total=lines.length*lineHeight,vertical=attr(alignment,'vertical','bottom');let ty=y+(vertical==='center'?(mh-total)/2:vertical==='top'?2:mh-total-2);const horizontal=attr(alignment,'horizontal','general');
       ctx.save();ctx.beginPath();ctx.rect(x+1,y+1,mw-2,mh-2);ctx.clip();for(const line of lines){const tw=ctx.measureText(line).width;const tx=horizontal==='center'?x+(mw-tw)/2:horizontal==='right'||(horizontal==='general'&&typeof read(address(c,r))==='number')?x+mw-tw-3:x+3;ctx.fillText(line,tx,ty);ty+=lineHeight;}ctx.restore();
     }
-    return output.toDataURL('image/png');
+    if(!options.regions?.length)return output.toDataURL('image/png');
+    // Crop existing filled structure blocks, preserving their cells, fonts, borders and proportions.
+    const crops=options.regions.map(range=>{
+      const [start,end]=range.split(':'),[left,top]=ref(start),[right,bottom]=ref(end);
+      if(left<c1||right>c2||top<r1||bottom>r2)throw Error('Tabela fora da área de impressão do memorial.');
+      return {x:xs[left]*2,y:ys[top]*2,w:(xs[right]+widths[right]-xs[left])*2,h:(ys[bottom]+heights[bottom]-ys[top])*2};
+    });
+    const landscape=document.createElement('canvas');landscape.width=3200;landscape.height=1800;
+    const margin=24,gap=32,availableW=landscape.width-margin*2,availableH=landscape.height-margin*2;
+    const maxW=Math.max(...crops.map(c=>c.w)),maxH=Math.max(...crops.map(c=>c.h));
+    let best;
+    for(let columns=1;columns<=crops.length;columns++){
+      const rows=Math.ceil(crops.length/columns),scale=Math.min((availableW-gap*(columns-1))/(columns*maxW),(availableH-gap*(rows-1))/(rows*maxH));
+      if(!best||scale>best.scale)best={columns,rows,scale};
+    }
+    const target=landscape.getContext('2d'),cellW=maxW*best.scale,cellH=maxH*best.scale;
+    const gridH=best.rows*cellH+(best.rows-1)*gap;
+    crops.forEach((crop,i)=>{
+      const row=Math.floor(i/best.columns),column=i%best.columns,count=Math.min(best.columns,crops.length-row*best.columns);
+      const gridW=count*cellW+(count-1)*gap,w=crop.w*best.scale,h=crop.h*best.scale;
+      const x=(landscape.width-gridW)/2+column*(cellW+gap)+(cellW-w)/2,y=(landscape.height-gridH)/2+row*(cellH+gap)+(cellH-h)/2;
+      target.drawImage(output,crop.x,crop.y,crop.w,crop.h,x,y,w,h);
+    });
+    return landscape.toDataURL('image/png');
   }
   window.HiveSheetImage={render,formula};
 })();
