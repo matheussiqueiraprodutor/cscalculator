@@ -42,6 +42,7 @@
       for(const m of matches){
         let parent=p.parentElement;while(parent&&parent.localName!=='sp')parent=parent.parentElement;if(parent)affected.add(parent);
         const key=m[1].trim();if(!(key in values))throw Error('Campo não mapeado: '+key);
+        if(parent){parent.hiveFields=parent.hiveFields||new Set();parent.hiveFields.add(key);}
         let start=0,first=null;
         for(const t of ts){const end=start+t.textContent.length;
           if(end>m.index&&start<m.index+m[0].length){
@@ -61,11 +62,62 @@
       const next=r.cloneNode(true);one(next,'t').textContent=text;br.after(next);anchor=next;
     }
   }
-  function fitFields(d,affected){
+  function fitHexagon(s){
+    const b=box(s),body=one(s,'bodyPr'),paras=all(s,'p'),pt=+(one(s,'rPr')?.getAttribute('sz')||3200)/100;
+    const lineHeight=pt*96/72*1.2,height=b.h/9525,width=b.w/9525;
+    const adjustment=all(s,'gd').find(e=>e.getAttribute('name')==='adj')?.getAttribute('fmla');
+    const bevel=adjustment?Number(adjustment.replace('val ',''))/100000:0.25;
+    const space=(i,count)=>{
+      const top=(height-count*lineHeight)/2+i*lineHeight;
+      // Test both edges of each line against the sloping polygon, leaving an inset.
+      const distance=Math.max(Math.abs(top-height/2),Math.abs(top+lineHeight-height/2))/(height/2);
+      return width*(1-2*bevel*distance)-20;
+    };
+    const measure=span=>{const rp=span.style,size=+(rp?.getAttribute('sz')||pt*100)/100;ctx.font=`${rp?.getAttribute('b')==='1'?'bold ':''}${size*96/72}px Calibri`;return ctx.measureText(span.text).width;};
+    const input=paras.map(p=>{
+      const tokens=[];
+      for(const r of Array.from(p.children)){
+        if(r.localName==='br'){tokens.push({br:true});continue;}
+        if(r.localName!=='r')continue;
+        const style=one(r,'rPr');for(const word of (one(r,'t')?.textContent||'').trim().split(/\s+/).filter(Boolean))tokens.push({text:word,style});
+      }
+      return {p,tokens};
+    });
+    let layout;
+    for(let count=1;count*lineHeight<=height-16;count++){
+      const out=[];let failed=false;
+      for(const {p,tokens} of input){
+        let line={p,spans:[],width:0};
+        for(const token of tokens){
+          if(token.br){out.push(line);line={p,spans:[],width:0};continue;}
+          let span={...token,text:(line.spans.length?' ':'')+token.text};
+          if(line.width+measure(span)>space(out.length,count)&&line.spans.length){out.push(line);line={p,spans:[],width:0};span={...token};}
+          // A single long word may use the wider middle of the hexagon; never split it prematurely.
+          if(measure(span)>space(out.length,count)){failed=true;break;}
+          line.spans.push(span);line.width+=measure(span);
+        }
+        if(failed)break;out.push(line);
+      }
+      if(!failed&&out.length<=count&&out.every((line,i)=>line.width<=space(i,out.length))){layout=out;break;}
+    }
+    if(!layout)return false;
+    for(const p of paras){
+      const rows=layout.filter(line=>line.p===p);for(const child of Array.from(p.children))if(['r','br'].includes(child.localName))child.remove();
+      const end=Array.from(p.children).find(e=>e.localName==='endParaRPr');
+      rows.forEach((line,i)=>{if(i)p.insertBefore(node(s.ownerDocument,A,'a:br'),end||null);for(const span of line.spans){const r=node(s.ownerDocument,A,'a:r');if(span.style)r.append(span.style.cloneNode(true));const t=node(s.ownerDocument,A,'a:t');t.setAttributeNS('http://www.w3.org/XML/1998/namespace','xml:space','preserve');t.textContent=span.text;r.append(t);p.insertBefore(r,end||null);}});
+    }
+    body.setAttribute('wrap','none');all(body,'spAutoFit').forEach(e=>e.remove());
+    return true;
+  }
+  function fitFields(d,affected,page){
     for(const s of all(d,'sp')){
       if(affected&&!affected.has(s))continue;
       const b=box(s),hex=one(s,'prstGeom')?.getAttribute('prst')==='hexagon';
       if(!one(s,'txBody')||!all(s,'t').length)continue;
+      const fields=Array.from(s.hiveFields||[]).map(k=>({'evento':'nome do evento','data':'data do evento','data montagem':'data de montagem'}[k]||k)).join(' e ');
+      const location=page|| (one(s,'cNvPr')?.getAttribute('id')==='21'?3:2);
+      const overflow=()=>Error('Página '+location+' — '+(fields||'texto do evento')+': o texto continua maior que a área disponível, mesmo após a quebra automática de linhas. Revise esse campo; a fonte e o desenho foram preservados.');
+      if(hex){if(!fitHexagon(s))throw overflow();continue;}
       // A central rectangle 60% wide and 80% high stays inside the hexagon's slopes.
       const width=(b.w/9525)*(hex?0.60:0.94),height=(b.h/9525)*(hex?0.80:0.94);
       let used=0;
@@ -90,7 +142,7 @@
           }else remaining-=w;
         }
       }
-      if(used>height)throw Error('O texto excede a área de “'+one(s,'cNvPr').getAttribute('name')+'”. Abrevie o evento, endereço ou nomes na revisão da exportação.');
+      if(used>height)throw overflow();
       const body=one(s,'bodyPr');body.setAttribute('wrap','square');all(body,'spAutoFit').forEach(e=>e.remove());
     }
   }
@@ -152,7 +204,7 @@
     for(const font of ['Calibri','Arial','Times New Roman'])if(!hasFont(font))throw Error('A fonte '+font+' precisa estar instalada para preservar o modelo e os memoriais.');
     const response=await fetch('assets/hive-template.pptx');if(!response.ok)throw Error('Não foi possível carregar o PowerPoint modelo.');
     const zip=await JSZip.loadAsync(await response.arrayBuffer());
-    for(const index of [2,3]){const path=`ppt/slides/slide${index}.xml`,d=xml(await zip.file(path).async('string'));const affected=replaceTokens(d,values);fitFields(d,affected);zip.file(path,serialize(d));}
+    for(const index of [2,3]){const path=`ppt/slides/slide${index}.xml`,d=xml(await zip.file(path).async('string'));const affected=replaceTokens(d,values);fitFields(d,affected,index);zip.file(path,serialize(d));}
     const path='ppt/slides/slide4.xml',d=xml(await zip.file(path).async('string'));const summary=gerarResumoTecnico().texto;if(!summary)throw Error('Gere o descritivo técnico antes de exportar.');description(d,summary);zip.file(path,serialize(d));
     // Content area copied from the existing vehicle-logistics rectangle in the template.
     const area=box(shape(xml(await zip.file('ppt/slides/slide12.xml').async('string')),14));

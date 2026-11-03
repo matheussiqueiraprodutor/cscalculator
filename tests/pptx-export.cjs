@@ -46,13 +46,16 @@ const assert=require('node:assert/strict');
  const output=await page.evaluate(async()=>{
   const solo=await HivePptx.memorial('solo'),aereo=await HivePptx.memorial('aereo'),logistica=await HivePptx.logistics();
   // Expose the filled images for visual QA, not product data.
-  const values={evento:'Congresso de Tecnologia',data:'03/11/2026',local:'Centro de Eventos',salas:'Principal',endereço:'Rua de Teste, 123','data montagem':'02/11/2026','tec de vídeo':'Maria Silva','tec de som':'João Santos','tec de iluminação':'Ana Souza','técnico de vídeo e auxiliar de vídeo':'Maria Silva e Pedro Lima','técnico de luz e auxiliares de luz':'Ana Souza e Carlos Silva','técnico de som e auxiliar de som':'João Santos e José Lima'};
+  const values={evento:'lilly cardiometabolismo',data:'03/11/2026',local:'Centro de Eventos',salas:'Principal',endereço:'Rua de Teste, 123','data montagem':'12/11/2026','tec de vídeo':'Maria Silva','tec de som':'João Santos','tec de iluminação':'Ana Souza','técnico de vídeo e auxiliar de vídeo':'Maria Silva e Pedro Lima','técnico de luz e auxiliares de luz':'Ana Souza e Carlos Silva','técnico de som e auxiliar de som':'João Santos e José Lima'};
   window.confirm=()=>true;window.artDownloadBlob=()=>{};
   const blob=await HivePptx.generate(values);const data=Array.from(new Uint8Array(await blob.arrayBuffer()));
   return {data,solo,aereo,logistica};
  });
  fs.mkdirSync('.qa',{recursive:true});fs.writeFileSync('.qa/export-test.pptx',Buffer.from(output.data));
  const JSZip=require('jszip');const original=await JSZip.loadAsync(fs.readFileSync('assets/hive-template.pptx'));const exported=await JSZip.loadAsync(Buffer.from(output.data));
+ const wrappedHex=await exported.file('ppt/slides/slide3.xml').async('string');
+ assert(wrappedHex.includes('cardiometabolismo'));
+ assert(wrappedHex.includes('wrap="none"'));
  for(const index of [1,5,6,7,10,11])assert.deepEqual(await exported.file(`ppt/slides/slide${index}.xml`).async('nodebuffer'),await original.file(`ppt/slides/slide${index}.xml`).async('nodebuffer'));
  for(const kind of ['solo','aereo','logistica'])fs.writeFileSync('.qa/'+kind+'.png',Buffer.from(output[kind].split(',')[1],'base64'));
  // Broken runs, escaping, and overlong text must be handled without modifying fixed labels.
@@ -61,7 +64,7 @@ const assert=require('node:assert/strict');
   HivePptx.replaceTokens(d,{evento:'A & B <C>'});
   const txt=d.documentElement.textContent;
   const z=await JSZip.loadAsync(await (await fetch('assets/hive-template.pptx')).arrayBuffer());const slide=new DOMParser().parseFromString(await z.file('ppt/slides/slide2.xml').async('string'),'application/xml');
-  HivePptx.replaceTokens(slide,{evento:'Nome muito longo '.repeat(200),data:'',local:'',salas:'',endereço:'','tec de vídeo':'','tec de som':'','tec de iluminação':''});let rejected=false;try{HivePptx.fitFields(slide);}catch{rejected=true;}
+  const fields=HivePptx.replaceTokens(slide,{evento:'Nome muito longo '.repeat(200),data:'',local:'',salas:'',endereço:'','tec de vídeo':'','tec de som':'','tec de iluminação':''});let rejected=false;try{HivePptx.fitFields(slide,fields,2);}catch(e){rejected=e.message.includes('Página 2')&&e.message.includes('nome do evento')&&!e.message.includes('Hexágono');}
   const desc=new DOMParser().parseFromString(await z.file('ppt/slides/slide4.xml').async('string'),'application/xml');
   const fontSize=HivePptx.description(desc,'Texto técnico de teste com várias linhas. '.repeat(100));
   return {txt,rejected,fontSize};
