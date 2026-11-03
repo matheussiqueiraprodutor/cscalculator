@@ -63,7 +63,13 @@
     }
   }
   function fitHexagon(s){
-    const b=box(s),body=one(s,'bodyPr'),paras=all(s,'p'),pt=+(one(s,'rPr')?.getAttribute('sz')||3200)/100;
+    const original=+(one(s,'rPr')?.getAttribute('sz')||3200)/100;
+    // Try the original size first, then reduce in quarter-point steps. Failed attempts do not edit XML.
+    for(let size=original;size>=8;size-=0.25)if(fitHexagonAtSize(s,size/original))return true;
+    return false;
+  }
+  function fitHexagonAtSize(s,scale){
+    const b=box(s),body=one(s,'bodyPr'),paras=all(s,'p'),originalPt=+(one(s,'rPr')?.getAttribute('sz')||3200)/100,pt=originalPt*scale;
     const lineHeight=pt*96/72*1.2,height=b.h/9525,width=b.w/9525;
     const adjustment=all(s,'gd').find(e=>e.getAttribute('name')==='adj')?.getAttribute('fmla');
     const bevel=adjustment?Number(adjustment.replace('val ',''))/100000:0.25;
@@ -73,7 +79,7 @@
       const distance=Math.max(Math.abs(top-height/2),Math.abs(top+lineHeight-height/2))/(height/2);
       return width*(1-2*bevel*distance)-20;
     };
-    const measure=span=>{const rp=span.style,size=+(rp?.getAttribute('sz')||pt*100)/100;ctx.font=`${rp?.getAttribute('b')==='1'?'bold ':''}${size*96/72}px Calibri`;return ctx.measureText(span.text).width;};
+    const measure=span=>{const rp=span.style,size=+(rp?.getAttribute('sz')||originalPt*100)/100*scale;ctx.font=`${rp?.getAttribute('b')==='1'?'bold ':''}${size*96/72}px Calibri`;return ctx.measureText(span.text).width*1.08;};
     const input=paras.map(p=>{
       const tokens=[];
       for(const r of Array.from(p.children)){
@@ -104,7 +110,11 @@
     for(const p of paras){
       const rows=layout.filter(line=>line.p===p);for(const child of Array.from(p.children))if(['r','br'].includes(child.localName))child.remove();
       const end=Array.from(p.children).find(e=>e.localName==='endParaRPr');
-      rows.forEach((line,i)=>{if(i)p.insertBefore(node(s.ownerDocument,A,'a:br'),end||null);for(const span of line.spans){const r=node(s.ownerDocument,A,'a:r');if(span.style)r.append(span.style.cloneNode(true));const t=node(s.ownerDocument,A,'a:t');t.setAttributeNS('http://www.w3.org/XML/1998/namespace','xml:space','preserve');t.textContent=span.text;r.append(t);p.insertBefore(r,end||null);}});
+      // Size every run, break, and empty paragraph explicitly so inherited 32 pt spacers cannot overflow.
+      const resized=style=>{const rp=style?style.cloneNode(true):node(s.ownerDocument,A,'a:rPr');rp.setAttribute('sz',Math.round(+(style?.getAttribute('sz')||originalPt*100)*scale));return rp;};
+      rows.forEach((line,i)=>{if(i){const br=node(s.ownerDocument,A,'a:br');br.append(resized(line.spans[0]?.style));p.insertBefore(br,end||null);}for(const span of line.spans){const r=node(s.ownerDocument,A,'a:r');r.append(resized(span.style));const t=node(s.ownerDocument,A,'a:t');t.setAttributeNS('http://www.w3.org/XML/1998/namespace','xml:space','preserve');t.textContent=span.text;r.append(t);p.insertBefore(r,end||null);}});
+      if(end)end.setAttribute('sz',Math.round(+(end.getAttribute('sz')||originalPt*100)*scale));
+      else {const ep=node(s.ownerDocument,A,'a:endParaRPr',{sz:Math.round(pt*100)});p.append(ep);}
     }
     body.setAttribute('wrap','none');all(body,'spAutoFit').forEach(e=>e.remove());
     return true;
@@ -116,7 +126,7 @@
       if(!one(s,'txBody')||!all(s,'t').length)continue;
       const fields=Array.from(s.hiveFields||[]).map(k=>({'evento':'nome do evento','data':'data do evento','data montagem':'data de montagem'}[k]||k)).join(' e ');
       const location=page|| (one(s,'cNvPr')?.getAttribute('id')==='21'?3:2);
-      const overflow=()=>Error('Página '+location+' — '+(fields||'texto do evento')+': o texto continua maior que a área disponível, mesmo após a quebra automática de linhas. Revise esse campo; a fonte e o desenho foram preservados.');
+      const overflow=()=>Error('Página '+location+' — '+(fields||'texto do evento')+': o texto excede a área mesmo após '+(hex?'quebrar as linhas e reduzir a fonte até 8 pontos':'a quebra automática de linhas')+'. Revise esse campo; o desenho e sua posição foram preservados.');
       if(hex){if(!fitHexagon(s))throw overflow();continue;}
       // A central rectangle 60% wide and 80% high stays inside the hexagon's slopes.
       const width=(b.w/9525)*(hex?0.60:0.94),height=(b.h/9525)*(hex?0.80:0.94);

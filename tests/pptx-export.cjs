@@ -67,7 +67,15 @@ const assert=require('node:assert/strict');
   const fields=HivePptx.replaceTokens(slide,{evento:'Nome muito longo '.repeat(200),data:'',local:'',salas:'',endereço:'','tec de vídeo':'','tec de som':'','tec de iluminação':''});let rejected=false;try{HivePptx.fitFields(slide,fields,2);}catch(e){rejected=e.message.includes('Página 2')&&e.message.includes('nome do evento')&&!e.message.includes('Hexágono');}
   const desc=new DOMParser().parseFromString(await z.file('ppt/slides/slide4.xml').async('string'),'application/xml');
   const fontSize=HivePptx.description(desc,'Texto técnico de teste com várias linhas. '.repeat(100));
-  return {txt,rejected,fontSize};
- });assert.equal(checks.txt,'Label A & B <C> final');assert(checks.rejected);assert(checks.fontSize<16);
+  const shrink=new DOMParser().parseFromString(await z.file('ppt/slides/slide3.xml').async('string'),'application/xml');
+  const shrinkFields=HivePptx.replaceTokens(shrink,{evento:'Encontro nacional de cardiometabolismo e inovação em tratamentos e tecnologias para a saúde', 'data montagem':'12/11/2026','técnico de vídeo e auxiliar de vídeo':'Clayton, Gleydson','técnico de luz e auxiliares de luz':'Leonardo, William','técnico de som e auxiliar de som':'Marcelo'});
+  HivePptx.fitFields(shrink,shrinkFields,3);
+  const hex=Array.from(shrink.getElementsByTagNameNS('*','sp')).find(s=>s.getElementsByTagNameNS('*','cNvPr')[0]?.getAttribute('id')==='21');
+  const sizes=Array.from(hex.getElementsByTagNameNS('*','rPr')).map(e=>+e.getAttribute('sz'));
+  const reduced=Math.max(...sizes)<3200&&Math.min(...sizes)>=800;
+  return {txt,rejected,fontSize,reduced,shrinkXml:new XMLSerializer().serializeToString(shrink)};
+ });assert.equal(checks.txt,'Label A & B <C> final');assert(checks.rejected);assert(checks.fontSize<16);assert(checks.reduced);
+ exported.file('ppt/slides/slide3.xml',checks.shrinkXml);
+ fs.writeFileSync('.qa/shrink-test.pptx',await exported.generateAsync({type:'nodebuffer'}));
  assert.deepEqual(errors,[]);await browser.close();console.log('PASS: export, workbook formulas, dialog, split runs, escaping, overflow.');
 })().catch(e=>{console.error(e);process.exit(1);});
