@@ -109,7 +109,12 @@ async function loadRequests(){
       (r.is_test?'<span class="badge test">TESTE</span>':'')+'</h3>'+
       '<div class="muted">'+esc(dateRange(r))+(r.event_location?' · '+esc(r.event_location):'')+
       (progressText?' · '+esc(progressText):'')+'</div></div>'+
-      '<div class="actions"><button class="secondary" onclick="toggleRequest(\''+r.id+'\',this)">Abrir</button>'+
+      '<div class="actions">'+
+      (r.status==='ready'?items.filter(item=>{
+        const cs=candidates.filter(c=>Number(c.request_item_id)===Number(item.id));
+        return cs.filter(c=>c.status==='available'||c.status==='confirmed').length<Number(item.quantity)&&cs.some(c=>c.status==='pending');
+      }).map(item=>'<a class="btn" href="equipe.html?request='+encodeURIComponent(r.id)+'">Continuar seleção · '+esc(functionsMap.get(Number(item.function_id))?.name||'Função')+'</a>').join(''):'')+
+      '<button class="secondary" onclick="toggleRequest(\''+r.id+'\',this)">Abrir</button>'+
       (r.status==='ready'?'<button class="success" onclick="closeRequest(\''+r.id+'\',\'completed\')">Finalizar</button><button class="danger" onclick="closeRequest(\''+r.id+'\',\'cancelled\')">Cancelar</button>':'')+
       '</div></div><div class="details"><div class="muted">Carregando detalhes...</div></div></div>';
   }).join('');
