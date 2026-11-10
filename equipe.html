@@ -6,32 +6,41 @@
 <section class="card"><h2>Ordem sugerida</h2><p class="muted">O Hive Pro usa a base da planilha da empresa em modo somente leitura. A função preferencial informada na planilha tem prioridade; depois entram avaliação e, em caso de empate, localização. Nenhuma mensagem é enviada nesta etapa.</p><div id="dbSync" class="muted" style="margin-top:-6px;margin-bottom:6px;opacity:.78">Base atualizada: carregando...</div><div id="realtimeState" class="muted" style="margin-bottom:10px;opacity:.78">Atualização em tempo real: conectando...</div><div id="bulkBar" class="bulkbar"><div class="muted">Revise as mensagens abaixo. Quando estiver tudo certo, aprove todas de uma vez.</div><button id="approveAll" type="button">Aprovar e enviar todas</button></div><div id="results"><div class="muted">Informe a equipe necessária para gerar a ordem.</div></div></section></div></main>
 <script>
 let functions=[],freelancers=[],staffingRealtimeChannel=null,activeAssignments=[],currentRequestIsTest=false,currentRequestReservationMode='normal',currentRequestId=null;
-const sectorName={audio:'Áudio',luz:'Iluminação',video:'Vídeo',geral:'Geral'};
 
 function esc(v){
   return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+const functionDisplayOrder=[
+  "Técnico de Áudio",
+  "Técnico de Iluminação",
+  "Técnico de Vídeo",
+  "Operador de PPT",
+  "Técnico de Streaming",
+  "Técnico AV",
+  "Auxiliar de Áudio",
+  "Auxiliar de Iluminação",
+  "Auxiliar de Vídeo",
+  "Auxiliar Geral",
+  "Cinegrafista"
+];
+
 function options(sel){
-  const visualOrder=name=>{
-    if(/^Técnico de /i.test(name)||name==='Técnico AV')return 1;
-    if(name==='Operador de PPT')return 2;
-    if(/^Auxiliar de /i.test(name)||name==='Auxiliar Geral')return 3;
-    return 2;
+  const position=name=>{
+    const index=functionDisplayOrder.indexOf(name);
+    return index===-1?functionDisplayOrder.length:index;
   };
 
   return functions
     .filter(f=>f.active)
     .slice()
     .sort((a,b)=>
-      visualOrder(a.name)-visualOrder(b.name)||
-      String(a.sector).localeCompare(String(b.sector),'pt-BR')||
-      Number(a.sort_order||0)-Number(b.sort_order||0)||
+      position(a.name)-position(b.name)||
       String(a.name).localeCompare(String(b.name),'pt-BR')
     )
     .map(f =>
       '<option value="'+f.id+'" '+(String(sel)===String(f.id)?'selected':'')+'>'+
-      sectorName[f.sector]+' · '+esc(f.name)+'</option>'
+      esc(f.name)+'</option>'
     ).join('');
 }
 
@@ -981,7 +990,7 @@ build.onclick=async()=>{
     const fn=functions.find(f=>Number(f.id)===n.function_id);
     const cs=candidateQueues.get(n.function_id)||[];
     return '<div class="result" data-function-id="'+n.function_id+'">'+
-      '<h3>'+esc(sectorName[fn.sector])+' · '+esc(fn.name)+' <span class="muted">('+n.quantity+' vaga'+(n.quantity>1?'s':'')+')</span></h3>'+
+      '<h3>'+esc(fn.name)+' <span class="muted">('+n.quantity+' vaga'+(n.quantity>1?'s':'')+')</span></h3>'+
       '<div class="fill-progress">0/'+n.quantity+' preenchida'+(n.quantity>1?'s':'')+'</div>'+
       (cs.length?cs.map((cand,i)=>
         '<div class="candidate '+(i<n.quantity?'':'queued')+'" data-freelancer-id="'+esc(cand.id)+'">'+
