@@ -1,0 +1,2 @@
+alter table public.company_freelancers_cache add column if not exists secondary_function text not null default '', add column if not exists functions_assigned boolean not null default false;
+comment on column public.company_freelancers_cache.functions_assigned is 'When true, staffing eligibility uses only the explicitly assigned preferred and secondary functions.';
