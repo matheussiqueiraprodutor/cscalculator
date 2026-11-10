@@ -69,7 +69,7 @@ async function initData(){
   if(r.error)throw r.error;
   functions=r.data||[];
   r=await MMAuth.client.from('company_freelancers_cache')
-    .select('source_key,full_name,whatsapp,city,state,audio,lighting,resolume,vmix,sound_design,camera,powerpoint,rating,preferred_function,synced_at')
+    .select('source_key,full_name,whatsapp,city,state,audio,lighting,resolume,vmix,sound_design,camera,powerpoint,rating,preferred_function,secondary_function,functions_assigned,synced_at')
     .order('full_name');
   if(r.error)throw r.error;
   freelancers=r.data||[];
@@ -137,6 +137,11 @@ function preferredForFunction(f,fn){
 
 function eligibleForFunction(f,fn){
   if(!fn)return false;
+  if(f.functions_assigned){
+    const role=normalizeText(fn.name);
+    return [f.preferred_function,f.secondary_function]
+      .some(value=>value&&normalizeText(value)===role);
+  }
 
   // A função preferencial serve para ordenar candidatos, mas nunca substitui
   // a qualificação técnica informada nas colunas da planilha.
