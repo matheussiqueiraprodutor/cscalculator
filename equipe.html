@@ -14,7 +14,7 @@ function esc(v){
 
 function options(sel){
   const visualOrder=name=>{
-    if(/^Técnico de /i.test(name))return 1;
+    if(/^Técnico de /i.test(name)||name==='Técnico AV')return 1;
     if(name==='Operador de PPT')return 2;
     if(/^Auxiliar de /i.test(name)||name==='Auxiliar Geral')return 3;
     return 2;
