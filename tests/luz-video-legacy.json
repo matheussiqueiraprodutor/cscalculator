@@ -1,0 +1,352 @@
+{
+  "luz": {
+    "estado": {
+      "campos": {
+        "tensaoRede": "220",
+        "ampsCircuito": "20",
+        "cabeamentoKgM": "0.5",
+        "susp-grupo-v1": true,
+        "usaanc-grupo-v1": true,
+        "usatalha-grupo-v1": false,
+        "pontos-grupo-v1": "1",
+        "capponto-grupo-v1": "500",
+        "box-grupo-v1": false,
+        "sel-grupo-v1": "beam9r",
+        "qty-grupo-v1": "1",
+        "comp-grupo-v1": "0",
+        "usaSplitter": true,
+        "usaArtnet": false,
+        "saidasSplitter": "8",
+        "saidasArtnet": "8"
+      },
+      "consoleAtual": "ma2full",
+      "infraDmx": {
+        "usaSplitter": true,
+        "saidasSplitter": 8,
+        "usaArtnet": false,
+        "saidasArtnet": 8
+      },
+      "grupos": [
+        {
+          "id": "v1",
+          "nome": "Vara principal",
+          "items": [
+            {
+              "type": "beam9r",
+              "qty": 4
+            }
+          ],
+          "comprimento": 0,
+          "suspenso": true,
+          "isBoxtruss": false,
+          "trussTipo": "q30",
+          "comprimentoTruss": 0,
+          "modoDmx": "junto",
+          "usaAncoragem": true,
+          "qtdPontos": 1,
+          "capacidadePonto": 500,
+          "usaTalha": false,
+          "qtdTalhas": 0,
+          "comprimentoTalha": 3
+        }
+      ],
+      "grupoCounter": 1,
+      "ts": 1794488762859
+    },
+    "resultado": {
+      "totalAparelhos": 4,
+      "totalW": 1200,
+      "totalKVA": 1.2,
+      "totalKg": 60,
+      "totalDmxCh": 64,
+      "saidasNecessarias": 1,
+      "parametrosMesa": 8192,
+      "parametrosUtilizados": 64,
+      "parametrosRestantes": 8128,
+      "saidasFisicasMesa": 6,
+      "saidasFisicasTotais": 14,
+      "saidasRestantes": 13,
+      "totalCircuitos": 1,
+      "consoleLabel": "grandMA2 full-size",
+      "consoleKey": "ma2full",
+      "totaisPorTipo": {
+        "beam9r": 4
+      },
+      "gruposResultados": [
+        {
+          "nome": "Vara principal",
+          "equipamentos": [
+            {
+              "label": "Moving Beam 9R (250W)",
+              "qty": 4,
+              "dmx": 64,
+              "watts": 1200,
+              "peso": 48
+            }
+          ],
+          "aparelhos": 4,
+          "watts": 1200,
+          "amps": 5.454545454545454,
+          "circuitos": 1,
+          "dmx": 64,
+          "saidasDmx": 1,
+          "modoDmx": "junto",
+          "comprimentoCabos": 0,
+          "pesoCabeamento": 0,
+          "isBoxtruss": false,
+          "trussLabel": null,
+          "comprimentoTruss": 0,
+          "pesoTruss": 0,
+          "suspenso": true,
+          "pesoEquipamentos": 48,
+          "pesoBumpers": 12,
+          "usaTalha": false,
+          "qtdTalhas": 0,
+          "comprimentoTalha": 0,
+          "pesoTalhas": 0,
+          "pesoSuspenso": 60,
+          "usaAncoragem": true,
+          "qtdPontos": 1,
+          "capacidadePonto": 500,
+          "capacidadeTotal": 500,
+          "pesoPorPonto": 60,
+          "pesoDisponivel": 440,
+          "sobrecarregado": false
+        }
+      ],
+      "circuitosPorGrupo": [
+        {
+          "nome": "Vara principal",
+          "watts": 1200,
+          "amps": 5.454545454545454,
+          "circuitos": 1
+        }
+      ],
+      "riggingResultados": [
+        {
+          "nome": "Vara principal",
+          "aparelhos": 4,
+          "peso": 60,
+          "usaAncoragem": true,
+          "usaTalha": false,
+          "qtdPontos": 1,
+          "pesoPorPonto": 60,
+          "capacidadePonto": 500,
+          "capacidadeTotal": 500,
+          "pesoDisponivel": 440,
+          "sobrecarregado": false,
+          "qtdTalhas": 0,
+          "comprimentoTalha": 0
+        }
+      ],
+      "totalCases": 2,
+      "infraDmx": {
+        "usaSplitter": true,
+        "saidasSplitter": 8,
+        "usaArtnet": false,
+        "saidasArtnet": 8
+      },
+      "saidasSplitter": 8,
+      "saidasArtnet": 8
+    }
+  },
+  "video": {
+    "estado": {
+      "campos": {
+        "larguraM": "6",
+        "alturaM": "3",
+        "topoAtivo": true,
+        "topoAlturaM": "0.5",
+        "perfilEletrico": "indoor",
+        "pixelPitch": "3",
+        "temTraseira": true,
+        "compFrente": "4",
+        "compTras": "2",
+        "pesoContrapeso": "40",
+        "alturaBarra": "4",
+        "processadoraSelect": "VX1000"
+      },
+      "panelSize": "100",
+      "mode": "ground",
+      "ts": 1794488763451
+    },
+    "resultado": {
+      "mode": "ground",
+      "larguraM": 6,
+      "alturaM": 3,
+      "panelSize": "100",
+      "pixelPitchKey": "3",
+      "perfilEletrico": "indoor",
+      "perfilEletricoLabel": "Indoor / locação",
+      "pixelPitchLabel": "P3",
+      "totalPaineis": 36,
+      "pesoTotal": 1112,
+      "potenciaTotalW": 5775,
+      "potenciaTotalKVA": 5.775,
+      "potenciaPainelUnit": 137.5,
+      "potenciaMaxPainelUnit": 275,
+      "potenciaMaxWm2": 550,
+      "fatorPotenciaConsiderada": 0.5,
+      "paineisPorCaboEnergia": 10,
+      "correntePorCaboEnergia": 6.25,
+      "potenciaPorCaboKVA": 1.375,
+      "cabosEnergia": 5,
+      "cabosSinal": 5,
+      "rjTotal": 10,
+      "mfFrente": 6,
+      "mfTras": 6,
+      "mfLateral": 2,
+      "temTraseira": true,
+      "compFrente": 4,
+      "compTras": 2,
+      "contrapesos": 12,
+      "chapas": 6,
+      "pesoContrapesoUnit": 40,
+      "bumpers": 0,
+      "talhas": 0,
+      "barras2m": 0,
+      "barras1m": 0,
+      "totalBarras": 0,
+      "tamanhoBarra": 2,
+      "comprimentoBarras": 6,
+      "alturaBarra": 4,
+      "casesTotal": 12,
+      "processadoraSelecionada": "VX1000",
+      "qtdSelecionada": 1,
+      "processadoraOkSaida": true,
+      "processadoraOkEntrada": true,
+      "candidatas": [
+        {
+          "nome": "VX600",
+          "maxPixels": 3900000,
+          "maxInputW": 3840,
+          "maxInputH": 2160,
+          "serieH": false,
+          "outputPorts": 6
+        },
+        {
+          "nome": "VC6",
+          "maxPixels": 3900000,
+          "maxInputW": 3840,
+          "maxInputH": 2784,
+          "serieH": false,
+          "outputPorts": 6
+        },
+        {
+          "nome": "VX1000",
+          "maxPixels": 6500000,
+          "maxInputW": 4096,
+          "maxInputH": 1080,
+          "serieH": false,
+          "outputPorts": 10
+        },
+        {
+          "nome": "VX16S",
+          "maxPixels": 10400000,
+          "maxInputW": 3840,
+          "maxInputH": 2160,
+          "serieH": false,
+          "outputPorts": 16
+        },
+        {
+          "nome": "H2",
+          "maxPixels": 26000000,
+          "maxInputW": 8192,
+          "maxInputH": 4320,
+          "serieH": true,
+          "outputPorts": 40,
+          "outputCards": 2,
+          "portsPerCard": 20
+        },
+        {
+          "nome": "H5",
+          "maxPixels": 39000000,
+          "maxInputW": 8192,
+          "maxInputH": 4320,
+          "serieH": true,
+          "outputPorts": 60,
+          "outputCards": 3,
+          "portsPerCard": 20
+        },
+        {
+          "nome": "H9",
+          "maxPixels": 65000000,
+          "maxInputW": 8192,
+          "maxInputH": 4320,
+          "serieH": true,
+          "outputPorts": 100,
+          "outputCards": 5,
+          "portsPerCard": 20
+        },
+        {
+          "nome": "H9 Enhanced",
+          "maxPixels": 130000000,
+          "maxInputW": 8192,
+          "maxInputH": 4320,
+          "serieH": true,
+          "outputPorts": 200,
+          "outputCards": 10,
+          "portsPerCard": 20
+        },
+        {
+          "nome": "H15",
+          "maxPixels": 130000000,
+          "maxInputW": 8192,
+          "maxInputH": 4320,
+          "serieH": true,
+          "outputPorts": 200,
+          "outputCards": 10,
+          "portsPerCard": 20
+        },
+        {
+          "nome": "H15 Enhanced",
+          "maxPixels": 208000000,
+          "maxInputW": 8192,
+          "maxInputH": 4320,
+          "serieH": true,
+          "outputPorts": 320,
+          "outputCards": 16,
+          "portsPerCard": 20
+        },
+        {
+          "nome": "H20",
+          "maxPixels": 260000000,
+          "maxInputW": 8192,
+          "maxInputH": 4320,
+          "serieH": true,
+          "outputPorts": 400,
+          "outputCards": 20,
+          "portsPerCard": 20
+        }
+      ],
+      "rjPrincipais": 5,
+      "rjRedundancia": 5,
+      "sugestaoProcessadoras": "2 processadoras com no mínimo 5 portas de saída cada: 1 para PRINCIPAL + 1 para REDUNDÂNCIA.",
+      "sugestaoProcessadorasQtd": 2,
+      "portasPorProcessadora": 5,
+      "topoAtivo": true,
+      "topoTotalPaineis": 12,
+      "topoLarguraPaineis": 12,
+      "topoAlturaPaineis": 1,
+      "topoAlturaM": 0.5,
+      "alturaRealTotal": 3.5,
+      "pesoPaineisTopo": 96,
+      "potenciaTotalWTopo": 825,
+      "cabosEnergiaTopo": 1,
+      "cabosSinalTopo": 1,
+      "paineisPorCaboEnergiaTopo": 21,
+      "totalPaineisGeral": 48,
+      "pesoMFFrenteUnit": 4,
+      "pesoMFTrasUnit": 2,
+      "pesoMFLateralUnit": 4,
+      "pesoChapaUnit": 1,
+      "pesoBumperUnit": 3,
+      "pesoTalhaUnit": 10,
+      "pesoBarra2mUnit": 7,
+      "pesoBarra1mUnit": 5,
+      "pesoPainelUnit": 13.5,
+      "pesoPainelUnitTopo": 8,
+      "areaM2": 21
+    }
+  }
+}

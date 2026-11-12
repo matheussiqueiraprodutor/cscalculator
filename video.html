@@ -412,6 +412,17 @@
     cursor:pointer;
   }
   .btn-copiar:hover{ color:var(--power); border-color:var(--power); }
+
+  #salasVideo{grid-column:1 / -1;}
+  #salasVideo .salas-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+  #salasVideo button{font-family:inherit;cursor:pointer;}
+  #salasVideo .salas-tabs button{border:1px solid var(--line);background:var(--panel-2);color:var(--muted);border-radius:20px;padding:10px 16px;max-width:100%;overflow-wrap:anywhere;}
+  #salasVideo .salas-tabs button.active{border-color:var(--accent,var(--signal));color:var(--accent,var(--signal));}
+  #salasVideo input{width:100%;background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:10px 12px;font:inherit;}
+  #salasVideo .btn-add{width:auto;height:38px;padding:0 14px;border:1px solid var(--accent,var(--power));border-radius:4px;background:var(--accent,var(--power));color:var(--text);font-weight:600;}
+  #excluirSalaVideo{width:auto;height:38px;padding:0 12px;white-space:nowrap;background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:4px;}
+  #excluirSalaVideo:disabled{opacity:.4;cursor:not-allowed;}
+  @media(max-width:600px){#salasVideo{max-width:calc(100vw - 40px);}#salasVideo .row2{grid-template-columns:1fr;}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="db-config.js"></script>
@@ -435,6 +446,7 @@
   <div class="save-status" id="saveStatus"><span style="display:inline-flex;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h13l3 3v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M8 4v5h8V4"/><rect x="7.5" y="13" width="9" height="6"/></svg></span><span id="saveStatusText">salvando…</span></div>
   <p class="sidebar-label">Seções</p>
   <nav id="sideNav">
+    <a href="#salasVideo">Salas de Vídeo</a>
     <a href="#sec-modo">Modo de montagem</a>
     <a href="#sec-painel">Painel de LED</a>
     <a href="#cardMaoFrancesa">Mão francesa</a>
@@ -454,6 +466,22 @@
 </aside>
 
 <main>
+  <div class="card" id="salasVideo">
+    <p class="section-title">Salas de Vídeo</p>
+    <div class="salas-tabs" id="abasSalasVideo" role="tablist" aria-label="Salas de Vídeo"></div>
+    <div class="row2">
+      <div class="field"><label for="nomeSalaVideo">Nome da sala selecionada</label><input id="nomeSalaVideo" type="text" maxlength="80" placeholder="Ex.: Plenária ou BU"></div>
+      <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+        <button type="button" class="btn-add" id="adicionarSalaVideo">+ Adicionar sala</button>
+        <button type="button" class="btn-add" id="duplicarSalaVideo">Duplicar sala</button>
+        <button type="button" class="btn-remove" id="excluirSalaVideo">Excluir sala</button>
+      </div>
+    </div>
+    <p class="note tight">Cada sala tem sua própria configuração. O descritivo soma todas as salas; os memoriais de solo e aéreo usam apenas a Sala 1.</p>
+    <p class="note tight" id="totalSalasVideo" aria-live="polite"></p>
+  </div>
+
+
   <!-- LEFT: INPUTS -->
   <div class="left-col">
 
@@ -1361,7 +1389,7 @@
     // O Descritivo Geral lê diretamente estes dados estruturados.
     // Não é mais necessário gerar o descritivo nesta calculadora.
     try {
-      localStorage.setItem('descritivo_dados_video', JSON.stringify(ultimoCalculo));
+      publicarSalasVideo();
       localStorage.setItem('descritivo_video_ts', String(Date.now()));
     } catch (e) {}
   }
@@ -1451,17 +1479,25 @@
   function coletarEstadoVideo(){
     const campos = {};
     document.querySelectorAll('input[id], select[id], textarea[id]').forEach(el => {
-      if (el.id === 'descritivoText') return;
+      if (el.id === 'descritivoText' || el.closest('#salasVideo')) return;
       campos[el.id] = el.type === 'checkbox' ? el.checked : el.value;
     });
-    return { campos, panelSize, mode, ts: ultimaEdicaoTs };
+    return { campos, panelSize, mode, processadoraSelecionada, ts: ultimaEdicaoTs };
   }
-  function salvarEstadoVideo(){ try { localStorage.setItem(STORAGE_KEY_VIDEO, JSON.stringify(coletarEstadoVideo())); ultimoSalvamentoTs = Date.now(); atualizarSaveStatus(); } catch(e) {} }
-  function agendarSalvarVideo(){ ultimaEdicaoTs = Date.now(); clearTimeout(saveTimerVideo); saveTimerVideo=setTimeout(salvarEstadoVideo,120); }
-  function restaurarEstadoVideo(){
+  function salvarEstadoVideo(){
     try {
-      const s=JSON.parse(localStorage.getItem(STORAGE_KEY_VIDEO)||'null'); if(!s) return false;
+      guardarSalaVideo();
+      const primeira = salasVideo[0].estado;
+      localStorage.setItem(STORAGE_KEY_VIDEO, JSON.stringify({...primeira, salasVideo, salaVideoAtiva, ts:ultimaEdicaoTs}));
+      ultimoSalvamentoTs = Date.now(); atualizarSaveStatus();
+    } catch(e) { $('saveStatusText').textContent = 'Não foi possível salvar. Mantenha esta página aberta.'; }
+  }
+  function agendarSalvarVideo(){ ultimaEdicaoTs = Date.now(); clearTimeout(saveTimerVideo); saveTimerVideo=setTimeout(salvarEstadoVideo,120); }
+  function restaurarEstadoVideo(estado){
+    try {
+      const s=estado || JSON.parse(localStorage.getItem(STORAGE_KEY_VIDEO)||'null'); if(!s) return false;
       if(s.panelSize) panelSize=s.panelSize; if(s.mode) mode=s.mode;
+      processadoraSelecionada=s.processadoraSelecionada ?? s.campos?.processadoraSelect ?? '';
       if(Number.isFinite(s.ts)) ultimaEdicaoTs=s.ts;
       Object.entries(s.campos||{}).forEach(([id,val])=>{const el=$(id);if(!el)return;if(el.type==='checkbox')el.checked=!!val;else el.value=val;});
       return true;
@@ -1504,6 +1540,90 @@
   });
   atualizarScrollspy();
 
+  // Salas usam IDs próprios: nomes repetidos não compartilham equipamentos.
+  let salasVideo = [], salaVideoAtiva = '', estadoPadraoVideo = null;
+  const copiarVideo = value => JSON.parse(JSON.stringify(value));
+  function guardarSalaVideo(){
+    const sala=salasVideo.find(s=>s.id===salaVideoAtiva);
+    if(sala) sala.estado=coletarEstadoVideo();
+  }
+  function publicarSalasVideo(){
+    const atual=salasVideo.find(s=>s.id===salaVideoAtiva);
+    if(!atual) return;
+    atual.resultado=copiarVideo(ultimoCalculo);
+    const dados={...salasVideo[0].resultado};
+    const somas=['potenciaTotalW','potenciaTotalKVA','pesoTotal','totalPaineis','totalPaineisGeral','areaM2','casesTotal','cabosEnergia','cabosSinal','rjTotal'];
+    somas.forEach(k=>dados[k]=salasVideo.reduce((n,s)=>n+Number(s.resultado?.[k]||0),0));
+    dados.salas=salasVideo.map((s,i)=>({id:s.id,nome:s.nome,numero:i+1,dados:s.resultado}));
+    localStorage.setItem('descritivo_dados_video',JSON.stringify(dados));
+    $('totalSalasVideo').textContent=`${salasVideo.length} sala(s) · Consumo total de Vídeo: ${fmt(dados.potenciaTotalW)} W`;
+  }
+  function desenharAbasSalasVideo(){
+    const wrap=$('abasSalasVideo'); wrap.replaceChildren();
+    salasVideo.forEach((s,i)=>{
+      const btn=document.createElement('button'); btn.type='button';
+      btn.textContent=`${i+1}. ${s.nome}`; btn.classList.toggle('active',s.id===salaVideoAtiva);
+      btn.setAttribute('role','tab'); btn.setAttribute('aria-selected',String(s.id===salaVideoAtiva));
+      btn.addEventListener('click',()=>trocarSalaVideo(s.id)); wrap.append(btn);
+    });
+    $('nomeSalaVideo').value=salasVideo.find(s=>s.id===salaVideoAtiva)?.nome||'';
+    $('excluirSalaVideo').disabled=salaVideoAtiva===salasVideo[0]?.id;
+    $('excluirSalaVideo').title='A Sala 1 é mantida como referência dos memoriais.';
+  }
+  function carregarSalaVideo(sala){
+    salaVideoAtiva=sala.id;
+    const estado=copiarVideo(sala.estado);
+    restaurarEstadoVideo(estado);
+    setMode(mode); setPanelSize(panelSize);
+  }
+  function trocarSalaVideo(id){
+    if(id===salaVideoAtiva)return;
+    clearTimeout(saveTimerVideo); guardarSalaVideo();
+    carregarSalaVideo(salasVideo.find(s=>s.id===id)); desenharAbasSalasVideo(); salvarEstadoVideo();
+  }
+  function adicionarSalaVideo(duplicar){
+    clearTimeout(saveTimerVideo); guardarSalaVideo();
+    const atual=salasVideo.find(s=>s.id===salaVideoAtiva);
+    const sala={id:crypto.randomUUID(),nome:duplicar?atual.nome+' (cópia)':'Sala '+(salasVideo.length+1),
+      estado:copiarVideo(duplicar?atual.estado:estadoPadraoVideo)};
+    salasVideo.push(sala); carregarSalaVideo(sala); desenharAbasSalasVideo();
+    ultimaEdicaoTs=Date.now(); salvarEstadoVideo();
+  }
+  function inicializarSalasVideo(){
+    const estadoInicialVideo=coletarEstadoVideo();
+    estadoPadraoVideo=copiarVideo(estadoInicialVideo);
+    // Novas salas começam sem painel; a Sala 1 mantém a configuração original.
+    estadoPadraoVideo.campos.larguraM='0'; estadoPadraoVideo.campos.alturaM='0';
+    const raw=localStorage.getItem(STORAGE_KEY_VIDEO);
+    let salvo=null; try{salvo=JSON.parse(raw||'null');}catch(e){}
+    if(Array.isArray(salvo?.salasVideo)&&salvo.salasVideo.length){
+      salasVideo=salvo.salasVideo;
+    }else{
+      // Mantém uma cópia do formato anterior antes da primeira conversão.
+      if(raw&&!localStorage.getItem('hive_video_antes_salas_v1'))localStorage.setItem('hive_video_antes_salas_v1',raw);
+      salasVideo=[{id:crypto.randomUUID(),nome:'Sala 1',estado:salvo||estadoInicialVideo}];
+    }
+    const ativa=salasVideo.find(s=>s.id===salvo?.salaVideoAtiva)||salasVideo[0];
+    // Recalcula todas as salas com o catálogo disponível ao abrir o projeto.
+    salasVideo.forEach(carregarSalaVideo); carregarSalaVideo(ativa); desenharAbasSalasVideo();
+    $('nomeSalaVideo').addEventListener('input',()=>{
+      const sala=salasVideo.find(s=>s.id===salaVideoAtiva);
+      sala.nome=$('nomeSalaVideo').value.trim()||'Sala '+(salasVideo.indexOf(sala)+1);
+      const btn=$('abasSalasVideo').children[salasVideo.indexOf(sala)];
+      btn.textContent=`${salasVideo.indexOf(sala)+1}. ${sala.nome}`;
+      publicarSalasVideo(); ultimaEdicaoTs=Date.now(); salvarEstadoVideo();
+    });
+    $('adicionarSalaVideo').addEventListener('click',()=>adicionarSalaVideo(false));
+    $('duplicarSalaVideo').addEventListener('click',()=>adicionarSalaVideo(true));
+    $('excluirSalaVideo').addEventListener('click',()=>{
+      const indice=salasVideo.findIndex(s=>s.id===salaVideoAtiva);
+      if(indice<=0||!confirm('Excluir esta sala e todos os seus equipamentos?'))return;
+      clearTimeout(saveTimerVideo); salasVideo.splice(indice,1);
+      carregarSalaVideo(salasVideo[0]); desenharAbasSalasVideo(); ultimaEdicaoTs=Date.now(); salvarEstadoVideo();
+    });
+    salvarEstadoVideo();
+  }
+
   // Junta pixel pitches e processadoras cadastrados em catalogo.html
   // (localStorage) aos catálogos padrão desta calculadora.
   if (window.MMCatalogo) {
@@ -1511,10 +1631,7 @@
     MMCatalogo.mergeProcessadoras(PROCESSADORAS_NOVASTAR);
   }
 
-  restaurarEstadoVideo();
-  setMode(mode);
-  setPanelSize(panelSize);
-  salvarEstadoVideo();
+  inicializarSalasVideo();
   atualizarSaveStatus();
   document.addEventListener('input', agendarSalvarVideo);
   document.addEventListener('change', agendarSalvarVideo);

@@ -343,6 +343,13 @@ function buildSom(d){
 
 /* ---------- LUZ ---------- */
 function buildLuz(d){
+  if(Array.isArray(d.salas)&&d.salas.length){
+    return {kpis:[
+      {big:fmtInt(d.totalW)+' W',label:'CONSUMO TOTAL'},
+      {big:fmtInt(d.totalAparelhos),label:'APARELHOS TOTAIS'},
+      {big:fmtInt(d.totalCases),label:'CASES TOTAIS'}
+    ],html:d.salas.map((s,i)=>blockTitle('Sala '+(i+1)+' — '+s.nome)+sectionInnerHtml('luz',s.dados||{})).join(''),note:'Consumo de todas as salas. Memoriais de solo e aéreo: somente Sala 1.'};
+  }
   const kpis=[
     {big:fmtBR(d.totalKVA,1)+' KVA', label:'POTÊNCIA TOTAL'},
     {big:fmtInt(d.totalKg)+' kg', label:'PESO SUSPENSO TOTAL'},
@@ -417,6 +424,13 @@ function buildLuz(d){
 
 /* ---------- VÍDEO ---------- */
 function buildVideo(d){
+  if(Array.isArray(d.salas)&&d.salas.length){
+    return {kpis:[
+      {big:fmtInt(d.potenciaTotalW)+' W',label:'CONSUMO TOTAL'},
+      {big:fmtInt(d.totalPaineisGeral),label:'PLACAS TOTAIS'},
+      {big:fmtInt(d.casesTotal),label:'CASES TOTAIS'}
+    ],html:d.salas.map((s,i)=>blockTitle('Sala '+(i+1)+' — '+s.nome)+sectionInnerHtml('video',s.dados||{})).join(''),note:'Consumo de todas as salas. Memoriais de solo e aéreo: somente Sala 1.'};
+  }
   const totalPaineisGeral=d.totalPaineisGeral||d.totalPaineis||0;
   const alturaFinal=d.topoAtivo && d.topoTotalPaineis>0 ? d.alturaRealTotal : d.alturaM;
   const areaM2=totalPaineisGeral*(d.panelSize==='100'?0.5:0.25);
@@ -694,27 +708,36 @@ function gerarResumoTecnico(){
   linhasHtml.push(`<h3>${esc(titulo)}</h3>`);
   linhasTexto.push(titulo);
 
-  if(dv && ((dv.totalPaineisGeral||dv.totalPaineis||0)>0)){
+  (dv?.salas || [{dados:dv}]).forEach((salaVideo,indiceSala)=>{
+    const painel=salaVideo.dados;
+  if(painel && ((painel.totalPaineisGeral||painel.totalPaineis||0)>0)){
     temConteudo=true;
-    const alturaFinal=(dv.topoAtivo && dv.topoTotalPaineis>0) ? dv.alturaRealTotal : dv.alturaM;
-    let frase=`1 Painel de LED medindo ${fmtBR(dv.larguraM,1)}x${fmtBR(alturaFinal,1)} m ${fmtInt(dv.potenciaTotalW)} watts com ${fmtInt(dv.pesoTotal)} kg`;
-    if(dv.mode==='ground' || dv.mode==='groundSuspenso'){
-      const totalMF=(dv.mfFrente||0)+(dv.temTraseira?(dv.mfTras||0):0)+(dv.mfLateral||0);
-      frase+=` instalados com ${fmtInt(dv.mfFrente)} mão${dv.mfFrente===1?'':'s'} francesa${dv.mfFrente===1?'':'s'} de ${fmtBR(dv.compFrente,1)} metros`;
-      if(dv.mfLateral) frase+=` + ${fmtInt(dv.mfLateral)} de acabamento lateral (total ${fmtInt(totalMF)} mãos francesas)`;
-      frase+=` + ${fmtInt(dv.contrapesos)} contrapeso${dv.contrapesos===1?'':'s'} de ${fmtInt(dv.pesoContrapesoUnit)}kg cada.`;
-      if(dv.mode==='groundSuspenso'){
-        const qtdBarras=(dv.barras2m||0)+(dv.barras1m||0);
-        const barrasDetalhe=[dv.barras2m?`${fmtInt(dv.barras2m)} de 2 m`:null,dv.barras1m?`${fmtInt(dv.barras1m)} de 1 m`:null].filter(Boolean).join(' + ');
-        frase+=` elevado a ${fmtBR(dv.alturaBarra,1)} m por ${fmtInt(qtdBarras)} barra${qtdBarras===1?'':'s'} de elevação${barrasDetalhe?' ('+barrasDetalhe+')':''}.`;
+    const alturaFinal=(painel.topoAtivo && painel.topoTotalPaineis>0) ? painel.alturaRealTotal : painel.alturaM;
+    let frase=`1 Painel de LED medindo ${fmtBR(painel.larguraM,1)}x${fmtBR(alturaFinal,1)} m ${fmtInt(painel.potenciaTotalW)} watts com ${fmtInt(painel.pesoTotal)} kg`;
+    if(painel.mode==='ground' || painel.mode==='groundSuspenso'){
+      const totalMF=(painel.mfFrente||0)+(painel.temTraseira?(painel.mfTras||0):0)+(painel.mfLateral||0);
+      frase+=` instalados com ${fmtInt(painel.mfFrente)} mão${painel.mfFrente===1?'':'s'} francesa${painel.mfFrente===1?'':'s'} de ${fmtBR(painel.compFrente,1)} metros`;
+      if(painel.mfLateral) frase+=` + ${fmtInt(painel.mfLateral)} de acabamento lateral (total ${fmtInt(totalMF)} mãos francesas)`;
+      frase+=` + ${fmtInt(painel.contrapesos)} contrapeso${painel.contrapesos===1?'':'s'} de ${fmtInt(painel.pesoContrapesoUnit)}kg cada.`;
+      if(painel.mode==='groundSuspenso'){
+        const qtdBarras=(painel.barras2m||0)+(painel.barras1m||0);
+        const barrasDetalhe=[painel.barras2m?`${fmtInt(painel.barras2m)} de 2 m`:null,painel.barras1m?`${fmtInt(painel.barras1m)} de 1 m`:null].filter(Boolean).join(' + ');
+        frase+=` elevado a ${fmtBR(painel.alturaBarra,1)} m por ${fmtInt(qtdBarras)} barra${qtdBarras===1?'':'s'} de elevação${barrasDetalhe?' ('+barrasDetalhe+')':''}.`;
       }
-    } else if(dv.mode==='suspenso'){
-      frase+=` suspenso por talha com ${fmtInt(dv.bumpers)} bumpers e ${fmtInt(dv.talhas)} talhas.`;
+    } else if(painel.mode==='suspenso'){
+      frase+=` suspenso por talha com ${fmtInt(painel.bumpers)} bumpers e ${fmtInt(painel.talhas)} talhas.`;
     } else {
       frase+='.';
     }
+    if(dv.salas?.length>1)frase='Sala '+(indiceSala+1)+' — '+salaVideo.nome+': '+frase;
     linhasHtml.push(`<p>${esc(frase)}</p>`);
     linhasTexto.push(frase);
+  }
+
+  });
+  if(dv?.salas?.length>1){
+    const totalVideo='Equipamentos de vídeo '+fmtInt(dv.potenciaTotalW)+' watts (total de todas as salas)';
+    linhasHtml.push('<p>'+esc(totalVideo)+'</p>'); linhasTexto.push(totalVideo);
   }
 
   linhasHtml.push('<div class="rt-spacer"></div>');
@@ -922,8 +945,12 @@ function artReadDados(key){
   try{ const raw = localStorage.getItem('descritivo_dados_'+key); return raw ? JSON.parse(raw) : null; }
   catch(e){ return null; }
 }
+function memorialDadosArea(key){
+  const dados=artReadDados(key);
+  return dados?.salas?.[0]?.dados || dados;
+}
 function buildAereoEstruturas(){
-  const dl = artReadDados('luz'), som = artReadDados('som'), ds = som?.salas?.[0]?.dados || som, dv = artReadDados('video');
+  const dl = memorialDadosArea('luz'), ds = memorialDadosArea('som'), dv = memorialDadosArea('video');
   const luzGroups = ((dl && dl.gruposResultados) || []).filter(g => (g.aparelhos>0) && g.suspenso);
   const somGroups = ((ds && ds.gruposResultados) || []).filter(g => (g.caixas>0) && g.suspenso);
   const n = Math.max(luzGroups.length, somGroups.length);
@@ -982,7 +1009,7 @@ function mergeGruposSolo(grupos, sufixo){
   return { titulo, area: AREA_PADRAO_SOLO_M2, rows };
 }
 function buildSoloEstruturas(){
-  const dl = artReadDados('luz'), som = artReadDados('som'), ds = som?.salas?.[0]?.dados || som, dv = artReadDados('video');
+  const dl = memorialDadosArea('luz'), ds = memorialDadosArea('som'), dv = memorialDadosArea('video');
   const estruturas = [];
   if (dv && (dv.mode==='ground' || dv.mode==='groundSuspenso') && ((dv.totalPaineisGeral||dv.totalPaineis||0)>0)){
     // A área que importa pro memorial de solo é o CONTATO com o chão (a base
@@ -1133,6 +1160,7 @@ function osRowsFromArea(d, area, customKey){
   return rows;
 }
 function osVideoRows(d){
+  if(d?.salas?.length)return d.salas.flatMap((s,i)=>osVideoRows(s.dados).map(row=>({...row,item:'Sala '+(i+1)+' — '+s.nome+' — '+row.item})));
   const rows=[];
   if(!d)return rows;
   const main=Number(d.totalPaineis||0);
@@ -1151,6 +1179,11 @@ function osVideoRows(d){
   return rows;
 }
 function osCabosVideoRows(d){
+  if(d?.salas?.length){
+    const rows=new Map();
+    d.salas.forEach(s=>osCabosVideoRows(s.dados).forEach(row=>rows.set(row.item,(rows.get(row.item)||0)+row.value)));
+    return Array.from(rows,([item,value])=>({item,value}));
+  }
   if(!d || !(Number(d.totalPaineisGeral||d.totalPaineis||0)>0)) return [];
   const total=Number(d.totalPaineisGeral||d.totalPaineis||0);
   const packs=Math.ceil(total/10)+1;

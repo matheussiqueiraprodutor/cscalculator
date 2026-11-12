@@ -555,6 +555,16 @@
     cursor:pointer;
   }
   .btn-copiar:hover{ color:var(--accent); border-color:var(--accent); }
+
+  #salasLuz .salas-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+  #salasLuz button{font-family:inherit;cursor:pointer;}
+  #salasLuz .salas-tabs button{border:1px solid var(--line);background:var(--panel-2);color:var(--muted);border-radius:20px;padding:10px 16px;max-width:100%;overflow-wrap:anywhere;}
+  #salasLuz .salas-tabs button.active{border-color:var(--accent,var(--signal));color:var(--accent,var(--signal));}
+  #salasLuz input{width:100%;background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:10px 12px;font:inherit;}
+  #salasLuz .btn-add{width:auto;height:38px;padding:0 14px;border:1px solid var(--accent,var(--power));border-radius:4px;background:var(--accent,var(--power));color:var(--text);font-weight:600;}
+  #excluirSalaLuz{width:auto;height:38px;padding:0 12px;white-space:nowrap;background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:4px;}
+  #excluirSalaLuz:disabled{opacity:.4;cursor:not-allowed;}
+  @media(max-width:600px){#salasLuz{max-width:calc(100vw - 40px);}#salasLuz .row2{grid-template-columns:1fr;}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="db-config.js"></script>
@@ -578,6 +588,7 @@
   <div class="save-status" id="saveStatus"><span style="display:inline-flex;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h13l3 3v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M8 4v5h8V4"/><rect x="7.5" y="13" width="9" height="6"/></svg></span><span id="saveStatusText">salvando…</span></div>
   <p class="sidebar-label">Seções</p>
   <nav id="sideNav">
+    <a href="#salasLuz">Salas de Luz</a>
     <a href="#sec-mesa">Mesa de luz</a>
     <a href="#sec-energia">Energia (AC)</a>
     <a href="#sec-equip">Equipamentos</a>
@@ -590,9 +601,25 @@
 </aside>
 
 <main>
+  <div class="card" id="salasLuz">
+    <p class="section-title">Salas de Luz</p>
+    <div class="salas-tabs" id="abasSalasLuz" role="tablist" aria-label="Salas de Luz"></div>
+    <div class="row2">
+      <div class="field"><label for="nomeSalaLuz">Nome da sala selecionada</label><input id="nomeSalaLuz" type="text" maxlength="80" placeholder="Ex.: Plenária ou BU"></div>
+      <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+        <button type="button" class="btn-add" id="adicionarSalaLuz">+ Adicionar sala</button>
+        <button type="button" class="btn-add" id="duplicarSalaLuz">Duplicar sala</button>
+        <button type="button" class="btn-remove" id="excluirSalaLuz">Excluir sala</button>
+      </div>
+    </div>
+    <p class="note tight">Cada sala tem sua própria configuração. O descritivo soma todas as salas; os memoriais de solo e aéreo usam apenas a Sala 1.</p>
+    <p class="note tight" id="totalSalasLuz" aria-live="polite"></p>
+  </div>
+
+
 
   <div class="card" id="sec-mesa">
-    <p class="section-title">Mesa de luz do evento <span class="sub">usada para todo o evento</span></p>
+    <p class="section-title">Mesa de luz da sala <span class="sub">usada nesta sala</span></p>
     <div class="pitch-toggle" id="consoleToggle"></div>
     <p class="note tight" id="notaConsole"></p>
   </div>
@@ -1537,7 +1564,7 @@
     // O Descritivo Geral lê diretamente estes dados estruturados.
     // Não é mais necessário gerar o descritivo nesta calculadora.
     try {
-      localStorage.setItem('descritivo_dados_luz', JSON.stringify(ultimoCalculo));
+      publicarSalasLuz();
       localStorage.setItem('descritivo_luz_ts', String(Date.now()));
     } catch (e) {}
 
@@ -1554,18 +1581,25 @@
   function coletarEstadoLuz(){
     const campos = {};
     document.querySelectorAll('input[id], select[id], textarea[id]').forEach(el => {
-      if (el.id === 'descritivoText') return;
+      if (el.id === 'descritivoText' || el.closest('#salasLuz')) return;
       campos[el.id] = el.type === 'checkbox' ? el.checked : el.value;
     });
     return { campos, consoleAtual, infraDmx: JSON.parse(JSON.stringify(infraDmx)), grupos: JSON.parse(JSON.stringify(grupos)), grupoCounter, ts: ultimaEdicaoTs };
   }
-  function salvarEstadoLuz(){ try { localStorage.setItem(STORAGE_KEY_LUZ, JSON.stringify(coletarEstadoLuz())); ultimoSalvamentoTs = Date.now(); atualizarSaveStatus(); } catch(e) {} }
-  function agendarSalvarLuz(){ ultimaEdicaoTs = Date.now(); clearTimeout(saveTimerLuz); saveTimerLuz=setTimeout(salvarEstadoLuz,120); }
-  function restaurarEstadoLuz(){
+  function salvarEstadoLuz(){
     try {
-      const s=JSON.parse(localStorage.getItem(STORAGE_KEY_LUZ)||'null'); if(!s) return false;
+      guardarSalaLuz();
+      const primeira = salasLuz[0].estado;
+      localStorage.setItem(STORAGE_KEY_LUZ, JSON.stringify({...primeira, salasLuz, salaLuzAtiva, ts:ultimaEdicaoTs}));
+      ultimoSalvamentoTs = Date.now(); atualizarSaveStatus();
+    } catch(e) { $('saveStatusText').textContent = 'Não foi possível salvar. Mantenha esta página aberta.'; }
+  }
+  function agendarSalvarLuz(){ ultimaEdicaoTs = Date.now(); clearTimeout(saveTimerLuz); saveTimerLuz=setTimeout(salvarEstadoLuz,120); }
+  function restaurarEstadoLuz(estado){
+    try {
+      const s=estado || JSON.parse(localStorage.getItem(STORAGE_KEY_LUZ)||'null'); if(!s) return false;
       if(s.consoleAtual) consoleAtual=s.consoleAtual; if(s.infraDmx) infraDmx=s.infraDmx;
-      if(Array.isArray(s.grupos)&&s.grupos.length) grupos=s.grupos; if(Number.isFinite(s.grupoCounter)) grupoCounter=s.grupoCounter;
+      if(Array.isArray(s.grupos)) grupos=s.grupos; if(Number.isFinite(s.grupoCounter)) grupoCounter=s.grupoCounter;
       if(Number.isFinite(s.ts)) ultimaEdicaoTs=s.ts;
       Object.entries(s.campos||{}).forEach(([id,val])=>{const el=$(id);if(!el)return;if(el.type==='checkbox')el.checked=!!val;else el.value=val;});
       return true;
@@ -1608,6 +1642,97 @@
   });
   atualizarScrollspy();
 
+  // Salas usam IDs próprios: nomes repetidos não compartilham equipamentos.
+  let salasLuz = [], salaLuzAtiva = '', estadoPadraoLuz = null;
+  const copiarLuz = value => JSON.parse(JSON.stringify(value));
+  function guardarSalaLuz(){
+    const sala=salasLuz.find(s=>s.id===salaLuzAtiva);
+    if(sala) sala.estado=coletarEstadoLuz();
+  }
+  function publicarSalasLuz(){
+    const atual=salasLuz.find(s=>s.id===salaLuzAtiva);
+    if(!atual) return;
+    atual.resultado=copiarLuz(ultimoCalculo);
+    const dados={...salasLuz[0].resultado};
+    const somas=['totalW','totalKVA','totalKg','totalAparelhos','totalCircuitos','totalDmxCh'];
+    somas.forEach(k=>dados[k]=salasLuz.reduce((n,s)=>n+Number(s.resultado?.[k]||0),0));
+    dados.totaisPorTipo={};
+    salasLuz.forEach(s=>Object.entries(s.resultado?.totaisPorTipo||{}).forEach(([k,v])=>{
+      dados.totaisPorTipo[k]=(dados.totaisPorTipo[k]||0)+Number(v||0);
+    }));
+    dados.totalCases=Object.entries(dados.totaisPorTipo).reduce((n,[k,v])=>n+(v>0?Math.ceil(v/(EQUIPAMENTOS[k]?.casePor||1)):0),0);
+    dados.salas=salasLuz.map((s,i)=>({id:s.id,nome:s.nome,numero:i+1,dados:s.resultado}));
+    localStorage.setItem('descritivo_dados_luz',JSON.stringify(dados));
+    $('totalSalasLuz').textContent=`${salasLuz.length} sala(s) · Consumo total de Luz: ${fmt(dados.totalW)} W`;
+  }
+  function desenharAbasSalasLuz(){
+    const wrap=$('abasSalasLuz'); wrap.replaceChildren();
+    salasLuz.forEach((s,i)=>{
+      const btn=document.createElement('button'); btn.type='button';
+      btn.textContent=`${i+1}. ${s.nome}`; btn.classList.toggle('active',s.id===salaLuzAtiva);
+      btn.setAttribute('role','tab'); btn.setAttribute('aria-selected',String(s.id===salaLuzAtiva));
+      btn.addEventListener('click',()=>trocarSalaLuz(s.id)); wrap.append(btn);
+    });
+    $('nomeSalaLuz').value=salasLuz.find(s=>s.id===salaLuzAtiva)?.nome||'';
+    $('excluirSalaLuz').disabled=salaLuzAtiva===salasLuz[0]?.id;
+    $('excluirSalaLuz').title='A Sala 1 é mantida como referência dos memoriais.';
+  }
+  function carregarSalaLuz(sala){
+    salaLuzAtiva=sala.id;
+    const estado=copiarLuz(sala.estado);
+    restaurarEstadoLuz(estado);
+    buildConsoleToggle(); buildGruposCards();
+    Object.entries(estado.campos||{}).forEach(([id,val])=>{
+      const el=$(id); if(!el||el.closest('#salasLuz'))return;
+      if(el.type==='checkbox')el.checked=!!val;else el.value=val;
+    });
+    updateDmxInfraUI(); calc();
+  }
+  function trocarSalaLuz(id){
+    if(id===salaLuzAtiva)return;
+    clearTimeout(saveTimerLuz); guardarSalaLuz();
+    carregarSalaLuz(salasLuz.find(s=>s.id===id)); desenharAbasSalasLuz(); salvarEstadoLuz();
+  }
+  function adicionarSalaLuz(duplicar){
+    clearTimeout(saveTimerLuz); guardarSalaLuz();
+    const atual=salasLuz.find(s=>s.id===salaLuzAtiva);
+    const sala={id:crypto.randomUUID(),nome:duplicar?atual.nome+' (cópia)':'Sala '+(salasLuz.length+1),
+      estado:copiarLuz(duplicar?atual.estado:estadoPadraoLuz)};
+    salasLuz.push(sala); carregarSalaLuz(sala); desenharAbasSalasLuz();
+    ultimaEdicaoTs=Date.now(); salvarEstadoLuz();
+  }
+  function inicializarSalasLuz(){
+    estadoPadraoLuz=coletarEstadoLuz();
+    const raw=localStorage.getItem(STORAGE_KEY_LUZ);
+    let salvo=null; try{salvo=JSON.parse(raw||'null');}catch(e){}
+    if(Array.isArray(salvo?.salasLuz)&&salvo.salasLuz.length){
+      salasLuz=salvo.salasLuz;
+    }else{
+      // Mantém uma cópia do formato anterior antes da primeira conversão.
+      if(raw&&!localStorage.getItem('hive_luz_antes_salas_v1'))localStorage.setItem('hive_luz_antes_salas_v1',raw);
+      salasLuz=[{id:crypto.randomUUID(),nome:'Sala 1',estado:salvo||copiarLuz(estadoPadraoLuz)}];
+    }
+    const ativa=salasLuz.find(s=>s.id===salvo?.salaLuzAtiva)||salasLuz[0];
+    // Recalcula todas as salas com o catálogo disponível ao abrir o projeto.
+    salasLuz.forEach(carregarSalaLuz); carregarSalaLuz(ativa); desenharAbasSalasLuz();
+    $('nomeSalaLuz').addEventListener('input',()=>{
+      const sala=salasLuz.find(s=>s.id===salaLuzAtiva);
+      sala.nome=$('nomeSalaLuz').value.trim()||'Sala '+(salasLuz.indexOf(sala)+1);
+      const btn=$('abasSalasLuz').children[salasLuz.indexOf(sala)];
+      btn.textContent=`${salasLuz.indexOf(sala)+1}. ${sala.nome}`;
+      publicarSalasLuz(); ultimaEdicaoTs=Date.now(); salvarEstadoLuz();
+    });
+    $('adicionarSalaLuz').addEventListener('click',()=>adicionarSalaLuz(false));
+    $('duplicarSalaLuz').addEventListener('click',()=>adicionarSalaLuz(true));
+    $('excluirSalaLuz').addEventListener('click',()=>{
+      const indice=salasLuz.findIndex(s=>s.id===salaLuzAtiva);
+      if(indice<=0||!confirm('Excluir esta sala e todos os seus equipamentos?'))return;
+      clearTimeout(saveTimerLuz); salasLuz.splice(indice,1);
+      carregarSalaLuz(salasLuz[0]); desenharAbasSalasLuz(); ultimaEdicaoTs=Date.now(); salvarEstadoLuz();
+    });
+    salvarEstadoLuz();
+  }
+
   // ===== init =====
   // Junta os equipamentos cadastrados em catalogo.html (localStorage) aos
   // catálogos padrão desta calculadora, antes de montar os seletores.
@@ -1617,7 +1742,7 @@
   }
 
   // Restaura o último projeto antes de reconstruir os blocos dinâmicos.
-  restaurarEstadoLuz();
+
 
   buildConsoleToggle();
   buildGruposCards();
@@ -1629,8 +1754,7 @@
   $('ampsCircuito').addEventListener('change', calc);
   $('cabeamentoKgM').addEventListener('input', calc);
   $('cabeamentoKgM').addEventListener('change', calc);
-  calc();
-  salvarEstadoLuz();
+  inicializarSalasLuz();
   atualizarSaveStatus();
   document.addEventListener('input', agendarSalvarLuz);
   document.addEventListener('change', agendarSalvarLuz);
