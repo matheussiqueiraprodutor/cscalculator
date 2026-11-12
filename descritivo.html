@@ -253,6 +253,13 @@ function noteHtml(text){ return text?`<div class="inote"><b>Observação:</b> ${
 
 /* ---------- SOM ---------- */
 function buildSom(d){
+  if(Array.isArray(d.salas)&&d.salas.length){
+    return {kpis:[
+      {big:fmtInt(d.totalWGeral)+' W',label:'CONSUMO TOTAL'},
+      {big:fmtInt(d.totalCaixas),label:'CAIXAS TOTAIS'},
+      {big:fmtInt(d.totalCases),label:'CASES TOTAIS'}
+    ],html:d.salas.map((s,i)=>blockTitle('Sala '+(i+1)+' — '+s.nome)+sectionInnerHtml('som',s.dados||{})).join(''),note:'Consumo de todas as salas. Memoriais de solo e aéreo: somente Sala 1.'};
+  }
   const kpis=[
     {big:fmtBR(d.totalKVA,1)+' KVA', label:'POTÊNCIA TOTAL', sub:'('+fmtInt(d.totalWGeral)+' W)'},
     {big:fmtInt(d.totalKg)+' kg', label:'PESO TOTAL DO PA'},
@@ -916,7 +923,7 @@ function artReadDados(key){
   catch(e){ return null; }
 }
 function buildAereoEstruturas(){
-  const dl = artReadDados('luz'), ds = artReadDados('som'), dv = artReadDados('video');
+  const dl = artReadDados('luz'), som = artReadDados('som'), ds = som?.salas?.[0]?.dados || som, dv = artReadDados('video');
   const luzGroups = ((dl && dl.gruposResultados) || []).filter(g => (g.aparelhos>0) && g.suspenso);
   const somGroups = ((ds && ds.gruposResultados) || []).filter(g => (g.caixas>0) && g.suspenso);
   const n = Math.max(luzGroups.length, somGroups.length);
@@ -975,7 +982,7 @@ function mergeGruposSolo(grupos, sufixo){
   return { titulo, area: AREA_PADRAO_SOLO_M2, rows };
 }
 function buildSoloEstruturas(){
-  const dl = artReadDados('luz'), ds = artReadDados('som'), dv = artReadDados('video');
+  const dl = artReadDados('luz'), som = artReadDados('som'), ds = som?.salas?.[0]?.dados || som, dv = artReadDados('video');
   const estruturas = [];
   if (dv && (dv.mode==='ground' || dv.mode==='groundSuspenso') && ((dv.totalPaineisGeral||dv.totalPaineis||0)>0)){
     // A área que importa pro memorial de solo é o CONTATO com o chão (a base
