@@ -763,7 +763,7 @@ function gerarResumoTecnico(){
   if(cab.dataMontagem) datasPartes.push(`Data: Montagem ${cab.dataMontagem}`);
   if(cab.dataEvento) datasPartes.push(`Evento ${cab.dataEvento}`);
   datasPartes.push(`Sala: ${cab.sala||''}`);
-  if(cab.hotel) datasPartes.push(`Hotel: ${cab.hotel}`);
+  if(cab.hotel) datasPartes.push(`Local: ${cab.hotel}`);
   if(datasPartes.length){
     linhasHtml.push(`<p class="rt-datas">${datasPartes.map(esc).join('<br>')}</p>`);
     linhasTexto.push(datasPartes.join('\n'));
